@@ -4939,8 +4939,8 @@
             <div class="auth-tabs">
                 <div class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')"
                     data-t-key="auth_tab_login">Login</div>
-                <!-- <div class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')"
-                    data-t-key="auth_tab_signup">Create Account</div> -->
+                <div class="auth-tab" id="auth-tab-signup" onclick="switchAuthTab('signup')"
+                    data-t-key="auth_tab_signup">Create Account</div>
             </div>
             <div id="login-form">
                 <div class="signup-sub-tabs" style="margin-bottom: 20px;">
@@ -10707,6 +10707,8 @@
 
         window.switchAuthTab = (tab) => {
             document.getElementById('auth-tab-login').classList.toggle('active', tab === 'login');
+            const signupTab = document.getElementById('auth-tab-signup');
+            if (signupTab) signupTab.classList.toggle('active', tab === 'signup');
             document.getElementById('login-form').classList.toggle('hidden', tab === 'signup');
             document.getElementById('signup-form').classList.toggle('hidden', tab === 'login');
             document.getElementById('auth-msg').innerHTML = '';
