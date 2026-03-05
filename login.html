@@ -23,9 +23,12 @@
     <meta name="twitter:image" content="https://YOUR_DOMAIN/assets/brand/og-preview.png">
     <script>
         (function () {
-            const isSmall = window.matchMedia('(max-width: 900px)').matches;
-            const forceDesktop = /[?&]desktop=1(?:&|$)/.test(window.location.search);
-            if (isSmall && !forceDesktop) {
+            const forceDesktop = /[?&]desktop=1(?:&|$)/i.test(window.location.search);
+            if (forceDesktop) return;
+            const ua = navigator.userAgent || '';
+            const isMobileUA = /Android|iPhone|iPad|iPod|Windows Phone|IEMobile|BlackBerry|Opera Mini|Mobile/i.test(ua);
+            const isSmallTouch = window.matchMedia('(max-width: 900px)').matches && ((navigator.maxTouchPoints || 0) > 1);
+            if (isMobileUA || isSmallTouch) {
                 window.location.replace('mobile.html');
             }
         })();
@@ -370,15 +373,16 @@
         // Session check on page load
         async function checkInitialSession() {
             const user = await checkSession(false);
-            // If already logged in, go to dashboard
             if (user) {
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
                     const kycStatus = userDoc.exists() ? (userDoc.data().kyc_status || 'Not Verified') : 'Not Verified';
                     const kycCompleted = kycStatus === 'Pending' || kycStatus === 'Verified';
-                    window.location.href = kycCompleted ? 'dashboard.html' : 'mobile.html';
+                    if (kycCompleted) {
+                        window.location.href = 'dashboard.html';
+                    }
                 } catch (e) {
-                    window.location.href = 'mobile.html';
+                    // Keep user on current page if profile/KYC lookup fails.
                 }
             }
         }
