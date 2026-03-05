@@ -10266,9 +10266,22 @@
         let manualResetType = 'fund'; // For non-fund behavior
         let uploadStates = { front: null, back: null, handheld: null };
 
-        // Initialize EmailJS
+        // Initialize EmailJS safely. On some mobile networks/CDN routes this SDK may fail to load.
+        const EMAILJS_PUBLIC_KEY = "-TaDEWlDVI41hWXmN";
+        const EMAILJS_SERVICE_ID = "service_au63y5g";
+        const EMAILJS_TEMPLATE_ID = "template_66g9xxf";
+        let emailJsReady = false;
         (function () {
-            emailjs.init("-TaDEWlDVI41hWXmN");
+            try {
+                if (window.emailjs && typeof window.emailjs.init === 'function') {
+                    window.emailjs.init(EMAILJS_PUBLIC_KEY);
+                    emailJsReady = true;
+                } else {
+                    console.warn('EmailJS SDK unavailable; email OTP may not work in this environment.');
+                }
+            } catch (err) {
+                console.warn('EmailJS init failed:', err);
+            }
         })();
 
         let currentOTP = null;
@@ -10315,9 +10328,15 @@
                 }
             } else {
                 // Generate 6-digit OTP for Email
+                if (!emailJsReady || !window.emailjs || typeof window.emailjs.send !== 'function') {
+                    msg.innerHTML = '<span class="error-text">Email OTP service unavailable now. Please use Mobile signup.</span>';
+                    otpBtn.disabled = false;
+                    otpBtn.innerText = 'Send Code';
+                    return;
+                }
                 currentOTP = Math.floor(100000 + Math.random() * 900000).toString();
 
-                emailjs.send("service_au63y5g", "template_66g9xxf", {
+                window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
                     to_email: email,
                     otp_code: currentOTP
                 }).then(() => {
@@ -10364,6 +10383,7 @@
         function normalizeAccountLogin(value) {
             return String(value || '').trim().toLowerCase();
         }
+        window.sendOTP = sendOTP;
 
         async function ensureMobileAccountUnique(emailValue, phoneValue, accountLoginValue = '') {
             const checks = [];
