@@ -5082,9 +5082,33 @@
                     <div class="signup-sub-tab login-sub-tab" data-auth-tab="mobile" onclick="switchLoginTab('mobile')">Mobile</div>
                     <div class="signup-sub-tab login-sub-tab" data-auth-tab="account" onclick="switchLoginTab('account')">Account</div>
                 </div>
-                <div class="auth-form-group"><label data-t-key="auth_label_email">Email Address</label><input
-                        type="text" id="login-email" class="auth-input" placeholder="Enter your email"
-                        data-t-key="auth_placeholder_email"></div>
+                <div class="auth-form-group"><label data-t-key="auth_label_email">Email Address</label>
+                    <div id="login-mobile-prefix-row" class="phone-prefix-row hidden">
+                        <select id="login-country-code" class="country-code-select">
+                            <option value="+86">China (+86)</option>
+                            <option value="+1">United States (+1)</option>
+                            <option value="+1">Canada (+1)</option>
+                            <option value="+44">United Kingdom (+44)</option>
+                            <option value="+49">Germany (+49)</option>
+                            <option value="+33">France (+33)</option>
+                            <option value="+39">Italy (+39)</option>
+                            <option value="+34">Spain (+34)</option>
+                            <option value="+81">Japan (+81)</option>
+                            <option value="+82">Korea (+82)</option>
+                            <option value="+65">Singapore (+65)</option>
+                            <option value="+61">Australia (+61)</option>
+                            <option value="+971">UAE (+971)</option>
+                            <option value="+91">India (+91)</option>
+                            <option value="+7">Russia (+7)</option>
+                            <option value="+55">Brazil (+55)</option>
+                            <option value="+52">Mexico (+52)</option>
+                            <option value="+84">Vietnam (+84)</option>
+                            <option value="+66">Thailand (+66)</option>
+                        </select>
+                    </div>
+                    <input type="text" id="login-email" class="auth-input" placeholder="Enter your email"
+                        data-t-key="auth_placeholder_email">
+                </div>
                 <div class="auth-form-group"><label data-t-key="auth_label_password">Password</label><input
                         type="password" id="login-password" class="auth-input" placeholder="Enter your password"
                         data-t-key="auth_placeholder_password"></div>
@@ -10497,9 +10521,59 @@
         let otpCooldown = 0;
         let confirmationResult = null; // Store phone auth result
 
+        const PHONE_COUNTRY_CODE_STORAGE_KEY = 'ec_phone_country_code';
+
         function normalizeCountryCodePrefix(rawPrefix) {
             const digits = String(rawPrefix || '').replace(/\D/g, '');
             return digits ? `+${digits}` : '+1';
+        }
+
+        function readSavedCountryCodePrefix() {
+            const raw = localStorage.getItem(PHONE_COUNTRY_CODE_STORAGE_KEY) || '';
+            const digits = String(raw).replace(/\D/g, '');
+            return digits ? `+${digits}` : '';
+        }
+
+        function detectCountryCodePrefix() {
+            const lang = String(navigator.language || '').toLowerCase();
+            const tz = String((Intl.DateTimeFormat().resolvedOptions() || {}).timeZone || '').toLowerCase();
+            if (lang.includes('zh') || tz.includes('shanghai') || tz.includes('hong_kong') || tz.includes('taipei')) return '+86';
+            if (lang.includes('-de') || lang === 'de' || tz.includes('berlin')) return '+49';
+            if (lang.includes('-gb') || tz.includes('london')) return '+44';
+            if (lang.includes('-jp') || tz.includes('tokyo')) return '+81';
+            if (lang.includes('-kr') || tz.includes('seoul')) return '+82';
+            return '+1';
+        }
+
+        function setCountryCodeSelectValue(selectEl, code) {
+            if (!selectEl) return;
+            const normalized = normalizeCountryCodePrefix(code);
+            const options = Array.from(selectEl.options || []);
+            const matched = options.find(opt => normalizeCountryCodePrefix(opt.value) === normalized);
+            if (matched) {
+                selectEl.value = matched.value;
+            }
+        }
+
+        function initPhoneCountryCodeSelectors() {
+            const signupSelect = document.getElementById('signup-country-code');
+            const loginSelect = document.getElementById('login-country-code');
+            const preferred = readSavedCountryCodePrefix() || detectCountryCodePrefix();
+
+            setCountryCodeSelectValue(signupSelect, preferred);
+            setCountryCodeSelectValue(loginSelect, preferred);
+
+            const bindSync = (source, peer) => {
+                if (!source) return;
+                source.addEventListener('change', () => {
+                    const code = normalizeCountryCodePrefix(source.value);
+                    localStorage.setItem(PHONE_COUNTRY_CODE_STORAGE_KEY, code);
+                    setCountryCodeSelectValue(peer, code);
+                });
+            };
+
+            bindSync(signupSelect, loginSelect);
+            bindSync(loginSelect, signupSelect);
         }
 
         function buildInternationalPhone(rawValue, rawPrefix) {
@@ -10825,13 +10899,16 @@
             let normalizedPhone = '';
             let accountLogin = '';
             const isAccountMode = currentLoginTab === 'account';
+            const loginCountryCode = (document.getElementById('login-country-code') || {}).value || readSavedCountryCodePrefix() || detectCountryCodePrefix();
             // If input is a phone number (numeric or starting with +), convert to virtual email
             const isPhone = !isAccountMode && /^\+?[\d]+$/.test(input);
             if (isPhone) {
-                let phone = input;
-                if (!phone.startsWith('+')) {
-                    phone = '+1' + phone; // Match signup.html default prefix
+                const phonePrefix = currentLoginTab === 'mobile' ? loginCountryCode : (readSavedCountryCodePrefix() || detectCountryCodePrefix());
+                const phone = buildInternationalPhone(input, phonePrefix);
+                if (!phone) {
+                    return msg.innerHTML = '<span class="error-text">Please enter a valid mobile number.</span>';
                 }
+                localStorage.setItem(PHONE_COUNTRY_CODE_STORAGE_KEY, normalizeCountryCodePrefix(phonePrefix));
                 normalizedPhone = phone;
                 email = `${phone}@mobile.local`;
             }
@@ -11046,6 +11123,7 @@
             const label = document.querySelector('#login-form .auth-form-group label');
             const input = document.getElementById('login-email');
             const tabs = document.querySelectorAll('.login-sub-tab');
+            const prefixRow = document.getElementById('login-mobile-prefix-row');
 
             tabs.forEach(t => t.classList.remove('active'));
             const activeTab = Array.from(tabs).find(t => (t.getAttribute('data-auth-tab') || '').toLowerCase() === tab);
@@ -11063,6 +11141,7 @@
                 label.innerText = 'Account';
                 input.placeholder = 'Enter your account';
             }
+            if (prefixRow) prefixRow.classList.toggle('hidden', tab !== 'mobile');
             document.getElementById('auth-msg').innerHTML = '';
         };
 
@@ -12957,6 +13036,7 @@ No transfer fees for account transfer / exchange</div>
         });
 
         window.addEventListener('DOMContentLoaded', () => {
+            initPhoneCountryCodeSelectors();
             const style = document.createElement('style');
             style.innerHTML = `
                 .v-price { transition: color 0.3s ease; }
