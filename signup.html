@@ -475,6 +475,24 @@
         // Handle Send OTP
         let generatedEmailOTP = null; // Store locally for comparison
 
+        function getPhoneAuthErrorMessage(error) {
+            const code = (error && error.code) ? String(error.code) : '';
+            const map = {
+                'auth/operation-not-allowed': 'SMS sign-in is not enabled for this app or this region.',
+                'auth/billing-not-enabled': 'SMS sending is unavailable because billing is not enabled for this project.',
+                'auth/invalid-phone-number': 'Invalid phone number format. Please include the correct country code.',
+                'auth/missing-phone-number': 'Please enter a valid mobile number first.',
+                'auth/too-many-requests': 'Too many attempts. Please wait a while and try again.',
+                'auth/quota-exceeded': 'SMS quota reached. Please try again later.',
+                'auth/captcha-check-failed': 'reCAPTCHA verification failed. Please refresh and try again.',
+                'auth/network-request-failed': 'Network error while sending SMS. Please check your connection.'
+            };
+
+            if (map[code]) return map[code];
+            if (code) return `Failed to send OTP. (${code})`;
+            return 'Failed to send OTP. Please try again later.';
+        }
+
         sendOtpBtn.addEventListener('click', async () => {
             if (currentTab === 'account') {
                 alert("Account registration does not require OTP.");
@@ -541,7 +559,7 @@
                     sendOtpBtn.disabled = false;
                 } catch (error) {
                     console.error(error);
-                    alert("Failed to send OTP: " + error.message);
+                    alert(getPhoneAuthErrorMessage(error));
                     sendOtpBtn.textContent = 'Send Code';
                     sendOtpBtn.disabled = false;
                     try {
