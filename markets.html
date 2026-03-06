@@ -824,8 +824,8 @@
         <!-- RIGHT SIDEBAR (30%) -->
         <div class="sidebar-panel">
             <div class="s-tab-nav">
-                <div class="s-tab-item active" data-sidebar-tab="gainers">Top Gainers</div>
-                <div class="s-tab-item" data-sidebar-tab="losers">Top Losers</div>
+                <div class="s-tab-item active" data-sidebar-tab="gainers">Rising List</div>
+                <div class="s-tab-item" data-sidebar-tab="losers">Falling List</div>
                 <div class="s-tab-item" data-sidebar-tab="volume">Top Volume</div>
             </div>
             <div class="s-list-container">
@@ -1130,7 +1130,7 @@
                 const dataKey = normalizeTabValue(tabEl.getAttribute('data-sidebar-tab'));
                 if (dataKey) return dataKey;
                 const fallback = normalizeTabValue(tabEl.getAttribute('data-action-label') || tabEl.textContent);
-                if (fallback === 'top losers') return 'losers';
+                if (fallback === 'top losers' || fallback === 'falling list') return 'losers';
                 if (fallback === 'top volume') return 'volume';
                 return 'gainers';
             }
