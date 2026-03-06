@@ -11244,11 +11244,10 @@
             const bottomNav = document.querySelector('.bottom-nav');
 
             const shouldHideHeaderNav = isRootLevel || target === 'support' || target === 'profile' || target === 'trade' || target === 'supportScreen' || target === 'kline';
-            const shouldHideBottomNav = target === 'kline' || target === 'supportChatScreen' || target === 'fais';
 
             if (header) header.classList.toggle('hidden', shouldHideHeaderNav);
-            if (bottomNav) bottomNav.classList.toggle('hidden', shouldHideBottomNav);
-            if (!shouldHideBottomNav) ensureBottomNavVisible();
+            if (bottomNav) bottomNav.classList.remove('hidden');
+            ensureBottomNavVisible(true);
 
             const appScreen = document.getElementById('app-screen');
             const isInsideApp = !!(targetEl && appScreen && appScreen.contains(targetEl));
