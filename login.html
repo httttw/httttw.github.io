@@ -512,11 +512,18 @@
                 const kycCompleted = isKycCompleted(kycStatus);
 
                 if (currentTab === 'account') {
-                    localStorage.setItem('ec_force_kyc_once', '1');
-                    sessionStorage.setItem('mobile_session_active', 'true');
-                    localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
-                    alert("Login successful! Redirecting to KYC.");
-                    window.location.href = 'mobile.html';
+                    if (!kycCompleted) {
+                        localStorage.setItem('ec_force_kyc_once', '1');
+                        sessionStorage.setItem('mobile_session_active', 'true');
+                        localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
+                        alert("Login successful! Redirecting to KYC.");
+                        window.location.href = 'mobile.html';
+                        return;
+                    }
+                    sessionStorage.removeItem('mobile_session_active');
+                    localStorage.removeItem('ec_mobile_session_grant_ts');
+                    alert("Login successful!");
+                    window.location.href = 'dashboard.html';
                     return;
                 }
 
