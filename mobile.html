@@ -436,6 +436,27 @@
             border-color: #6a35ff;
         }
 
+        .phone-prefix-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .country-code-select {
+            width: 100%;
+            padding: 12px 12px;
+            background: #f8f8f8;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            color: #222;
+        }
+
+        .country-code-select:focus {
+            border-color: #6a35ff;
+        }
+
         .auth-btn {
             width: 100%;
             padding: 16px;
@@ -4983,6 +5004,29 @@
 
                 <div class="auth-form-group">
                     <label data-t-key="auth_label_email">Email</label>
+                    <div id="signup-mobile-prefix-row" class="phone-prefix-row hidden">
+                        <select id="signup-country-code" class="country-code-select">
+                            <option value="+86">China (+86)</option>
+                            <option value="+1">United States (+1)</option>
+                            <option value="+1">Canada (+1)</option>
+                            <option value="+44">United Kingdom (+44)</option>
+                            <option value="+49">Germany (+49)</option>
+                            <option value="+33">France (+33)</option>
+                            <option value="+39">Italy (+39)</option>
+                            <option value="+34">Spain (+34)</option>
+                            <option value="+81">Japan (+81)</option>
+                            <option value="+82">Korea (+82)</option>
+                            <option value="+65">Singapore (+65)</option>
+                            <option value="+61">Australia (+61)</option>
+                            <option value="+971">UAE (+971)</option>
+                            <option value="+91">India (+91)</option>
+                            <option value="+7">Russia (+7)</option>
+                            <option value="+55">Brazil (+55)</option>
+                            <option value="+52">Mexico (+52)</option>
+                            <option value="+84">Vietnam (+84)</option>
+                            <option value="+66">Thailand (+66)</option>
+                        </select>
+                    </div>
                     <input type="text" id="signup-email" class="auth-input" placeholder="Enter your email"
                         data-t-key="auth_placeholder_email">
                 </div>
@@ -10294,6 +10338,32 @@
         let otpCooldown = 0;
         let confirmationResult = null; // Store phone auth result
 
+        function normalizeCountryCodePrefix(rawPrefix) {
+            const digits = String(rawPrefix || '').replace(/\D/g, '');
+            return digits ? `+${digits}` : '+1';
+        }
+
+        function buildInternationalPhone(rawValue, rawPrefix) {
+            const input = String(rawValue || '').trim();
+            if (!input) return '';
+            if (input.startsWith('+')) {
+                const fullDigits = input.replace(/\D/g, '');
+                return fullDigits ? `+${fullDigits}` : '';
+            }
+
+            const localDigits = input.replace(/\D/g, '');
+            if (!localDigits) return '';
+
+            const prefix = normalizeCountryCodePrefix(rawPrefix);
+            const prefixDigits = prefix.replace(/\D/g, '');
+
+            // If user pasted the number including country code (without '+'), normalize it.
+            if (prefixDigits && localDigits.startsWith(prefixDigits) && localDigits.length > prefixDigits.length + 3) {
+                return `+${localDigits}`;
+            }
+            return `${prefix}${localDigits}`;
+        }
+
         async function sendOTP() {
             console.log("sendOTP button clicked");
             const rawEmail = document.getElementById('signup-email').value;
@@ -10315,9 +10385,13 @@
             otpBtn.innerText = 'Sending...';
 
             if (currentSignupTab === 'mobile') {
-                let phoneNumber = email;
-                if (!phoneNumber.startsWith('+')) {
-                    phoneNumber = '+1' + phoneNumber.replace(/\D/g, '');
+                const selectedCode = (document.getElementById('signup-country-code') || {}).value || '+1';
+                const phoneNumber = buildInternationalPhone(email, selectedCode);
+                if (!phoneNumber) {
+                    msg.innerHTML = '<span class="error-text">Please enter a valid mobile number.</span>';
+                    otpBtn.disabled = false;
+                    otpBtn.innerText = 'Send Code';
+                    return;
                 }
 
                 try {
@@ -10484,10 +10558,9 @@
                     return msg.innerHTML = `<span class="error-text">Invalid SMS code: ${error.message}</span>`;
                 }
 
-                phone = rawEmail;
-                if (!phone.startsWith('+')) {
-                    phone = '+1' + phone.replace(/\D/g, '');
-                }
+                const selectedCode = (document.getElementById('signup-country-code') || {}).value || '+1';
+                phone = buildInternationalPhone(rawEmail, selectedCode);
+                if (!phone) return msg.innerHTML = '<span class="error-text">Please enter a valid mobile number.</span>';
                 finalEmail = `${phone}@mobile.local`;
             } else {
                 if (otpInput !== currentOTP) return msg.innerHTML = '<span class="error-text">Invalid verification code</span>';
@@ -10819,6 +10892,7 @@
             const tabs = document.querySelectorAll('.signup-tab-item');
             const otpGroup = document.getElementById('signup-otp-group');
             const recaptchaBox = document.getElementById('recaptcha-container');
+            const prefixRow = document.getElementById('signup-mobile-prefix-row');
             const otpInput = document.getElementById('signup-otp');
             const otpBtn = document.getElementById('otp-btn');
 
@@ -10833,7 +10907,7 @@
                 input.placeholder = 'Enter your email';
             } else if (tab === 'mobile') {
                 label.innerText = 'Mobile Number';
-                input.placeholder = 'Enter your mobile number';
+                input.placeholder = 'Enter mobile number';
             } else {
                 label.innerText = 'Account';
                 input.placeholder = 'Create an account';
@@ -10842,6 +10916,7 @@
             const needsOtp = tab !== 'account';
             if (otpGroup) otpGroup.classList.toggle('hidden', !needsOtp);
             if (recaptchaBox) recaptchaBox.classList.toggle('hidden', tab !== 'mobile');
+            if (prefixRow) prefixRow.classList.toggle('hidden', tab !== 'mobile');
             if (!needsOtp && otpInput) otpInput.value = '';
             if (!needsOtp && otpBtn) {
                 otpBtn.disabled = false;
