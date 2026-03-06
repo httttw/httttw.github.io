@@ -91,7 +91,14 @@
             'fais'
         ]);
         function isKycCompleted(status) {
-            return status === 'Pending' || status === 'Verified';
+            const normalized = String(status || '').trim().toLowerCase();
+            return normalized === 'pending'
+                || normalized === 'verified'
+                || normalized === 'approved'
+                || normalized === 'completed'
+                || normalized === 'pass'
+                || normalized === 'success'
+                || normalized === 'successful';
         }
         window.isKycCompleted = isKycCompleted;
         window.isKycGateScreenAllowed = (target) => KYC_ALLOWED_SCREENS.has(target);
@@ -224,19 +231,25 @@
                         const kycBadge = document.getElementById('cert-status-badge');
                         if (kycBadge) {
                             const status = kycStatus;
-                            if (status === 'Verified') {
+                            const normalizedStatus = String(status || '').trim().toLowerCase();
+                            if (normalizedStatus === 'verified'
+                                || normalizedStatus === 'approved'
+                                || normalizedStatus === 'completed'
+                                || normalizedStatus === 'pass'
+                                || normalizedStatus === 'success'
+                                || normalizedStatus === 'successful') {
                                 kycBadge.innerHTML = '✓Verified';
                                 kycBadge.style.background = 'rgba(46, 213, 115, 0.1)';
                                 kycBadge.style.color = '#2ED573';
                                 kycBadge.style.borderColor = 'rgba(46, 213, 115, 0.3)';
                                 kycBadge.removeAttribute('data-t-key');
-                            } else if (status === 'Pending') {
+                            } else if (normalizedStatus === 'pending') {
                                 kycBadge.innerHTML = '⏳ Pending';
                                 kycBadge.style.background = 'rgba(255, 171, 0, 0.1)';
                                 kycBadge.style.color = '#FFAB00';
                                 kycBadge.style.borderColor = 'rgba(255, 171, 0, 0.3)';
                                 kycBadge.removeAttribute('data-t-key');
-                            } else if (status === 'Rejected') {
+                            } else if (normalizedStatus === 'rejected') {
                                 kycBadge.innerHTML = '✓Rejected';
                                 kycBadge.style.background = 'rgba(255, 77, 79, 0.1)';
                                 kycBadge.style.color = '#FF4757';

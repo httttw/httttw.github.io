@@ -42,7 +42,14 @@ async function checkSession(redirectIfNoSession = true, redirectUrl = 'login.htm
 }
 
 function isKycCompleted(kycStatus) {
-    return kycStatus === 'Pending' || kycStatus === 'Verified';
+    const normalized = String(kycStatus || '').trim().toLowerCase();
+    return normalized === 'pending'
+        || normalized === 'verified'
+        || normalized === 'approved'
+        || normalized === 'completed'
+        || normalized === 'pass'
+        || normalized === 'success'
+        || normalized === 'successful';
 }
 
 function getPageName(pathOrUrl) {

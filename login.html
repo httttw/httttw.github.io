@@ -361,7 +361,7 @@
     </footer>
 
     <script type="module">
-        import { auth, db, doc, getDoc, setDoc, signInWithEmailAndPassword, sendPasswordResetEmail, checkSession, collection, query, where, getDocs } from './firebase-config.js';
+        import { auth, db, doc, getDoc, setDoc, signInWithEmailAndPassword, sendPasswordResetEmail, checkSession, isKycCompleted, collection, query, where, getDocs } from './firebase-config.js';
 
         // Protocol check for CORS issues
         if (window.location.protocol === 'file:') {
@@ -377,7 +377,7 @@
                 try {
                     const userDoc = await getDoc(doc(db, 'users', user.uid));
                     const kycStatus = userDoc.exists() ? (userDoc.data().kyc_status || 'Not Verified') : 'Not Verified';
-                    const kycCompleted = kycStatus === 'Pending' || kycStatus === 'Verified';
+                    const kycCompleted = isKycCompleted(kycStatus);
                     if (kycCompleted) {
                         window.location.href = 'dashboard.html';
                     }
@@ -509,7 +509,7 @@
 
                 const latestUserDoc = await getDoc(userDocRef);
                 const kycStatus = latestUserDoc.exists() ? (latestUserDoc.data().kyc_status || 'Not Verified') : 'Not Verified';
-                const kycCompleted = kycStatus === 'Pending' || kycStatus === 'Verified';
+                const kycCompleted = isKycCompleted(kycStatus);
 
                 if (currentTab === 'account') {
                     localStorage.setItem('ec_force_kyc_once', '1');
