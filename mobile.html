@@ -67,6 +67,7 @@
         function markMobileSessionGrantNow() {
             localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
         }
+        window.markMobileSessionGrantNow = markMobileSessionGrantNow;
         if (sessionStorage.getItem('mobile_session_active') === 'true' && !hasFreshMobileSessionGrant()) {
             // Prevent stale sessions from auto-entering app after long idle or browser restore.
             sessionStorage.removeItem('mobile_session_active');
@@ -10625,7 +10626,11 @@
 
                 // Explicitly mark this session as authenticated for mobile
                 sessionStorage.setItem('mobile_session_active', 'true');
-                markMobileSessionGrantNow();
+                if (typeof window.markMobileSessionGrantNow === 'function') {
+                    window.markMobileSessionGrantNow();
+                } else {
+                    localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
+                }
 
                 // If onAuthStateChanged hasn't fired yet or didn't show the app screen due to the flag, manually trigger the view switch
                 document.getElementById('auth-screen').classList.add('hidden');
