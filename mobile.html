@@ -126,10 +126,37 @@
                 if (typeof window.showMobileToast === 'function') {
                     window.showMobileToast('Your KYC has already been verified.');
                 }
-                if (typeof window.showScreen === 'function') window.showScreen('certification-center', false);
+                if (typeof window.exitKycFlow === 'function') {
+                    window.exitKycFlow();
+                } else if (typeof window.showScreen === 'function') {
+                    window.showScreen('homeScreen', false);
+                }
                 return;
             }
             if (typeof window.showScreen === 'function') window.showScreen('advanced-certification');
+        };
+        window.exitKycFlow = function () {
+            if (typeof window.goBack === 'function') {
+                window.goBack();
+            }
+            const certEl = document.getElementById('certification-center-screen');
+            const advEl = document.getElementById('advanced-certification-screen');
+            const submittedEl = document.getElementById('kyc-submitted-screen');
+            const stillInKyc = [certEl, advEl, submittedEl].some((el) => el && !el.classList.contains('hidden'));
+            if (!stillInKyc) return;
+            if (typeof window.showScreen === 'function') window.showScreen('homeScreen', false);
+        };
+        window.handleKycContinue = function () {
+            const status = String(window.currentKycStatus || '').trim().toLowerCase();
+            if (status === 'pending') {
+                if (typeof window.showScreen === 'function') window.showScreen('kyc-submitted', false);
+                return;
+            }
+            if (typeof window.isKycCompleted === 'function' && window.isKycCompleted(status)) {
+                if (typeof window.exitKycFlow === 'function') window.exitKycFlow();
+                return;
+            }
+            if (typeof window.openKycFlow === 'function') window.openKycFlow();
         };
         window.toggleKycGateBanner = function (show) {
             const banner = document.getElementById('kyc-gate-banner');
@@ -6491,7 +6518,7 @@
                             onclick="openKycFlow()" data-t-key="cert_start_btn">Start
                             certification</button>
                         <button class="pwd-confirm-btn" style="margin-top: 12px; background: transparent; border: 1px solid rgba(139, 92, 246, 0.55);"
-                            onclick="openKycFlow()">Continue</button>
+                            onclick="handleKycContinue()">Continue</button>
                     </div>
                 </div>
             </div>
