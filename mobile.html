@@ -5919,7 +5919,7 @@
             <div id="profile-screen" class="screen hidden">
                 <div class="profile-top-bar">
                     <span onclick="goBack()" style="cursor:pointer;">&lt;</span>
-                    <span onclick="showScreen('support')" style="cursor:pointer;">💬</span>
+                    <span onclick="showScreen('supportScreen')" style="cursor:pointer;">💬</span>
                 </div>
 
                 <div class="scroll-area">
@@ -11580,7 +11580,15 @@
         }
         window.syncBottomNavState = syncBottomNavState;
 
+        function normalizeScreenTarget(target) {
+            if (target === 'support' || target === 'support-screen') {
+                return 'supportScreen';
+            }
+            return target;
+        }
+
         function showScreen(target, isPush = true) {
+            target = normalizeScreenTarget(target);
             if (window.kycGateActive && typeof window.isKycGateScreenAllowed === 'function' && !window.isKycGateScreenAllowed(target)) {
                 // Soft gate only: allow browsing pages while KYC is pending.
                 // Trading/deposit/withdraw actions are still blocked by guardKycForAction.
@@ -11629,7 +11637,8 @@
             toggleScreen('bank-card-config-screen', target === 'bank-card-config');
             toggleScreen('coin-collection-config-screen', target === 'coin-collection-config');
             toggleScreen('consume-record-screen', target === 'consume-record');
-            toggleScreen('support-screen', target === 'support');
+            // Legacy support screen kept in markup for backward compatibility, but no longer used.
+            toggleScreen('support-screen', false);
             toggleScreen('certification-center-screen', target === 'certification-center');
             toggleScreen('advanced-certification-screen', target === 'advanced-certification');
             toggleScreen('kyc-submitted-screen', target === 'kyc-submitted');
@@ -13699,7 +13708,7 @@ No transfer fees for account transfer / exchange</div>
                 // CoinGecko refresh to supplement small-cap symbols unsupported by TwelveData.
                 setInterval(() => {
                     fetchCoinGeckoQuotesMobile().catch(() => { });
-                }, 20000);
+                }, 10000);
             }
 
             // Continuous Simulation: Jitter ALL coins every 2 seconds to make the site look alive
@@ -14819,6 +14828,14 @@ No transfer fees for account transfer / exchange</div>
 
         let chatUnsubscribe = null;
         let unreadUnsubscribe = null;
+        const CHAT_EMPTY_NOTICE = 'Our team is here to help! We will generally respond within 24 hours.';
+
+        function renderChatNotice(container, text = CHAT_EMPTY_NOTICE) {
+            if (!container) return;
+            const safeText = String(text || CHAT_EMPTY_NOTICE);
+            container.innerHTML = `<div class="chat-notice">${safeText}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }
 
         async function initUnreadListener() {
             const user = await checkSession(false);
@@ -14902,6 +14919,7 @@ No transfer fees for account transfer / exchange</div>
                 const container = document.getElementById('chat-main-area');
                 if (!container) return;
                 container.innerHTML = '';
+                let messageCount = 0;
 
                 snapshot.forEach((doc) => {
                     const data = doc.data();
@@ -14917,10 +14935,17 @@ No transfer fees for account transfer / exchange</div>
                         row.innerHTML = `<div class="chat-bubble-text">${data.text}</div>`;
                     }
                     container.appendChild(row);
+                    messageCount += 1;
                 });
+                if (messageCount === 0) {
+                    renderChatNotice(container, CHAT_EMPTY_NOTICE);
+                    return;
+                }
                 container.scrollTop = container.scrollHeight;
             }, (err) => {
                 console.error("Chat sync error:", err);
+                const container = document.getElementById('chat-main-area');
+                renderChatNotice(container, 'Chat connection is unstable. Please try again.');
             });
         }
 

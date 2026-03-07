@@ -2103,7 +2103,7 @@
                 setInterval(() => {
                     const symbols = getDisplayedSymbols();
                     fetchCoinGeckoQuotes(symbols).catch(() => { });
-                }, 20000);
+                }, 10000);
             }
 
             // Heartbeat: Every 3 seconds, force-refresh all displayed symbols from store
