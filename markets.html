@@ -1444,8 +1444,62 @@
     <!-- TWELVE DATA REAL-TIME INTEGRATION -->
     <script>
         const TWELVE_DATA_API_KEY = 'f5a558c730a64406839742e38b78af5e';
+        const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+        const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
+        const COINGECKO_PROXY_URL = (() => {
+            const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
+            if (manual) return manual;
+            const host = String(window.location.hostname || '').toLowerCase();
+            const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
+            return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
+        })();
+        const ENABLE_COINGECKO = !!COINGECKO_PROXY_URL || !!COINGECKO_DEMO_KEY;
+        const COINGECKO_SYMBOL_TO_ID = {
+            BTC: 'bitcoin',
+            ETH: 'ethereum',
+            BNB: 'binancecoin',
+            SOL: 'solana',
+            XRP: 'ripple',
+            ADA: 'cardano',
+            DOGE: 'dogecoin',
+            DOT: 'polkadot',
+            LTC: 'litecoin',
+            BCH: 'bitcoin-cash',
+            LINK: 'chainlink',
+            AVAX: 'avalanche-2',
+            MATIC: 'matic-network',
+            UNI: 'uniswap',
+            ATOM: 'cosmos',
+            ETC: 'ethereum-classic',
+            HBAR: 'hedera-hashgraph',
+            WBT: 'whitebit',
+            XMR: 'monero',
+            ALGO: 'algorand',
+            NEO: 'neo',
+            IOTA: 'iota',
+            XTZ: 'tezos',
+            AXS: 'axie-infinity',
+            SAND: 'the-sandbox',
+            MANA: 'decentraland',
+            USDC: 'usd-coin',
+            CHZ: 'chiliz',
+            HYPE: 'hyperliquid',
+            SUI: 'sui',
+            TON: 'toncoin',
+            TRX: 'tron',
+            XLM: 'stellar',
+            USDE: 'ethena-usde',
+            ICP: 'internet-computer',
+            DAI: 'dai',
+            VET: 'vechain',
+            YFI: 'yearn-finance',
+            OKB: 'okb',
+            ORDI: 'ordinals',
+            '1000SATS': 'sats-ordinals'
+        };
         let marketDataStore = {};
         let ws = null;
+        let coingeckoProxyUnavailable = false;
 
         /**
          * Chunks an array into smaller arrays of a specified size.
@@ -1482,6 +1536,108 @@
         function cleanSymbol(s) {
             if (!s) return "";
             return s.replace(/\s+/g, '').toUpperCase();
+        }
+
+        function getCoinGeckoHeaders() {
+            const headers = { 'accept': 'application/json' };
+            if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
+            return headers;
+        }
+
+        function getCoinGeckoId(base) {
+            const key = cleanSymbol(base || '').split('/')[0];
+            if (!key) return '';
+            return COINGECKO_SYMBOL_TO_ID[key] || '';
+        }
+
+        async function fetchCoinGeckoSimplePrice(idsCsv) {
+            const params = new URLSearchParams({
+                ids: idsCsv,
+                vs_currencies: 'usd',
+                include_24hr_change: 'true',
+                include_24hr_vol: 'true',
+                include_last_updated_at: 'true'
+            });
+
+            if (COINGECKO_PROXY_URL && !coingeckoProxyUnavailable) {
+                const glue = COINGECKO_PROXY_URL.includes('?') ? '&' : '?';
+                const proxyUrl = `${COINGECKO_PROXY_URL}${glue}${params.toString()}`;
+                try {
+                    const response = await fetch(proxyUrl, { headers: { 'accept': 'application/json' } });
+                    if (!response.ok) {
+                        if (response.status === 404 || response.status === 502 || response.status === 530) {
+                            coingeckoProxyUnavailable = true;
+                        }
+                        throw new Error(`HTTP ${response.status} from proxy`);
+                    }
+                    return await response.json();
+                } catch (err) {
+                    throw err;
+                }
+            }
+
+            if (!COINGECKO_PROXY_URL) {
+                const response = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, {
+                    headers: getCoinGeckoHeaders()
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} from CoinGecko`);
+                }
+                return await response.json();
+            }
+
+            throw new Error('CoinGecko proxy unavailable');
+        }
+
+        async function fetchCoinGeckoQuotes(rawSymbols) {
+            if (!ENABLE_COINGECKO) return { updated: 0, candidates: 0 };
+            const bases = Array.from(new Set(
+                (rawSymbols || [])
+                    .map((s) => cleanSymbol(s).split('/')[0])
+                    .filter(Boolean)
+            ));
+            if (bases.length === 0) return { updated: 0, candidates: 0 };
+
+            const idToBase = {};
+            bases.forEach((base) => {
+                const id = getCoinGeckoId(base);
+                if (id) idToBase[id] = base;
+            });
+            const ids = Object.keys(idToBase);
+            if (ids.length === 0) return { updated: 0, candidates: bases.length };
+
+            let updated = 0;
+            const chunks = chunkArray(ids, 80);
+            for (const idChunk of chunks) {
+                try {
+                    const data = await fetchCoinGeckoSimplePrice(idChunk.join(','));
+                    for (const id of idChunk) {
+                        const info = data[id];
+                        if (!info || !isFinite(Number(info.usd))) continue;
+                        const base = idToBase[id];
+                        const price = Number(info.usd);
+                        const change = isFinite(Number(info.usd_24h_change)) ? Number(info.usd_24h_change) : 0;
+                        const volume = isFinite(Number(info.usd_24h_vol)) ? Number(info.usd_24h_vol) : 0;
+                        const prevClose = change === -100 ? price : (price / (1 + (change / 100)));
+                        const storeData = {
+                            price: price,
+                            change: Number(change.toFixed(4)),
+                            volume: String(volume),
+                            prevClose: isFinite(prevClose) && prevClose > 0 ? prevClose : price,
+                            lastPrice: 0
+                        };
+
+                        marketDataStore[`${base}/USD`] = storeData;
+                        marketDataStore[`${base}/USDT`] = storeData;
+                        updateElementsForSymbol(`${base}/USD`);
+                        updateElementsForSymbol(`${base}/USDT`);
+                        updated += 1;
+                    }
+                } catch (err) {
+                    console.warn('CoinGecko quote fetch error:', err.message || err);
+                }
+            }
+            return { updated, candidates: bases.length };
         }
 
         const FALLBACK_BASE_PRICE = {
@@ -1726,9 +1882,15 @@
                 }
             }
 
+            const geckoResult = await fetchCoinGeckoQuotes(symbols);
+
             const fallbackApplied = applyFallbackForMissingSymbols(symbols);
-            if (liveUpdateCount > 0) {
-                setStatus("Live market data", "#2ED573");
+            if (liveUpdateCount > 0 && geckoResult.updated > 0) {
+                setStatus("Live market data (Hybrid)", "#2ED573");
+            } else if (geckoResult.updated > 0) {
+                setStatus("Live market data (CoinGecko)", "#2ED573");
+            } else if (liveUpdateCount > 0) {
+                setStatus("Live market data (TwelveData)", "#2ED573");
             } else if (fallbackApplied > 0) {
                 setStatus("Fallback market data", "#ff9800");
             } else {
@@ -1935,6 +2097,14 @@
             fetchInitialData().then(() => {
                 initWebSocket();
             });
+
+            if (ENABLE_COINGECKO) {
+                // Keep small-cap prices fresh using CoinGecko polling.
+                setInterval(() => {
+                    const symbols = getDisplayedSymbols();
+                    fetchCoinGeckoQuotes(symbols).catch(() => { });
+                }, 20000);
+            }
 
             // Heartbeat: Every 3 seconds, force-refresh all displayed symbols from store
             // This catches elements that were missed by initial load or MutationObserver

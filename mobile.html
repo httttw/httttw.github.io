@@ -13162,8 +13162,153 @@ No transfer fees for account transfer / exchange</div>
     <!-- TWELVE DATA API INTEGRATION -->
     <script>
         const twelveDataApiKey = "f5a558c730a64406839742e38b78af5e";
+        const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+        const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
+        const COINGECKO_PROXY_URL = (() => {
+            const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
+            if (manual) return manual;
+            const host = String(window.location.hostname || '').toLowerCase();
+            const frontendHosts = new Set(['easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
+            return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
+        })();
+        const ENABLE_COINGECKO = !!COINGECKO_PROXY_URL || !!COINGECKO_DEMO_KEY;
+        const COINGECKO_SYMBOL_TO_ID = {
+            BTC: 'bitcoin',
+            ETH: 'ethereum',
+            BNB: 'binancecoin',
+            SOL: 'solana',
+            XRP: 'ripple',
+            ADA: 'cardano',
+            DOGE: 'dogecoin',
+            DOT: 'polkadot',
+            LTC: 'litecoin',
+            BCH: 'bitcoin-cash',
+            LINK: 'chainlink',
+            AVAX: 'avalanche-2',
+            MATIC: 'matic-network',
+            UNI: 'uniswap',
+            ATOM: 'cosmos',
+            ETC: 'ethereum-classic',
+            HBAR: 'hedera-hashgraph',
+            WBT: 'whitebit',
+            XMR: 'monero',
+            ALGO: 'algorand',
+            NEO: 'neo',
+            IOTA: 'iota',
+            XTZ: 'tezos',
+            AXS: 'axie-infinity',
+            SAND: 'the-sandbox',
+            MANA: 'decentraland',
+            USDC: 'usd-coin',
+            CHZ: 'chiliz',
+            HYPE: 'hyperliquid',
+            SUI: 'sui',
+            TON: 'toncoin',
+            TRX: 'tron',
+            XLM: 'stellar',
+            USDE: 'ethena-usde',
+            ICP: 'internet-computer',
+            DAI: 'dai',
+            VET: 'vechain',
+            YFI: 'yearn-finance',
+            OKB: 'okb'
+        };
         const topCryptoCoins = ["BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "DOT", "LTC", "BCH", "LINK", "AVAX", "MATIC", "UNI", "ATOM", "ETC", "HBAR", "IP", "WBT", "XMR", "ALGO", "NEO", "IOTA", "XTZ", "AXS", "SAND", "MANA", "USDC", "CHZ", "HYPE", "SUI", "TON", "TRX", "XLM", "USDE", "ICP", "DAI", "VET", "YFI", "OKB"];
         const symbolsForWS = topCryptoCoins.map(c => c + "/USD").join(",");
+        let mobileCoinGeckoProxyUnavailable = false;
+
+        function getMobileCoinGeckoHeaders() {
+            const headers = { 'accept': 'application/json' };
+            if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
+            return headers;
+        }
+
+        function getMobileCoinGeckoId(symbol) {
+            const base = String(symbol || '').trim().toUpperCase();
+            return COINGECKO_SYMBOL_TO_ID[base] || '';
+        }
+
+        async function fetchMobileCoinGeckoSimplePrice(idsCsv) {
+            const params = new URLSearchParams({
+                ids: idsCsv,
+                vs_currencies: 'usd',
+                include_24hr_change: 'true',
+                include_24hr_vol: 'true',
+                include_last_updated_at: 'true'
+            });
+
+            if (COINGECKO_PROXY_URL && !mobileCoinGeckoProxyUnavailable) {
+                const glue = COINGECKO_PROXY_URL.includes('?') ? '&' : '?';
+                const proxyUrl = `${COINGECKO_PROXY_URL}${glue}${params.toString()}`;
+                const res = await fetch(proxyUrl, { headers: { 'accept': 'application/json' } });
+                if (!res.ok) {
+                    if (res.status === 404 || res.status === 502 || res.status === 530) {
+                        mobileCoinGeckoProxyUnavailable = true;
+                    }
+                    throw new Error(`HTTP ${res.status} from proxy`);
+                }
+                return await res.json();
+            }
+
+            if (!COINGECKO_PROXY_URL) {
+                const res = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, {
+                    headers: getMobileCoinGeckoHeaders()
+                });
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status} from CoinGecko`);
+                }
+                return await res.json();
+            }
+            throw new Error('CoinGecko proxy unavailable');
+        }
+
+        async function fetchCoinGeckoQuotesMobile() {
+            if (!ENABLE_COINGECKO) return 0;
+            const tracked = Array.from(new Set(topCryptoCoins.map((sym) => String(sym || '').toUpperCase())));
+            const idToSymbol = {};
+            tracked.forEach((sym) => {
+                const id = getMobileCoinGeckoId(sym);
+                if (id) idToSymbol[id] = sym;
+            });
+            const ids = Object.keys(idToSymbol);
+            if (ids.length === 0) return 0;
+
+            let updated = 0;
+            const chunkSize = 80;
+            for (let i = 0; i < ids.length; i += chunkSize) {
+                const chunk = ids.slice(i, i + chunkSize);
+                try {
+                    const data = await fetchMobileCoinGeckoSimplePrice(chunk.join(','));
+                    chunk.forEach((id) => {
+                        const info = data[id];
+                        if (!info || !isFinite(Number(info.usd))) return;
+                        const sym = idToSymbol[id];
+                        const price = Number(info.usd);
+                        const change = isFinite(Number(info.usd_24h_change)) ? Number(info.usd_24h_change) : 0;
+                        const volume = isFinite(Number(info.usd_24h_vol)) ? Number(info.usd_24h_vol) : 0;
+                        const prev = window.localData[sym] || {};
+
+                        window.localData[sym] = {
+                            price: price,
+                            close: price,
+                            open: prev.open || price,
+                            high: Math.max(prev.high || price, price),
+                            low: Math.min(prev.low || price, price),
+                            volume: volume > 0 ? volume : (prev.volume || 0),
+                            change: change
+                        };
+                        updatePriceUI(sym, price);
+                        updateChangeUI(sym, change);
+                        updateVolumeUI(sym, window.localData[sym].volume);
+                        if (sym === (window.currentTradingCoin || 'BTC')) animateOrderbook(price);
+                        updated += 1;
+                    });
+                } catch (err) {
+                    console.warn('Mobile CoinGecko fetch error:', err.message || err);
+                }
+            }
+            return updated;
+        }
 
         const fallbackMockData = {
             "BTC": { price: 64087.71, change: -3.97 },
@@ -13252,6 +13397,9 @@ No transfer fees for account transfer / exchange</div>
                 }
             });
 
+            if (ENABLE_COINGECKO) {
+                fetchCoinGeckoQuotesMobile().catch(() => { });
+            }
             initTwelveData();
             updateContractCalculations();
             updateDeliveryRequirementsUI();
@@ -13546,6 +13694,13 @@ No transfer fees for account transfer / exchange</div>
             }
 
             fetchQuotes();
+
+            if (ENABLE_COINGECKO) {
+                // CoinGecko refresh to supplement small-cap symbols unsupported by TwelveData.
+                setInterval(() => {
+                    fetchCoinGeckoQuotesMobile().catch(() => { });
+                }, 20000);
+            }
 
             // Continuous Simulation: Jitter ALL coins every 2 seconds to make the site look alive
             setInterval(() => {
