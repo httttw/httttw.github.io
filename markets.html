@@ -490,7 +490,7 @@
             <div class="t-links">
                 <a href="markets.html" class="t-link active">Markets</a>
                 <div class="t-link arr" id="transaction-menu">
-                    Transaction
+                    Contract
                     <div class="nav-dropdown" id="transaction-dropdown">
                         <a href="contract.html" class="dropdown-item">
                             <i class="ri-file-list-3-line"></i>
@@ -528,10 +528,10 @@
                 <a href="mobile.html" class="t-link">Mobile</a>
             </div>
             <div class="t-actions" id="main-nav-actions">
-                <a href="mobile.html" class="btn-dep" style="text-decoration: none;">Deposit</a>
-                <a href="#" class="t-r arr">Wallet</a>
-                <a href="#" class="t-r arr">Order</a>
-                <a href="login.html" class="t-r arr">Account</a>
+                <a href="fund.html" class="btn-dep" style="text-decoration: none;">Deposit</a>
+                <a href="fund.html" class="t-r arr">Wallet</a>
+                <a href="dashboard.html" class="t-r arr">Order</a>
+                <a href="dashboard.html" class="t-r arr">Account</a>
                 <div class="t-r" style="border-left:1px solid #333; margin-left:15px; color:#fff;">English</div>
             </div>
         </nav>
@@ -1736,29 +1736,105 @@
             USDE: 'https://s2.coinmarketcap.com/static/img/coins/64x64/29470.png',
             IP: 'https://s2.coinmarketcap.com/static/img/coins/64x64/24091.png'
         };
-        function getMarketIconUrl(base) {
+        const marketCoinCmcIds = {
+            BTC: 1,
+            ETH: 1027,
+            ETC: 1321,
+            YFI: 5864,
+            XTZ: 2011,
+            XRP: 52,
+            XMR: 328,
+            XLM: 512,
+            WBT: 2626,
+            VET: 3077,
+            USDE: 29470,
+            USDC: 3408,
+            TRX: 1958,
+            TON: 11419,
+            SUI: 20947,
+            SOL: 5426,
+            SAND: 6210,
+            NEO: 1376,
+            MANA: 1966,
+            LTC: 2,
+            LINK: 1975,
+            IOTA: 1720,
+            ICP: 8916,
+            HYPE: 22690,
+            HBAR: 4642,
+            DOT: 6636,
+            DOGE: 74,
+            DAI: 4943,
+            CHZ: 4066,
+            BCH: 1831,
+            BNB: 1839,
+            AVAX: 5805,
+            ALGO: 4030,
+            ADA: 2010,
+            AXS: 6783,
+            OKB: 3897
+        };
+        function getMarketIconCandidates(base) {
             const coin = cleanSymbol(base || '').split('/')[0];
-            if (!coin) return '';
-            if (marketIconOverrides[coin]) return marketIconOverrides[coin];
-            return `https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/${coin.toLowerCase()}.png`;
+            if (!coin) return [];
+            const urls = [];
+            if (marketIconOverrides[coin]) {
+                urls.push(marketIconOverrides[coin]);
+            }
+            if (marketCoinCmcIds[coin]) {
+                urls.push(`https://s2.coinmarketcap.com/static/img/coins/64x64/${marketCoinCmcIds[coin]}.png`);
+            }
+            urls.push(`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/32/color/${coin.toLowerCase()}.png`);
+            urls.push(`https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/${coin.toLowerCase()}.png`);
+            return Array.from(new Set(urls.filter(Boolean)));
+        }
+        function applyIconFallback(el, coin) {
+            const fallback = (coin && coin.charAt(0).toUpperCase()) || '?';
+            el.textContent = fallback;
+            el.style.background = 'linear-gradient(135deg, #3b3f52, #1f2230)';
+            el.style.color = '#ffffff';
+            el.style.fontWeight = '700';
+            el.style.fontSize = '11px';
+        }
+        function clearIconFallbackStyle(el) {
+            el.style.background = '';
+            el.style.color = '';
+            el.style.fontWeight = '';
+            el.style.fontSize = '';
         }
         function setIconElement(el, base) {
             if (!el) return;
             const coin = cleanSymbol(base || '').split('/')[0];
             if (!coin) return;
             const already = el.getAttribute('data-icon-symbol');
-            if (already === coin && el.querySelector('img')) return;
-            const fallback = coin.charAt(0) || '?';
-            const iconUrl = getMarketIconUrl(coin);
+            const resolved = el.getAttribute('data-icon-url');
+            if (already === coin && resolved && el.querySelector('img')) return;
+            const candidates = getMarketIconCandidates(coin);
             el.setAttribute('data-icon-symbol', coin);
+            el.removeAttribute('data-icon-url');
             el.textContent = '';
             const img = document.createElement('img');
             img.alt = `${coin} logo`;
-            img.src = iconUrl;
+            img.referrerPolicy = 'no-referrer';
+            let index = 0;
+            const tryNext = () => {
+                if (index >= candidates.length) {
+                    img.remove();
+                    applyIconFallback(el, coin);
+                    return;
+                }
+                img.src = candidates[index];
+                index += 1;
+            };
+            img.addEventListener('load', () => {
+                clearIconFallbackStyle(el);
+                el.setAttribute('data-icon-url', img.src);
+            });
             img.addEventListener('error', () => {
-                el.textContent = fallback;
-            }, { once: true });
+                tryNext();
+            });
             el.appendChild(img);
+            tryNext();
         }
         function applyMarketIcons(root = document) {
             root.querySelectorAll('tr[data-symbol]').forEach(row => {
@@ -2267,10 +2343,10 @@
 
             if (user && navActions) {
                 navActions.innerHTML = `
-                <a href="mobile.html" class="btn-dep" style="text-decoration: none;">Deposit</a>
+                <a href="fund.html" class="btn-dep" style="text-decoration: none;">Deposit</a>
                 <a href="fund.html" class="t-r arr">Wallet</a>
                 <a href="dashboard.html" class="t-r arr">Order</a>
-                <a href="dashboard.html" class="t-r arr">Dashboard</a>
+                <a href="dashboard.html" class="t-r arr">Account</a>
                 <div class="t-r arr" id="dynamic-logout-btn" style="cursor: pointer; color: #ffeb3b;">Logout</div>
                 <div class="t-r" style="border-left:1px solid #333; margin-left:15px; color:#fff;">English</div>
                 `;

@@ -862,14 +862,48 @@
     return resolveTopbarActionByKey(inferTopbarActionKey(label));
   }
 
+  function hasLikelyFirebaseSession() {
+    try {
+      for (var i = 0; i < localStorage.length; i += 1) {
+        var key = localStorage.key(i) || "";
+        if (key.indexOf("firebase:authUser:") !== 0) continue;
+        var raw = localStorage.getItem(key);
+        if (!raw) continue;
+        var parsed = null;
+        try {
+          parsed = JSON.parse(raw);
+        } catch (ignore) {
+          continue;
+        }
+        if (
+          parsed &&
+          (parsed.uid ||
+            parsed.email ||
+            (parsed.stsTokenManager && parsed.stsTokenManager.accessToken))
+        ) {
+          return true;
+        }
+      }
+    } catch (e) {
+      return false;
+    }
+    return false;
+  }
+
+  function isTopbarUserSignedIn() {
+    if (window.__EC_USER_SIGNED_IN === true) return true;
+    return hasLikelyFirebaseSession();
+  }
+
   function resolveTopbarActionByKey(key) {
     if (!key) return null;
-    if (key === "deposit") return { type: "route", to: "mobile.html" };
-    if (key === "wallet") return { type: "route", to: "fund.html" };
-    if (key === "order") return { type: "route", to: "dashboard.html" };
-    if (key === "dashboard") return { type: "route", to: "dashboard.html" };
+    var signedIn = isTopbarUserSignedIn();
+    if (key === "deposit") return { type: "route", to: signedIn ? "fund.html" : "login.html" };
+    if (key === "wallet") return { type: "route", to: signedIn ? "fund.html" : "login.html" };
+    if (key === "order") return { type: "route", to: signedIn ? "dashboard.html" : "login.html" };
+    if (key === "dashboard") return { type: "route", to: signedIn ? "dashboard.html" : "login.html" };
     if (key === "logout") return { type: "logout" };
-    if (key === "account") return { type: "route", to: "login.html" };
+    if (key === "account") return { type: "route", to: signedIn ? "dashboard.html" : "login.html" };
     return null;
   }
 

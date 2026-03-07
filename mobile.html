@@ -803,7 +803,7 @@
             -webkit-overflow-scrolling: touch;
             touch-action: pan-y;
             overscroll-behavior-y: contain;
-            padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+            padding-bottom: calc(var(--ec-bottom-nav-height, 84px) + 16px + env(safe-area-inset-bottom, 0px));
         }
 
         #trade-screen .scroll-area,
@@ -812,12 +812,16 @@
             min-height: 0;
             overflow-y: auto !important;
             -webkit-overflow-scrolling: touch;
+            padding-bottom: calc(var(--ec-bottom-nav-height, 84px) + 28px + env(safe-area-inset-bottom, 0px));
         }
 
         #trade-footer-content {
-            max-height: 42vh;
-            overflow-y: auto;
+            max-height: none;
+            min-height: 180px;
+            overflow: visible;
             -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            padding-bottom: calc(var(--ec-bottom-nav-height, 84px) + 20px) !important;
         }
 
         .list-container {
@@ -4169,8 +4173,8 @@
         #trade-spot-content {
             justify-content: flex-start !important;
             align-items: stretch !important;
-            height: auto !important;
-            min-height: 100% !important;
+            height: 100% !important;
+            min-height: 0 !important;
             flex-grow: 1;
         }
 
@@ -5006,6 +5010,7 @@
             background: transparent !important;
             font-family: 'Inter', sans-serif !important;
             font-weight: 400 !important;
+            min-height: 0 !important;
         }
 
         /* Header Area */
@@ -9213,7 +9218,7 @@
                         Contract
                     </div>
                 </div>
-                <span onclick="showScreen('history'); switchHistoryTab('contract');" style="cursor:pointer;">🕘</span>
+                <span onclick="openTradeHistoryScreen()" style="cursor:pointer;">🕘</span>
             </div>
 
             <div class="scroll-area" style="flex-grow: 1; display: flex; flex-direction: column; background: #1a0b2e;">
@@ -9323,9 +9328,9 @@
                             </div>
                             <div
                                 style="flex-grow: 1; text-align: right; padding-left: 12px; display: flex; align-items: center;">
-                                <input type="text" placeholder="0"
+                                <input id="ex-from-amount" type="text" placeholder="0" oninput="onExchangeAmountInput()"
                                     style="width: 100%; border: none; background: transparent; text-align: right; outline: none; font-size: 18px; font-weight: 500; color: #fff; font-variant-numeric: tabular-nums;">
-                                <span
+                                <span id="ex-max-btn" onclick="fillExchangeMax()"
                                     style="color: #6a35ff; font-weight: 600; font-size: 12px; margin-left: 12px; cursor: pointer; text-transform: uppercase;">max</span>
                             </div>
                         </div>
@@ -9362,14 +9367,14 @@
                                 <span style="color: #6a35ff; font-size: 10px;">$</span>
                             </div>
                             <div style="flex-grow: 1; text-align: right; padding-left: 12px;">
-                                <input type="text" placeholder="0" disabled
+                                <input id="ex-to-amount" type="text" placeholder="0" disabled
                                     style="width: 100%; border: none; background: transparent; text-align: right; outline: none; font-size: 18px; font-weight: 500; color: #999; font-variant-numeric: tabular-nums;">
                             </div>
                         </div>
                     </div>
 
                     <!-- ACTION BUTTON -->
-                    <button onclick="alert('Insufficient balance')" class="pwd-confirm-btn"
+                    <button id="ex-submit-btn" onclick="submitExchangeOrder()" class="pwd-confirm-btn"
                         style="margin-top: auto; border-radius: 10px; background: linear-gradient(135deg, #6a35ff 0%, #a044ff 100%); box-shadow: 0 6px 20px rgba(106, 53, 255, 0.25); border: none; padding: 16px; font-weight: 600; font-size: 16px; color: #fff; cursor: pointer;">
                         Exchange
                     </button>
@@ -9987,7 +9992,7 @@
                     <span>From</span>
                     <span>To</span>
                 </div>
-                <div style="text-align: center; padding: 100px 20px; color: #999; font-size: 14px;">
+                <div id="flash-history-list" style="text-align: center; padding: 100px 20px; color: #999; font-size: 14px;">
                     No exchange history
                 </div>
             </div>
@@ -11493,6 +11498,128 @@
         let exFrom = 'USDT';
         let exTo = 'BTC';
         let modalTarget = 'from';
+        const EXCHANGE_FEE_RATE = 0.005;
+        window.currentAssetBalances = window.currentAssetBalances || { USDT: 0 };
+        window.exchangeHistoryAll = window.exchangeHistoryAll || [];
+
+        function normalizeAssetBalances(rawAssets, usdtFallback = 0) {
+            const src = (rawAssets && typeof rawAssets === 'object') ? rawAssets : {};
+            const normalized = {};
+            Object.keys(src).forEach((key) => {
+                const sym = String(key || '').trim().toUpperCase();
+                if (!sym) return;
+                const amount = Number(src[key]);
+                normalized[sym] = Number.isFinite(amount) && amount > 0 ? amount : 0;
+            });
+            const usdt = Number(usdtFallback);
+            if (Number.isFinite(usdt)) {
+                normalized.USDT = usdt > 0 ? usdt : 0;
+            } else if (!Object.prototype.hasOwnProperty.call(normalized, 'USDT')) {
+                normalized.USDT = 0;
+            }
+            return normalized;
+        }
+
+        function getExchangeBalance(symbol) {
+            const sym = String(symbol || '').toUpperCase();
+            if (!sym) return 0;
+            const assets = window.currentAssetBalances || {};
+            const fallbackUsdt = Number(currentUserBalance || 0);
+            const val = sym === 'USDT'
+                ? (Object.prototype.hasOwnProperty.call(assets, 'USDT') ? Number(assets.USDT) : fallbackUsdt)
+                : Number(assets[sym] || 0);
+            return Number.isFinite(val) && val > 0 ? val : 0;
+        }
+
+        function getCoinUsdPriceForExchange(symbol) {
+            const sym = String(symbol || '').trim().toUpperCase();
+            if (!sym) return 0;
+            if (sym === 'USDT' || sym === 'USDC' || sym === 'USDE' || sym === 'DAI') return 1;
+            const local = window.localData && window.localData[sym] ? Number(window.localData[sym].price) : NaN;
+            if (Number.isFinite(local) && local > 0) return local;
+            if (typeof fallbackMockData !== 'undefined' && fallbackMockData[sym]) {
+                const mock = Number(fallbackMockData[sym].price);
+                if (Number.isFinite(mock) && mock > 0) return mock;
+            }
+            return 0;
+        }
+
+        function formatExchangeAmount(value, symbol) {
+            const n = Number(value);
+            if (!Number.isFinite(n) || n <= 0) return '0';
+            const sym = String(symbol || '').toUpperCase();
+            const stable = sym === 'USDT' || sym === 'USDC' || sym === 'USDE' || sym === 'DAI';
+            return n.toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: stable ? 2 : 6
+            });
+        }
+
+        function cleanExchangeInput(raw) {
+            const str = String(raw || '').replace(/,/g, '').replace(/[^\d.]/g, '');
+            const parts = str.split('.');
+            if (parts.length <= 1) return str;
+            return `${parts[0]}.${parts.slice(1).join('')}`;
+        }
+
+        function parseExchangeAmount(raw) {
+            const num = Number(cleanExchangeInput(raw));
+            return Number.isFinite(num) && num > 0 ? num : 0;
+        }
+
+        function computeExchangeQuote(fromSymbol, toSymbol, fromAmount) {
+            const amount = Number(fromAmount);
+            const fromPrice = getCoinUsdPriceForExchange(fromSymbol);
+            const toPrice = getCoinUsdPriceForExchange(toSymbol);
+            if (!Number.isFinite(amount) || amount <= 0 || fromPrice <= 0 || toPrice <= 0) {
+                return { valid: false, grossToAmount: 0, feeAmount: 0, toNetAmount: 0, rate: 0 };
+            }
+            const grossToAmount = (amount * fromPrice) / toPrice;
+            const feeAmount = grossToAmount * EXCHANGE_FEE_RATE;
+            const toNetAmount = Math.max(0, grossToAmount - feeAmount);
+            return {
+                valid: true,
+                grossToAmount,
+                feeAmount,
+                toNetAmount,
+                rate: fromPrice / toPrice
+            };
+        }
+
+        function updateExchangeSubmitState() {
+            const btn = document.getElementById('ex-submit-btn');
+            const amountInput = document.getElementById('ex-from-amount');
+            if (!btn || !amountInput) return;
+            const amount = parseExchangeAmount(amountInput.value);
+            const available = getExchangeBalance(exFrom);
+            const quote = computeExchangeQuote(exFrom, exTo, amount);
+            const canSubmit = amount > 0 && amount <= available && quote.valid && quote.toNetAmount > 0;
+            btn.disabled = !canSubmit;
+            btn.style.opacity = canSubmit ? '1' : '0.55';
+            btn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
+        }
+
+        function onExchangeAmountInput() {
+            const fromInput = document.getElementById('ex-from-amount');
+            const toInput = document.getElementById('ex-to-amount');
+            if (!fromInput || !toInput) return;
+            const cleaned = cleanExchangeInput(fromInput.value);
+            if (cleaned !== fromInput.value) fromInput.value = cleaned;
+            const amount = parseExchangeAmount(cleaned);
+            const quote = computeExchangeQuote(exFrom, exTo, amount);
+            toInput.value = quote.valid && quote.toNetAmount > 0 ? formatExchangeAmount(quote.toNetAmount, exTo) : '';
+            updateExchangeSubmitState();
+        }
+        window.onExchangeAmountInput = onExchangeAmountInput;
+
+        function fillExchangeMax() {
+            const fromInput = document.getElementById('ex-from-amount');
+            if (!fromInput) return;
+            const available = getExchangeBalance(exFrom);
+            fromInput.value = available > 0 ? formatExchangeAmount(available, exFrom) : '';
+            onExchangeAmountInput();
+        }
+        window.fillExchangeMax = fillExchangeMax;
 
         function openCoinModal(target) {
             modalTarget = target;
@@ -11536,16 +11663,166 @@
         function updateExchangeUI() {
             const from = exchangeCoins.find(c => c.s === exFrom);
             const to = exchangeCoins.find(c => c.s === exTo);
+            if (!from || !to) return;
 
             document.getElementById('ex-from-icon').innerHTML = getCoinIconHtml(from.s, from.i);
             document.getElementById('ex-from-icon').style.background = '#1a0b2e';
             document.getElementById('ex-from-symbol').innerText = from.s;
-            document.getElementById('ex-available-text').innerText = `0 ${from.s}`;
+            const available = getExchangeBalance(from.s);
+            document.getElementById('ex-available-text').innerText = `${formatExchangeAmount(available, from.s)} ${from.s}`;
 
             document.getElementById('ex-to-icon').innerHTML = getCoinIconHtml(to.s, to.i);
             document.getElementById('ex-to-icon').style.background = '#1a0b2e';
             document.getElementById('ex-to-symbol').innerText = to.s;
+            onExchangeAmountInput();
         }
+
+        function renderExchangeHistory() {
+            const container = document.getElementById('flash-history-list');
+            if (!container) return;
+            const items = Array.isArray(window.exchangeHistoryAll) ? window.exchangeHistoryAll : [];
+            if (items.length === 0) {
+                container.style.textAlign = 'center';
+                container.style.padding = '100px 20px';
+                container.style.color = '#999';
+                container.style.fontSize = '14px';
+                container.innerHTML = 'No exchange history';
+                return;
+            }
+            const html = items.map((item) => {
+                const ts = item.timestamp && item.timestamp.seconds
+                    ? new Date(item.timestamp.seconds * 1000)
+                    : new Date();
+                const time = ts.toLocaleString();
+                const fromAmount = formatExchangeAmount(item.from_amount, item.from_coin);
+                const toAmount = formatExchangeAmount(item.to_amount, item.to_coin);
+                const feeAmount = formatExchangeAmount(item.fee_amount, item.to_coin);
+                return `
+                    <div style="padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span style="color:#fff; font-weight:600;">${item.from_coin} → ${item.to_coin}</span>
+                            <span style="color:#8b8fa8; font-size:12px;">${time}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; color:#c9cce0; font-size:13px;">
+                            <span>${fromAmount} ${item.from_coin}</span>
+                            <span>${toAmount} ${item.to_coin}</span>
+                        </div>
+                        <div style="margin-top:4px; color:#8b8fa8; font-size:12px;">
+                            Fee: ${feeAmount} ${item.to_coin} (${(Number(item.fee_rate || EXCHANGE_FEE_RATE) * 100).toFixed(2)}%)
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            container.style.textAlign = 'left';
+            container.style.padding = '0';
+            container.style.color = '#fff';
+            container.style.fontSize = '14px';
+            container.innerHTML = html;
+        }
+        window.renderExchangeHistory = renderExchangeHistory;
+
+        function openTradeHistoryScreen() {
+            const exchangeTab = document.getElementById('trade-tab-exc');
+            const isExchangeTab = !!(exchangeTab && exchangeTab.classList.contains('active'));
+            if (isExchangeTab) {
+                showScreen('flash-history');
+                renderExchangeHistory();
+                return;
+            }
+            showScreen('history');
+            switchHistoryTab('contract');
+        }
+        window.openTradeHistoryScreen = openTradeHistoryScreen;
+
+        async function submitExchangeOrder() {
+            if (window.guardKycForAction && window.guardKycForAction('performing exchange')) return;
+            const fromInput = document.getElementById('ex-from-amount');
+            const submitBtn = document.getElementById('ex-submit-btn');
+            if (!fromInput || !submitBtn) return;
+
+            const amount = parseExchangeAmount(fromInput.value);
+            const available = getExchangeBalance(exFrom);
+            const quote = computeExchangeQuote(exFrom, exTo, amount);
+            if (!(amount > 0)) {
+                window.showMobileToast('Please enter a valid amount.');
+                return;
+            }
+            if (amount > available) {
+                window.showMobileToast(`Insufficient ${exFrom} balance.`);
+                return;
+            }
+            if (!quote.valid || quote.toNetAmount <= 0) {
+                window.showMobileToast('Exchange quote is unavailable. Please try again.');
+                return;
+            }
+
+            let user = auth.currentUser;
+            if (!user) {
+                user = await checkSession(false);
+            }
+            if (!user) {
+                window.showMobileToast('Please log in first.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            const oldText = submitBtn.innerText;
+            submitBtn.innerText = 'Processing...';
+
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const snap = await getDoc(userRef);
+                if (!snap.exists()) {
+                    throw new Error('User profile not found.');
+                }
+                const data = snap.data() || {};
+                const assetBalances = normalizeAssetBalances(data.asset_balances, data.balance || 0);
+                const liveFromBalance = Number(assetBalances[exFrom] || 0);
+                if (amount > liveFromBalance + 1e-8) {
+                    throw new Error(`Insufficient ${exFrom} balance.`);
+                }
+
+                const liveQuote = computeExchangeQuote(exFrom, exTo, amount);
+                if (!liveQuote.valid || liveQuote.toNetAmount <= 0) {
+                    throw new Error('Failed to build exchange quote.');
+                }
+
+                assetBalances[exFrom] = Math.max(0, liveFromBalance - amount);
+                assetBalances[exTo] = Number(assetBalances[exTo] || 0) + liveQuote.toNetAmount;
+                const usdtBalance = Number(assetBalances.USDT || 0);
+
+                await updateDoc(userRef, {
+                    asset_balances: assetBalances,
+                    balance: usdtBalance
+                });
+
+                await addDoc(collection(db, 'exchange_orders'), {
+                    user_uid: user.uid,
+                    from_coin: exFrom,
+                    to_coin: exTo,
+                    from_amount: amount,
+                    gross_to_amount: liveQuote.grossToAmount,
+                    to_amount: liveQuote.toNetAmount,
+                    fee_rate: EXCHANGE_FEE_RATE,
+                    fee_amount: liveQuote.feeAmount,
+                    rate: liveQuote.rate,
+                    status: 'Completed',
+                    timestamp: serverTimestamp()
+                });
+
+                fromInput.value = '';
+                onExchangeAmountInput();
+                window.showMobileToast(`Exchanged ${formatExchangeAmount(amount, exFrom)} ${exFrom} to ${formatExchangeAmount(liveQuote.toNetAmount, exTo)} ${exTo}.`);
+            } catch (error) {
+                console.error('Exchange submit error:', error);
+                window.showMobileToast(error.message || 'Exchange failed. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = oldText;
+                updateExchangeSubmitState();
+            }
+        }
+        window.submitExchangeOrder = submitExchangeOrder;
 
         let mobileViewportBaseHeight = Math.max(window.innerHeight || 0, document.documentElement.clientHeight || 0);
 
@@ -13466,6 +13743,7 @@ No transfer fees for account transfer / exchange</div>
             updateContractCalculations();
             updateDeliveryRequirementsUI();
             updateDeliveryFeeEstimate();
+            updateExchangeUI();
         });
 
         function formatCompactNumber(value) {
@@ -13606,6 +13884,10 @@ No transfer fees for account transfer / exchange</div>
                 if (window.klineChart && window.klineChart.currentCoin === sym) {
                     window.klineChart.update(pVal);
                 }
+            }
+
+            if ((sym === exFrom || sym === exTo) && typeof onExchangeAmountInput === 'function') {
+                onExchangeAmountInput();
             }
         }
 
@@ -15488,6 +15770,7 @@ No transfer fees for account transfer / exchange</div>
                     const data = docSnap.data();
                     const balance = data.balance || 0;
                     const formattedBalance = parseFloat(balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    window.currentAssetBalances = normalizeAssetBalances(data.asset_balances, balance);
 
                     // Update various balance displays in the UI
                     const elH1 = document.getElementById('funds-balance-h1');
@@ -15533,6 +15816,10 @@ No transfer fees for account transfer / exchange</div>
                     if (withdrawQuantityValEl) withdrawQuantityValEl.innerText = formattedBalance;
 
                     currentUserBalance = parseFloat(balance);
+
+                    if (typeof updateExchangeUI === 'function') {
+                        updateExchangeUI();
+                    }
 
                     if (typeof updateContractCalculations === 'function') {
                         updateContractCalculations();
@@ -15740,6 +16027,34 @@ No transfer fees for account transfer / exchange</div>
             });
         }
 
+        let exchangeHistoryUnsubscribe = null;
+        async function initExchangeHistoryListener(user) {
+            if (!user) return;
+            if (exchangeHistoryUnsubscribe) exchangeHistoryUnsubscribe();
+
+            const q = collection(db, 'exchange_orders');
+            exchangeHistoryUnsubscribe = onSnapshot(q, (snapshot) => {
+                window.exchangeHistoryAll = [];
+                snapshot.forEach((docSnap) => {
+                    const d = docSnap.data();
+                    if (d.user_uid === user.uid) {
+                        window.exchangeHistoryAll.push({ id: docSnap.id, ...d });
+                    }
+                });
+
+                window.exchangeHistoryAll.sort((a, b) => {
+                    const tA = a.timestamp ? a.timestamp.seconds : 0;
+                    const tB = b.timestamp ? b.timestamp.seconds : 0;
+                    return tB - tA;
+                });
+
+                const flashScreen = document.getElementById('flash-history-screen');
+                if (flashScreen && !flashScreen.classList.contains('hidden')) {
+                    renderExchangeHistory();
+                }
+            });
+        }
+
         // Initialize all listeners when the auth state changes
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -15749,16 +16064,20 @@ No transfer fees for account transfer / exchange</div>
                 initDepositSync();
                 initDepositHistoryListener(user);
                 initWithdrawHistoryListener(user);
+                initExchangeHistoryListener(user);
                 initUserBalanceListener(user);
                 initTradeHistoryListener(user);
             } else {
                 console.log("Mobile: User not authenticated, cleaning up listeners.");
+                window.currentAssetBalances = { USDT: 0 };
                 if (unreadUnsubscribe) unreadUnsubscribe();
                 if (chatUnsubscribe) chatUnsubscribe();
                 if (depositHistoryUnsubscribe) depositHistoryUnsubscribe();
                 if (withdrawHistoryUnsubscribe) withdrawHistoryUnsubscribe();
+                if (exchangeHistoryUnsubscribe) exchangeHistoryUnsubscribe();
                 if (userBalanceUnsubscribe) userBalanceUnsubscribe();
                 if (tradeHistoryUnsubscribe) tradeHistoryUnsubscribe();
+                if (typeof updateExchangeUI === 'function') updateExchangeUI();
             }
         });
 

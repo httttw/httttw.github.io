@@ -244,7 +244,7 @@
         <div class="t-links">
             <a href="markets.html" class="t-link">Markets</a>
             <div class="t-link arr" id="transaction-menu">
-                Transaction
+                Contract
                 <div class="nav-dropdown" id="transaction-dropdown">
                     <a href="contract.html" class="dropdown-item">
                         <i class="ri-file-list-3-line"></i>
@@ -532,13 +532,11 @@
                         localStorage.setItem('ec_force_kyc_once', '1');
                         sessionStorage.setItem('mobile_session_active', 'true');
                         localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
-                        alert("Login successful! Redirecting to KYC.");
                         window.location.href = 'mobile.html';
                         return;
                     }
                     sessionStorage.removeItem('mobile_session_active');
                     localStorage.removeItem('ec_mobile_session_grant_ts');
-                    alert("Login successful!");
                     window.location.href = 'dashboard.html';
                     return;
                 }
@@ -552,7 +550,6 @@
                 sessionStorage.removeItem('mobile_session_active');
                 localStorage.removeItem('ec_mobile_session_grant_ts');
 
-                alert("Login successful!");
                 window.location.href = 'dashboard.html';
             } catch (error) {
                 alert(getReadableLoginError(error, 'Login failed. Please try again.'));

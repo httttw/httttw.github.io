@@ -33,6 +33,11 @@ async function checkSession(redirectIfNoSession = true, redirectUrl = 'login.htm
     return new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             unsubscribe();
+            try {
+                window.__EC_USER_SIGNED_IN = !!user;
+            } catch (e) {
+                // ignore window assignment issues
+            }
             if (!user && redirectIfNoSession) {
                 window.location.href = redirectUrl;
             }
@@ -147,6 +152,11 @@ async function enforceKycAccess(options = {}) {
 async function handleLogout() {
     try {
         await signOut(auth);
+        try {
+            window.__EC_USER_SIGNED_IN = false;
+        } catch (e) {
+            // ignore window assignment issues
+        }
         window.location.href = 'index.html';
     } catch (err) {
         alert("Logout failed: " + err.message);

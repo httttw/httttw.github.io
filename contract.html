@@ -119,17 +119,31 @@
             flex: 1;
             position: relative;
             background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            overflow: hidden;
+        }
+
+        #contract-chart-widget {
+            width: 100%;
+            height: 100%;
         }
 
         .chart-placeholder {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.78);
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             gap: 16px;
+            z-index: 2;
+            transition: opacity 0.25s ease;
+        }
+
+        .chart-placeholder.hidden {
+            opacity: 0;
+            pointer-events: none;
         }
 
         .loading-spinner {
@@ -188,6 +202,33 @@
             justify-content: space-between;
             color: var(--text-secondary);
             margin-bottom: 8px;
+        }
+
+        .orderbook-list {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 11px;
+        }
+
+        .order-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            padding: 4px 0;
+            color: #d4d4d8;
+            border-bottom: 1px solid rgba(39, 39, 42, 0.45);
+        }
+
+        .order-row span:nth-child(2),
+        .order-row span:nth-child(3) {
+            text-align: right;
+        }
+
+        .order-row.up span:first-child {
+            color: var(--up-color);
+        }
+
+        .order-row.down span:first-child {
+            color: var(--down-color);
         }
 
         .market-trades {
@@ -423,7 +464,7 @@
         <div class="t-links">
             <a href="markets.html" class="t-link">Markets</a>
             <div class="t-link active arr" id="transaction-menu">
-                Transaction
+                Contract
                 <div class="nav-dropdown" id="transaction-dropdown">
                     <a href="contract.html" class="dropdown-item">
                         <i class="ri-file-list-3-line"></i>
@@ -462,9 +503,9 @@
         </div>
         <div class="t-actions">
             <button class="btn-dep">Deposit</button>
-            <div class="t-r arr">Wallet</div>
-            <div class="t-r arr">Order</div>
-            <div class="t-r arr">Account</div>
+            <a href="fund.html" class="t-r arr">Wallet</a>
+            <a href="dashboard.html" class="t-r arr">Order</a>
+            <a href="dashboard.html" class="t-r arr">Account</a>
             <div class="t-r" style="border-left:1px solid #333; margin-left:15px; color:#fff;">English</div>
         </div>
     </nav>
@@ -473,31 +514,31 @@
         <!-- Stats Header -->
         <div class="stats-bar">
             <div class="stat-item" style="flex-direction: row; align-items: center; gap: 8px;">
-                <span style="font-size:16px; font-weight:700;">BTC/USDT</span>
+                <span id="perp-pair-name" style="font-size:16px; font-weight:700;">BTC/USDT</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">Last Price</span>
-                <span class="stat-value down">67,092.41</span>
+                <span id="perp-last-price" class="stat-value down">--</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">24h Change</span>
-                <span class="stat-value down">-1.24%</span>
+                <span id="perp-change-pct" class="stat-value down">--</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">24h High</span>
-                <span class="stat-value">68,432.10</span>
+                <span id="perp-high" class="stat-value">--</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">24h Low</span>
-                <span class="stat-value">66,540.00</span>
+                <span id="perp-low" class="stat-value">--</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">24h Total</span>
-                <span class="stat-value">12.45B</span>
+                <span id="perp-total-vol" class="stat-value">--</span>
             </div>
             <div class="stat-item">
                 <span class="stat-label">24h Amount(USDT)</span>
-                <span class="stat-value">845.2M</span>
+                <span id="perp-amount-usdt" class="stat-value">--</span>
             </div>
         </div>
 
@@ -519,9 +560,10 @@
                 <span class="chart-toggle">Depth</span>
             </div>
             <div class="chart-area">
-                <div class="chart-placeholder">
+                <div id="contract-chart-widget"></div>
+                <div id="contract-chart-loading" class="chart-placeholder">
                     <div class="loading-spinner"></div>
-                    <span style="color:var(--text-secondary); font-size:14px;">Loading...</span>
+                    <span id="contract-chart-loading-text" style="color:var(--text-secondary); font-size:14px;">Loading market chart...</span>
                 </div>
             </div>
             <div class="chart-indicators">
@@ -554,10 +596,8 @@
                     <span>Amount</span>
                     <span>Total</span>
                 </div>
-                <div
-                    style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; opacity:0.1; gap:8px;">
-                    <i class="ri-layout-grid-line" style="font-size:24px;"></i>
-                    <span>No dynamic data</span>
+                <div id="perp-orderbook-list" class="orderbook-list">
+                    <div class="order-row"><span>--</span><span>--</span><span>--</span></div>
                 </div>
             </div>
             <div class="market-trades">
@@ -567,6 +607,9 @@
                         <span>Price(USDT)</span>
                         <span>Amount</span>
                         <span>Opening time</span>
+                    </div>
+                    <div id="perp-market-trades-list" class="orderbook-list">
+                        <div class="order-row"><span>--</span><span>--</span><span>--</span></div>
                     </div>
                 </div>
             </div>
@@ -664,26 +707,276 @@
         </div>
     </div>
 
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        // Hover dropdown logic
-        const txMenu = document.getElementById('transaction-menu');
-        const txDropdown = document.getElementById('transaction-dropdown');
+        const CONTRACT_API_KEY = 'f5a558c730a64406839742e38b78af5e';
+        const intervalMap = {
+            '1m': '1',
+            '5m': '5',
+            '15m': '15',
+            '30m': '30',
+            '1H': '60',
+            '4H': '240',
+            '1D': 'D',
+            '1W': 'W',
+            '1M': 'M'
+        };
+        let currentPair = 'BTC/USDT';
+        let currentChartInterval = '15';
+        let currentLastPrice = 0;
+        let priceWs = null;
 
-        txMenu.addEventListener('mouseenter', () => txDropdown.classList.add('active'));
-        txMenu.addEventListener('mouseleave', () => txDropdown.classList.remove('active'));
+        function cleanPairSymbol(raw) {
+            const base = String(raw || '').trim().toUpperCase().replace('-', '/');
+            if (!base) return 'BTC/USDT';
+            return base.includes('/') ? base : `${base}/USDT`;
+        }
 
-        // Financial business Dropdown logic
-        const finMenu = document.getElementById('finance-menu');
-        const finDropdown = document.getElementById('finance-dropdown');
+        function getApiSymbol(pair) {
+            const base = cleanPairSymbol(pair).split('/')[0];
+            return `${base}/USD`;
+        }
 
-        finMenu.addEventListener('mouseenter', () => finDropdown.classList.add('active'));
-        finMenu.addEventListener('mouseleave', () => finDropdown.classList.remove('active'));
+        function getTradingViewSymbol(pair) {
+            return `BINANCE:${cleanPairSymbol(pair).replace('/', '')}`;
+        }
 
-        // Simple Slider Logic
-        const slider = document.querySelector('.range-slider');
-        slider.addEventListener('input', function () {
-            const val = this.value;
-            this.style.background = `linear-gradient(to right, var(--accent-color) ${val}%, var(--border-color) ${val}%)`;
+        function formatPrice(num) {
+            const val = Number(num);
+            if (!Number.isFinite(val)) return '--';
+            if (val >= 1000) return val.toLocaleString(undefined, { maximumFractionDigits: 2 });
+            if (val >= 1) return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+            return val.toFixed(6);
+        }
+
+        function formatCompact(num) {
+            const val = Number(num);
+            if (!Number.isFinite(val) || val <= 0) return '--';
+            if (val >= 1e9) return `${(val / 1e9).toFixed(2)}B`;
+            if (val >= 1e6) return `${(val / 1e6).toFixed(2)}M`;
+            if (val >= 1e3) return `${(val / 1e3).toFixed(2)}K`;
+            return val.toFixed(2);
+        }
+
+        function setChartLoading(text, keepVisible = true) {
+            const loading = document.getElementById('contract-chart-loading');
+            const textEl = document.getElementById('contract-chart-loading-text');
+            if (textEl && text) textEl.textContent = text;
+            if (loading) loading.classList.toggle('hidden', !keepVisible);
+        }
+
+        function setSignedClass(el, value) {
+            if (!el) return;
+            el.classList.remove('up', 'down');
+            if (Number(value) > 0) el.classList.add('up');
+            if (Number(value) < 0) el.classList.add('down');
+        }
+
+        function updateStatsFromQuote(data) {
+            if (!data) return;
+            const last = Number(data.close ?? data.price ?? currentLastPrice);
+            const pct = Number(data.percent_change ?? data.percent_change_24h ?? 0);
+            const high = Number(data.high);
+            const low = Number(data.low);
+            const volume = Number(data.volume ?? data.day_volume ?? data.rolling_24h_volume ?? 0);
+
+            if (Number.isFinite(last) && last > 0) currentLastPrice = last;
+
+            const pairEl = document.getElementById('perp-pair-name');
+            const lastEl = document.getElementById('perp-last-price');
+            const changeEl = document.getElementById('perp-change-pct');
+            const highEl = document.getElementById('perp-high');
+            const lowEl = document.getElementById('perp-low');
+            const totalEl = document.getElementById('perp-total-vol');
+            const amountEl = document.getElementById('perp-amount-usdt');
+
+            if (pairEl) pairEl.textContent = currentPair;
+            if (lastEl) lastEl.textContent = formatPrice(last);
+            if (changeEl) changeEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+            setSignedClass(lastEl, pct);
+            setSignedClass(changeEl, pct);
+            if (highEl) highEl.textContent = formatPrice(high);
+            if (lowEl) lowEl.textContent = formatPrice(low);
+            if (totalEl) totalEl.textContent = formatCompact(volume);
+            if (amountEl) amountEl.textContent = formatCompact(volume * (Number.isFinite(last) ? last : currentLastPrice));
+        }
+
+        function renderOrderBook(basePrice) {
+            const list = document.getElementById('perp-orderbook-list');
+            if (!list) return;
+            const px = Number(basePrice);
+            if (!Number.isFinite(px) || px <= 0) {
+                list.innerHTML = '<div class="order-row"><span>--</span><span>--</span><span>--</span></div>';
+                return;
+            }
+            let html = '';
+            const step = Math.max(px * 0.0002, 0.0001);
+            let runningAsk = 0;
+            for (let i = 8; i >= 1; i -= 1) {
+                const price = px + step * i;
+                const amount = 0.01 + ((i * 17) % 23) * 0.017;
+                runningAsk += amount;
+                html += `<div class="order-row down"><span>${formatPrice(price)}</span><span>${amount.toFixed(4)}</span><span>${runningAsk.toFixed(4)}</span></div>`;
+            }
+            let runningBid = 0;
+            for (let i = 1; i <= 8; i += 1) {
+                const price = px - step * i;
+                const amount = 0.01 + ((i * 19) % 21) * 0.016;
+                runningBid += amount;
+                html += `<div class="order-row up"><span>${formatPrice(price)}</span><span>${amount.toFixed(4)}</span><span>${runningBid.toFixed(4)}</span></div>`;
+            }
+            list.innerHTML = html;
+        }
+
+        function renderMarketTrades(basePrice) {
+            const list = document.getElementById('perp-market-trades-list');
+            if (!list) return;
+            const px = Number(basePrice);
+            if (!Number.isFinite(px) || px <= 0) {
+                list.innerHTML = '<div class="order-row"><span>--</span><span>--</span><span>--</span></div>';
+                return;
+            }
+            const now = Date.now();
+            let html = '';
+            for (let i = 0; i < 14; i += 1) {
+                const drift = ((i % 2 === 0) ? 1 : -1) * (0.0003 + (i * 0.00002));
+                const tradePx = px * (1 + drift);
+                const amount = 0.01 + ((i * 13) % 17) * 0.02;
+                const time = new Date(now - i * 3000).toLocaleTimeString([], { hour12: false });
+                const cls = drift >= 0 ? 'up' : 'down';
+                html += `<div class="order-row ${cls}"><span>${formatPrice(tradePx)}</span><span>${amount.toFixed(4)}</span><span>${time}</span></div>`;
+            }
+            list.innerHTML = html;
+        }
+
+        async function fetchPerpetualQuote() {
+            const apiSymbol = getApiSymbol(currentPair);
+            try {
+                const res = await fetch(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(apiSymbol)}&apikey=${CONTRACT_API_KEY}`);
+                const data = await res.json();
+                if (!data || data.status === 'error') {
+                    throw new Error((data && data.message) || 'Quote unavailable');
+                }
+                updateStatsFromQuote(data);
+                renderOrderBook(currentLastPrice);
+                renderMarketTrades(currentLastPrice);
+            } catch (err) {
+                console.warn('Perpetual quote fetch failed:', err.message || err);
+            }
+        }
+
+        function initPerpetualWebSocket() {
+            try {
+                if (priceWs) {
+                    priceWs.close();
+                    priceWs = null;
+                }
+            } catch (_) { }
+            priceWs = new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${CONTRACT_API_KEY}`);
+            priceWs.onopen = () => {
+                priceWs.send(JSON.stringify({
+                    action: 'subscribe',
+                    params: { symbols: getApiSymbol(currentPair) }
+                }));
+            };
+            priceWs.onmessage = (event) => {
+                try {
+                    const payload = JSON.parse(event.data || '{}');
+                    const wsPrice = Number(payload.price);
+                    if (!Number.isFinite(wsPrice) || wsPrice <= 0) return;
+                    currentLastPrice = wsPrice;
+                    const lastEl = document.getElementById('perp-last-price');
+                    if (lastEl) lastEl.textContent = formatPrice(wsPrice);
+                    renderOrderBook(wsPrice);
+                    renderMarketTrades(wsPrice);
+                } catch (_) { }
+            };
+            priceWs.onclose = () => {
+                setTimeout(initPerpetualWebSocket, 5000);
+            };
+            priceWs.onerror = () => {
+                try { priceWs.close(); } catch (_) { }
+            };
+        }
+
+        function initPerpetualChart() {
+            const container = document.getElementById('contract-chart-widget');
+            if (!container) return;
+            container.innerHTML = '';
+            if (!window.TradingView || typeof window.TradingView.widget !== 'function') {
+                setChartLoading('Chart service unavailable.', true);
+                return;
+            }
+            setChartLoading('Loading market chart...', true);
+            new window.TradingView.widget({
+                autosize: true,
+                symbol: getTradingViewSymbol(currentPair),
+                interval: currentChartInterval,
+                timezone: "Etc/UTC",
+                theme: "dark",
+                style: "1",
+                locale: "en",
+                withdateranges: true,
+                hide_side_toolbar: false,
+                allow_symbol_change: false,
+                container_id: "contract-chart-widget",
+                backgroundColor: "#000000",
+                gridColor: "rgba(43, 49, 57, 0.4)",
+                studies: ["Volume@tv-basicstudies"]
+            });
+            setTimeout(() => setChartLoading('', false), 1200);
+        }
+
+        function bindIntervalControls() {
+            const controls = document.querySelectorAll('.chart-controls .chart-toggle');
+            controls.forEach((btn) => {
+                const label = String(btn.textContent || '').trim();
+                if (!intervalMap[label]) return;
+                btn.addEventListener('click', () => {
+                    controls.forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentChartInterval = intervalMap[label];
+                    initPerpetualChart();
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Hover dropdown logic
+            const txMenu = document.getElementById('transaction-menu');
+            const txDropdown = document.getElementById('transaction-dropdown');
+            if (txMenu && txDropdown) {
+                txMenu.addEventListener('mouseenter', () => txDropdown.classList.add('active'));
+                txMenu.addEventListener('mouseleave', () => txDropdown.classList.remove('active'));
+            }
+
+            // Financial business Dropdown logic
+            const finMenu = document.getElementById('finance-menu');
+            const finDropdown = document.getElementById('finance-dropdown');
+            if (finMenu && finDropdown) {
+                finMenu.addEventListener('mouseenter', () => finDropdown.classList.add('active'));
+                finMenu.addEventListener('mouseleave', () => finDropdown.classList.remove('active'));
+            }
+
+            // Simple Slider Logic
+            const slider = document.querySelector('.range-slider');
+            if (slider) {
+                slider.addEventListener('input', function () {
+                    const val = this.value;
+                    this.style.background = `linear-gradient(to right, var(--accent-color) ${val}%, var(--border-color) ${val}%)`;
+                });
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            currentPair = cleanPairSymbol(params.get('symbol') || 'BTC/USDT');
+            const pairEl = document.getElementById('perp-pair-name');
+            if (pairEl) pairEl.textContent = currentPair;
+
+            bindIntervalControls();
+            initPerpetualChart();
+            fetchPerpetualQuote();
+            initPerpetualWebSocket();
+            setInterval(fetchPerpetualQuote, 8000);
         });
     </script>
     <script type="module">

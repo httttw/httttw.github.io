@@ -340,7 +340,7 @@
     <header class="h-14 border-b border-[#2b3139] flex items-center px-4 justify-between shrink-0">
         <div class="flex items-center gap-8">
             <div class="flex items-center gap-4">
-                <a href="markets.html" id="hamburger-btn" class="text-[#848e9c] hover:text-[#eaecef] flex items-center">
+                <a href="javascript:void(0)" id="hamburger-btn" class="text-[#848e9c] hover:text-[#eaecef] flex items-center">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -1475,6 +1475,7 @@
 
             if (hamburgerBtn) {
                 hamburgerBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     marketDrawer.classList.add('open');
                     drawerOverlay.classList.add('active');
