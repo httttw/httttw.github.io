@@ -396,6 +396,22 @@
 
         let currentTab = 'email';
 
+        function getReadableLoginError(error, fallbackMessage) {
+            const code = String(error && error.code || '').toLowerCase();
+            const map = {
+                'auth/invalid-credential': 'Account or password is incorrect.',
+                'auth/wrong-password': 'Account or password is incorrect.',
+                'auth/user-not-found': 'Account or password is incorrect.',
+                'auth/invalid-email': 'Please enter a valid email format.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
+                'auth/network-request-failed': 'Network error. Please check your connection and retry.'
+            };
+            if (map[code]) return map[code];
+            const raw = String(error && error.message || '').trim();
+            if (raw && !/firebase/i.test(raw)) return raw;
+            return fallbackMessage || 'Login failed. Please try again.';
+        }
+
         function buildDeterministicUserId(uid) {
             const src = String(uid || '');
             let hash = 0;
@@ -539,7 +555,7 @@
                 alert("Login successful!");
                 window.location.href = 'dashboard.html';
             } catch (error) {
-                alert("Login failed: " + error.message);
+                alert(getReadableLoginError(error, 'Login failed. Please try again.'));
             }
         });
 
@@ -566,7 +582,7 @@
                 await sendPasswordResetEmail(auth, email);
                 alert('Password reset email sent. Please check your inbox.');
             } catch (error) {
-                alert('Failed to send reset email: ' + error.message);
+                alert(getReadableLoginError(error, 'Failed to send reset email. Please try again later.'));
             }
         });
 

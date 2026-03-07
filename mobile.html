@@ -1841,6 +1841,81 @@
             transform: scale(0.98);
         }
 
+        #trade-open-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.82);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 11010;
+        }
+
+        .trade-open-modal-box {
+            width: 88%;
+            max-width: 360px;
+            background: #160b2a;
+            border: 1px solid rgba(0, 212, 255, 0.28);
+            border-radius: 16px;
+            padding: 18px 16px 14px;
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.45);
+            color: #fff;
+        }
+
+        .trade-open-head {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #00d4ff;
+        }
+
+        .trade-open-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 14px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .trade-open-details>div {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .trade-open-details b {
+            color: #fff;
+            font-weight: 600;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .trade-open-order-id {
+            font-size: 11px;
+            color: #9ad7ff !important;
+        }
+
+        .trade-open-confirm-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #00d4ff, #6a35ff);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
         .history-label {
             display: inline-block;
             background: rgba(26, 11, 46, 0.8);
@@ -10615,6 +10690,26 @@
             return 'Failed to send OTP. Please try again later.';
         }
 
+        function getReadableAuthErrorMessage(error, fallbackMessage) {
+            const code = String(error && error.code || '').toLowerCase();
+            const map = {
+                'auth/email-already-in-use': 'This account is already registered. Please login directly.',
+                'auth/invalid-credential': 'Account or password is incorrect.',
+                'auth/wrong-password': 'Account or password is incorrect.',
+                'auth/user-not-found': 'Account or password is incorrect.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
+                'auth/network-request-failed': 'Network error. Please check connection and retry.',
+                'auth/invalid-verification-code': 'Invalid or expired SMS code.',
+                'auth/code-expired': 'The verification code has expired. Please request a new code.',
+                'permission-denied': 'Permission denied. Please log in again.',
+                'unauthenticated': 'Session expired. Please log in again.'
+            };
+            if (map[code]) return map[code];
+            const raw = String(error && error.message || '').trim();
+            if (raw && !/firebase/i.test(raw)) return raw;
+            return fallbackMessage || 'Request failed. Please try again.';
+        }
+
         async function sendOTP() {
             console.log("sendOTP button clicked");
             const rawEmail = document.getElementById('signup-email').value;
@@ -10801,7 +10896,8 @@
                 try {
                     await confirmationResult.confirm(otpInput);
                 } catch (error) {
-                    return msg.innerHTML = `<span class="error-text">Invalid SMS code: ${error.message}</span>`;
+                    const smsError = getReadableAuthErrorMessage(error, 'Invalid or expired SMS code.');
+                    return msg.innerHTML = `<span class="error-text">${smsError}</span>`;
                 }
 
                 const selectedCode = (document.getElementById('signup-country-code') || {}).value || '+1';
@@ -10875,7 +10971,7 @@
                 } else if (error.code === 'auth/network-request-failed') {
                     msg.innerHTML = '<span class="error-text">Network unstable. Please retry.</span>';
                 } else {
-                    msg.innerHTML = `<span class="error-text">${error.message}</span>`;
+                    msg.innerHTML = `<span class="error-text">${getReadableAuthErrorMessage(error, 'Unable to create account right now. Please try again.')}</span>`;
                 }
             } finally {
                 window.__mobileSignupInProgress = false;
@@ -11003,7 +11099,7 @@
                 } else if (code === 'auth/network-request-failed') {
                     msg.innerHTML = '<span class="error-text">Network error. Please check connection and retry.</span>';
                 } else {
-                    msg.innerHTML = '<span class="error-text">' + error.message + '</span>';
+                    msg.innerHTML = `<span class="error-text">${getReadableAuthErrorMessage(error, 'Login failed. Please try again.')}</span>`;
                 }
             }
         }
@@ -14791,6 +14887,44 @@ No transfer fees for account transfer / exchange</div>
             }
         };
 
+        window.showPerpetualOrderOpenedModal = function (payload) {
+            const overlay = document.getElementById('trade-open-overlay');
+            const details = document.getElementById('trade-open-details');
+            if (!overlay || !details || !payload) {
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Perpetual order opened successfully.');
+                }
+                return;
+            }
+            const tpValue = payload.takeProfit === null || payload.takeProfit === undefined ? '--' : Number(payload.takeProfit).toFixed(2);
+            const slValue = payload.stopLoss === null || payload.stopLoss === undefined ? '--' : Number(payload.stopLoss).toFixed(2);
+            details.innerHTML = `
+                <div><span>Pair</span><b>${payload.symbol}/USDT</b></div>
+                <div><span>Side</span><b>${payload.direction}</b></div>
+                <div><span>Lots</span><b>${payload.lots}</b></div>
+                <div><span>Contract Unit</span><b>${payload.contractUnit} USDT/Lot</b></div>
+                <div><span>Contract Value</span><b>${Number(payload.notional).toFixed(2)} USDT</b></div>
+                <div><span>Leverage</span><b>${payload.leverage}x</b></div>
+                <div><span>Entry</span><b>${Number(payload.entryPrice).toFixed(2)}</b></div>
+                <div><span>TP / SL</span><b>${tpValue} / ${slValue}</b></div>
+                <div><span>Order ID</span><b class="trade-open-order-id">${payload.tradeId}</b></div>
+            `;
+            overlay.style.display = 'flex';
+            if (!overlay.__bindClose) {
+                overlay.addEventListener('click', (evt) => {
+                    if (evt.target === overlay) {
+                        window.closePerpetualOrderOpenedModal();
+                    }
+                });
+                overlay.__bindClose = true;
+            }
+        };
+
+        window.closePerpetualOrderOpenedModal = function () {
+            const overlay = document.getElementById('trade-open-overlay');
+            if (overlay) overlay.style.display = 'none';
+        };
+
         window.handleContractTrade = async (directionOverride) => {
             if (window.guardKycForAction && window.guardKycForAction('opening a perpetual order')) return;
             const symbol = window.currentTradingCoin || 'BTC';
@@ -14868,13 +15002,25 @@ No transfer fees for account transfer / exchange</div>
                 };
 
                 const tradeId = await window.fire_submitTrade(tradeInfo);
-                alert(
-                    `Perpetual order opened\nPair: ${symbol}/USDT\nSide: ${direction}\nLots: ${lots}\nContract Unit: ${contractUnit} USDT/Lot\nContract Value: ${notional.toFixed(2)} USDT\nLeverage: ${leverage}x\n` +
-                    `Entry: ${entryPrice.toFixed(2)}\nTP: ${takeProfit !== null ? takeProfit : '--'}\nSL: ${stopLoss !== null ? stopLoss : '--'}\nOrder ID: ${tradeId}`
-                );
+                window.showPerpetualOrderOpenedModal({
+                    symbol: symbol,
+                    direction: direction,
+                    lots: lots,
+                    contractUnit: contractUnit,
+                    notional: notional,
+                    leverage: leverage,
+                    entryPrice: entryPrice,
+                    takeProfit: takeProfit,
+                    stopLoss: stopLoss,
+                    tradeId: tradeId
+                });
                 renderHoldPositions();
             } catch (e) {
-                alert("Trade failed: " + e.message);
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast(getReadableAuthErrorMessage(e, 'Trade failed. Please try again.'));
+                } else {
+                    alert("Trade failed.");
+                }
             }
         };
 
@@ -14925,7 +15071,11 @@ No transfer fees for account transfer / exchange</div>
                 overlay.style.display = 'flex';
             } catch (e) {
                 console.error("Close position error:", e);
-                alert("Failed to close position: " + e.message);
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast(getReadableAuthErrorMessage(e, 'Failed to close position. Please try again.'));
+                } else {
+                    alert("Failed to close position.");
+                }
             }
         };
 
@@ -15313,6 +15463,14 @@ No transfer fees for account transfer / exchange</div>
         window.renderHistoryContractList = renderHistoryContractList;
         window.renderWithdrawHistory = renderWithdrawHistory;
     </script>
+    <!-- Perpetual Open Order Modal -->
+    <div id="trade-open-overlay">
+        <div class="trade-open-modal-box">
+            <div class="trade-open-head">Perpetual Order Opened</div>
+            <div id="trade-open-details" class="trade-open-details"></div>
+            <button class="trade-open-confirm-btn" onclick="closePerpetualOrderOpenedModal()">Confirm</button>
+        </div>
+    </div>
     <!-- Trade Result Modal -->
     <div id="trade-result-overlay">
         <div class="result-modal-box">
