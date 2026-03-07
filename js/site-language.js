@@ -133,11 +133,19 @@
   var isFlushing = false;
   var uxReady = false;
 
+  function isFrontendHost(host) {
+    return host === "easycryptoguide.com"
+      || host === "www.easycryptoguide.com"
+      || host === "m.easycryptoguide.com"
+      || host === "easycryptoguide.pages.dev";
+  }
+
   function enforceDeviceEntryRouting() {
     try {
       var host = String(window.location.hostname || "").toLowerCase();
       if (!host) return false;
       if (host === "localhost" || host === "127.0.0.1" || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+      if (!isFrontendHost(host)) return false;
 
       var path = String(window.location.pathname || "").toLowerCase();
       if (path.indexOf("admin") >= 0 || path.indexOf("support_admin") >= 0) return false;
