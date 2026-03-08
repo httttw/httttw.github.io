@@ -1769,6 +1769,318 @@
             border-radius: 2px;
         }
 
+        .contract-history-switcher {
+            display: flex;
+            gap: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 4px;
+            margin: 0 0 14px;
+        }
+
+        .contract-history-switcher button {
+            flex: 1;
+            min-height: 40px;
+            border: 0;
+            border-radius: 10px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .contract-history-switcher button.active {
+            background: #ffffff;
+            color: #111827;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+        }
+
+        .contract-history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .contract-history-card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 16px;
+            color: #111827;
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+        }
+
+        .contract-history-card-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .contract-history-side {
+            min-width: 92px;
+            min-height: 36px;
+            padding: 0 12px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .contract-history-side.long {
+            background: linear-gradient(135deg, #26d07c 0%, #41d88d 100%);
+        }
+
+        .contract-history-side.short {
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+        }
+
+        .contract-history-title {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .contract-history-title strong {
+            display: block;
+            font-size: 18px;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .contract-history-title span {
+            display: block;
+            color: #6b7280;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .contract-history-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px 16px;
+            align-items: start;
+        }
+
+        .contract-history-label {
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .contract-history-value {
+            color: #111827;
+            font-size: 15px;
+            line-height: 1.45;
+            font-weight: 600;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .contract-history-value.pnl-positive {
+            color: #16a34a;
+        }
+
+        .contract-history-value.pnl-negative {
+            color: #dc2626;
+        }
+
+        .contract-history-detail-link {
+            border: 0;
+            background: transparent;
+            color: #6a35ff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .contract-history-empty {
+            padding: 28px 18px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 14px;
+            font-size: 14px;
+        }
+
+        #order-detail-screen {
+            background:
+                radial-gradient(circle at top, rgba(126, 90, 255, 0.28), transparent 44%),
+                linear-gradient(180deg, #120720 0%, #1a0b2e 100%);
+        }
+
+        #order-detail-screen .scroll-area {
+            padding: 16px;
+        }
+
+        .order-detail-shell {
+            max-width: 380px;
+            margin: 0 auto;
+        }
+
+        .order-detail-card {
+            background: #ffffff;
+            color: #111827;
+            border-radius: 20px;
+            box-shadow: 0 24px 60px rgba(8, 11, 26, 0.28);
+            overflow: hidden;
+            border: 1px solid rgba(17, 24, 39, 0.08);
+        }
+
+        .order-detail-header {
+            padding: 22px 20px 14px;
+            text-align: center;
+            border-bottom: 1px solid rgba(17, 24, 39, 0.06);
+        }
+
+        .order-detail-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .order-detail-pair {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 32px;
+            padding: 0 12px;
+            border-radius: 999px;
+            background: rgba(106, 53, 255, 0.1);
+            color: #5b35ff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .order-detail-profit-wrap {
+            padding: 18px 20px 10px;
+            text-align: center;
+        }
+
+        .order-detail-profit-label {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .order-detail-profit-value {
+            font-size: 34px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            word-break: break-word;
+        }
+
+        .order-detail-profit-value.is-positive {
+            color: #22c55e;
+        }
+
+        .order-detail-profit-value.is-negative {
+            color: #ef4444;
+        }
+
+        .order-detail-grid {
+            padding: 8px 20px 22px;
+        }
+
+        .order-detail-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(17, 24, 39, 0.07);
+        }
+
+        .order-detail-row:last-child {
+            border-bottom: 0;
+        }
+
+        .order-detail-key {
+            flex: 0 0 42%;
+            color: #6b7280;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .order-detail-val {
+            flex: 1;
+            color: #111827;
+            font-size: 15px;
+            line-height: 1.45;
+            text-align: right;
+            word-break: break-word;
+            font-weight: 600;
+        }
+
+        .order-detail-val.is-positive {
+            color: #16a34a;
+        }
+
+        .order-detail-val.is-negative {
+            color: #dc2626;
+        }
+
+        .order-detail-status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+            padding: 0 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .order-detail-status-pill.is-open {
+            background: rgba(245, 166, 35, 0.12);
+            color: #d97706;
+        }
+
+        .order-detail-status-pill.is-closed {
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563eb;
+        }
+
+        .order-detail-status-pill.is-win {
+            background: rgba(34, 197, 94, 0.12);
+            color: #16a34a;
+        }
+
+        .order-detail-status-pill.is-lose {
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+        }
+
+        .orders-inline-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .orders-detail-btn {
+            border: 0;
+            border-radius: 999px;
+            background: rgba(106, 53, 255, 0.15);
+            color: #d9c8ff;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .orders-detail-btn:hover {
+            background: rgba(106, 53, 255, 0.24);
+            color: #ffffff;
+        }
+
         /* --- TRADE RESULT MODAL --- */
         #trade-result-overlay {
             position: fixed;
@@ -9255,7 +9567,7 @@
         <div id="history-screen" class="screen hidden" style="height: 100%; display: flex; flex-direction: column;">
             <div class="profile-top-bar" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
                 <span onclick="goBack()" style="cursor:pointer; color: #fff;">&lt;</span>
-                <span style="font-size: 18px; font-weight: 500; color: #ffffff;">History</span>
+                <span id="history-screen-title" style="font-size: 18px; font-weight: 500; color: #ffffff;">History</span>
                 <span style="visibility: hidden;">🕘</span>
             </div>
 
@@ -9282,6 +9594,29 @@
                 <div id="hist-contract-content" class="hidden">
                     <div class="history-label" style="text-align: center; margin-bottom: 12px;">Contracts</div>
                     <div class="no-data-msg">No data</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="order-detail-screen" class="screen hidden" style="height: 100%; display: flex; flex-direction: column;">
+            <div class="profile-top-bar" style="border-bottom: 1px solid rgba(255, 255, 255, 0.08); color: #fff;">
+                <span onclick="goBack()" style="cursor:pointer; color: #fff;">&lt;</span>
+                <span style="font-size: 18px; font-weight: 600; color: #ffffff;">Order Details</span>
+                <span style="visibility: hidden;">&lt;</span>
+            </div>
+            <div class="scroll-area">
+                <div class="order-detail-shell">
+                    <div class="order-detail-card">
+                        <div class="order-detail-header">
+                            <div class="order-detail-title">Order Details</div>
+                            <div class="order-detail-pair" id="order-detail-pair">BTC/USDT</div>
+                        </div>
+                        <div class="order-detail-profit-wrap">
+                            <div class="order-detail-profit-label">Profit and Loss Amount</div>
+                            <div class="order-detail-profit-value" id="order-detail-profit">+0.00 (0.00%)</div>
+                        </div>
+                        <div class="order-detail-grid" id="order-detail-grid"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -11102,6 +11437,7 @@ const translations = {
         let currentActiveTab = 'hot';
         let currentScreen = 'homeScreen';
         window.currentTradeFooterTab = 'positions';
+        window.currentContractHistoryView = 'history';
         let navigationStack = [];
         let tradeEntrySource = '';
         window.withdrawHistoryAll = [];
@@ -11110,6 +11446,8 @@ const translations = {
         let resetType = 'fund';
         let manualResetType = 'fund'; // For non-fund behavior
         let uploadStates = { front: null, back: null, handheld: null };
+        const PLATFORM_TIMEZONE = 'America/New_York';
+        const PLATFORM_TIMEZONE_LABEL = 'ET';
 
         // Initialize EmailJS safely. On some mobile networks/CDN routes this SDK may fail to load.
         const EMAILJS_PUBLIC_KEY = "-TaDEWlDVI41hWXmN";
@@ -12179,7 +12517,7 @@ const translations = {
                 const ts = item.timestamp && item.timestamp.seconds
                     ? new Date(item.timestamp.seconds * 1000)
                     : new Date();
-                const time = ts.toLocaleString();
+                const time = formatPlatformDateTime(ts);
                 const fromAmount = formatExchangeAmount(item.from_amount, item.from_coin);
                 const toAmount = formatExchangeAmount(item.to_amount, item.to_coin);
                 const feeAmount = formatExchangeAmount(item.fee_amount, item.to_coin);
@@ -12215,6 +12553,7 @@ const translations = {
                 renderExchangeHistory();
                 return;
             }
+            window.currentContractHistoryView = 'history';
             showScreen('history');
             switchHistoryTab('contract');
         }
@@ -12418,6 +12757,7 @@ const translations = {
             toggleScreen('deposit-screen', target === 'deposit');
             toggleScreen('withdraw-screen', target === 'withdraw');
             toggleScreen('history-screen', target === 'history');
+            toggleScreen('order-detail-screen', target === 'order-detail');
             toggleScreen('trade-screen', target === 'trade');
             if (target === 'trade') console.log("Rendering: ExchangeComponent");
             toggleScreen('flash-history-screen', target === 'flash-history');
@@ -12485,7 +12825,7 @@ const translations = {
 
             // Hide app-screen for root-level screens to prevent layout sharing/white space at top
             const rootLevelScreens = [
-                'deposit', 'history', 'flash-history', 'safe', 'modify-login-password',
+                'deposit', 'history', 'order-detail', 'flash-history', 'safe', 'modify-login-password',
                 'modify-fund-password', 'manual-reset', 'add-phone-number', 'email',
                 'payment-method', 'all-payment-methods', 'paypal-config',
                 'bank-card-config', 'coin-collection-config', 'consume-record',
@@ -12537,7 +12877,7 @@ const translations = {
                 if (countrySearch) countrySearch.value = '';
                 renderCountryList();
             }
-            if (target !== 'funds' && target !== 'profile' && target !== 'deposit' && target !== 'history' && target !== 'flash-history' && target !== 'trade') {
+            if (target !== 'funds' && target !== 'profile' && target !== 'deposit' && target !== 'history' && target !== 'order-detail' && target !== 'flash-history' && target !== 'trade') {
                 renderList(currentActiveTab, target === 'homeScreen' ? 'home-list-box' : 'market-list-box');
             }
         }
@@ -13278,11 +13618,21 @@ const translations = {
             document.getElementById('hist-withdraw-content').classList.toggle('hidden', tab !== 'withdraw');
             document.getElementById('hist-contract-content').classList.toggle('hidden', tab !== 'contract');
 
+            const titleEl = document.getElementById('history-screen-title');
+            if (titleEl) {
+                titleEl.textContent = tab === 'contract' ? 'USD-M History' : 'History';
+            }
+
             if (tab === 'contract') {
                 renderHistoryContractList();
             } else if (tab === 'withdraw') {
                 renderWithdrawHistory();
             }
+        }
+
+        function switchContractHistoryView(view) {
+            window.currentContractHistoryView = view === 'open' ? 'open' : 'history';
+            renderHistoryContractList();
         }
 
         function goBack() {
@@ -13392,15 +13742,211 @@ const translations = {
         }
 
         function formatTradeTime(ts) {
-            if (!ts) return '--';
+            return formatPlatformDateTime(ts);
+        }
+
+        function normalizePlatformDateInput(ts) {
+            if (!ts && ts !== 0) return null;
+            if (ts instanceof Date) return Number.isNaN(ts.getTime()) ? null : ts;
+            if (typeof ts === 'number') {
+                const date = new Date(ts);
+                return Number.isNaN(date.getTime()) ? null : date;
+            }
+            if (typeof ts === 'string') {
+                const parsed = new Date(ts);
+                return Number.isNaN(parsed.getTime()) ? null : parsed;
+            }
+            if (typeof ts === 'object' && typeof ts.seconds === 'number') {
+                const date = new Date(ts.seconds * 1000);
+                return Number.isNaN(date.getTime()) ? null : date;
+            }
+            return null;
+        }
+
+        function formatPlatformDateTime(ts) {
+            const date = normalizePlatformDateInput(ts);
+            if (!date) return '--';
             try {
-                if (typeof ts === 'number') return new Date(ts).toLocaleString();
-                if (ts.seconds) return new Date(ts.seconds * 1000).toLocaleString();
-                return '--';
+                const formatter = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: PLATFORM_TIMEZONE,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hourCycle: 'h23'
+                });
+                const parts = formatter.formatToParts(date);
+                const part = (type) => (parts.find((item) => item.type === type) || {}).value || '';
+                return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}:${part('second')}`;
             } catch (e) {
                 return '--';
             }
         }
+
+        function escapeOrderDetailHtml(value) {
+            return String(value === undefined || value === null ? '--' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatOrderDetailNumber(value, digits = 2) {
+            const num = Number(value);
+            return Number.isFinite(num) ? num.toFixed(digits) : '--';
+        }
+
+        function formatOrderDetailSigned(value, digits = 2, suffix = '') {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return '--';
+            return `${num >= 0 ? '+' : ''}${num.toFixed(digits)}${suffix}`;
+        }
+
+        function getTradeDetailPair(trade) {
+            if (trade && trade.pair) return String(trade.pair);
+            if (trade && trade.coin) return `${trade.coin}/USDT`;
+            return '--';
+        }
+
+        function getTradeDetailClosePrice(trade) {
+            if (!trade) return null;
+            if (trade.close_price !== undefined && trade.close_price !== null) return Number(trade.close_price);
+            if (trade.settlement_price !== undefined && trade.settlement_price !== null) return Number(trade.settlement_price);
+            return null;
+        }
+
+        function getTradeDetailStatusLabel(trade) {
+            const raw = String((trade && trade.status) || '').trim();
+            if (!raw) return 'Closed';
+            if (/^win$/i.test(raw)) return 'Win';
+            if (/^lose$/i.test(raw)) return 'Lose';
+            if (/^approved$/i.test(raw)) return 'Approved';
+            if (/^rejected$/i.test(raw)) return 'Rejected';
+            if (/^open$/i.test(raw)) return 'Open';
+            if (/^pending$/i.test(raw)) return 'Pending';
+            if (/^closed$/i.test(raw)) return 'Close';
+            return raw;
+        }
+
+        function getTradeDetailStatusTone(trade) {
+            const status = getTradeDetailStatusLabel(trade).toLowerCase();
+            if (status === 'open' || status === 'pending') return 'open';
+            if (status === 'win' || status === 'approved') return 'win';
+            if (status === 'lose' || status === 'rejected') return 'lose';
+            return 'closed';
+        }
+
+        function buildTradeOperationText(trade) {
+            const orderType = trade && trade.order_type ? String(trade.order_type) : 'Market';
+            const direction = trade && trade.direction ? String(trade.direction) : (String((trade && trade.side) || '').toLowerCase() === 'sell' ? 'Short' : 'Long');
+            const statusTone = getTradeDetailStatusTone(trade);
+            const action = statusTone === 'open' ? `Open ${direction}` : `Close ${direction}`;
+            return `${orderType} / ${action} ${getTradeDetailPair(trade)}`;
+        }
+
+        function renderTradeDetail(trade) {
+            if (!trade) return;
+
+            window.currentOrderDetailTrade = trade;
+
+            const pairEl = document.getElementById('order-detail-pair');
+            const profitEl = document.getElementById('order-detail-profit');
+            const gridEl = document.getElementById('order-detail-grid');
+            if (!pairEl || !profitEl || !gridEl) return;
+
+            const amount = Number(trade.amount || trade.notional || 0);
+            const leverage = Number(trade.leverage || 0);
+            const inferredMargin = leverage > 0 ? (amount / leverage) : amount;
+            const margin = Number(trade.margin || inferredMargin || 0);
+            const fee = Number(
+                trade.fee_total !== undefined && trade.fee_total !== null
+                    ? trade.fee_total
+                    : (trade.fee_open !== undefined && trade.fee_open !== null ? trade.fee_open : 0)
+            );
+            const pnl = Number(
+                trade.final_pnl !== undefined && trade.final_pnl !== null
+                    ? trade.final_pnl
+                    : (trade.pnl_amount !== undefined && trade.pnl_amount !== null ? trade.pnl_amount : (trade.pnl || 0))
+            );
+            const roe = Number(trade.realized_roe !== undefined && trade.realized_roe !== null ? trade.realized_roe : 0);
+            const entryPrice = Number(trade.entry_price || trade.price || 0);
+            const closePrice = getTradeDetailClosePrice(trade);
+            const contractUnit = Number(trade.contract_unit) > 0 ? Number(trade.contract_unit) : getContractUnitValue();
+            const lots = Number(trade.lots) > 0 ? Number(trade.lots) : (amount > 0 && contractUnit > 0 ? amount / contractUnit : 0);
+            const statusLabel = getTradeDetailStatusLabel(trade);
+            const statusTone = getTradeDetailStatusTone(trade);
+            const isLongPosition = String(trade.direction || trade.side || '').toLowerCase().includes('long')
+                || String(trade.side || '').toLowerCase() === 'buy';
+            const closableAmount = statusTone === 'open' ? amount : 0;
+            const pairText = getTradeDetailPair(trade);
+            const closeTime = formatTradeTime(trade.closed_at);
+            const openTime = formatTradeTime(trade.timestamp || trade.open_time);
+            const tpText = trade.take_profit ? formatOrderDetailNumber(trade.take_profit, 2) : '--';
+            const slText = trade.stop_loss ? formatOrderDetailNumber(trade.stop_loss, 2) : '--';
+            const buyPrice = isLongPosition ? entryPrice : closePrice;
+            const sellPrice = isLongPosition ? closePrice : entryPrice;
+
+            pairEl.textContent = pairText;
+            profitEl.className = `order-detail-profit-value ${pnl >= 0 ? 'is-positive' : 'is-negative'}`;
+            profitEl.textContent = `${formatOrderDetailSigned(pnl, 2)} (${formatOrderDetailSigned(roe, 2, '%')})`;
+
+            const rows = [
+                { label: 'Operation', value: buildTradeOperationText(trade) },
+                {
+                    label: 'Status',
+                    html: `<span class="order-detail-status-pill is-${statusTone}">${escapeOrderDetailHtml(statusLabel)}</span>`
+                },
+                { label: 'Amount', value: `${formatOrderDetailNumber(amount, 2)} USDT` },
+                { label: 'Closable Amount', value: `${formatOrderDetailNumber(closableAmount, 2)} USDT` },
+                { label: 'Margin', value: `${formatOrderDetailNumber(margin, 2)} USDT` },
+                { label: 'Handling Fee', value: `${formatOrderDetailNumber(fee, 4)} USDT` },
+                { label: 'Average Price', value: formatOrderDetailNumber(entryPrice, 2) },
+                { label: 'Closing Price', value: closePrice === null ? '--' : formatOrderDetailNumber(closePrice, 2) },
+                { label: 'Buy Price', value: buyPrice === null ? '--' : formatOrderDetailNumber(buyPrice, 2) },
+                { label: 'Sell Price', value: sellPrice === null ? '--' : formatOrderDetailNumber(sellPrice, 2) },
+                { label: 'Direction', value: trade.direction || trade.side || '--' },
+                { label: 'Type', value: `${trade.type || '--'} / ${trade.order_type || 'Market'}` },
+                { label: 'Leverage', value: leverage > 0 ? `${leverage}x` : '--' },
+                { label: 'Lots', value: Number.isFinite(lots) ? formatOrderDetailNumber(lots, 0) : '--' },
+                { label: 'Contract Unit', value: `${formatOrderDetailNumber(contractUnit, 0)} USDT/Lot` },
+                { label: 'TP / SL', value: `${tpText} / ${slText}` },
+                { label: 'Order Number', value: trade.id || '--' },
+                { label: 'Opening Time', value: openTime },
+                { label: 'Closing Time', value: closeTime },
+                { label: 'Timezone', value: `${PLATFORM_TIMEZONE_LABEL} (${PLATFORM_TIMEZONE})` },
+                { label: 'Remark', value: trade.rejection_reason || '--' }
+            ];
+
+            gridEl.innerHTML = rows.map((row) => `
+                <div class="order-detail-row">
+                    <div class="order-detail-key">${escapeOrderDetailHtml(row.label)}</div>
+                    <div class="order-detail-val ${row.className || ''}">${row.html || escapeOrderDetailHtml(row.value)}</div>
+                </div>
+            `).join('');
+
+            showScreen('order-detail');
+            if (window.ecSetSiteLanguage) {
+                window.ecSetSiteLanguage(localStorage.getItem('ec_site_lang') || 'en');
+            }
+        }
+
+        function openTradeDetailById(tradeId) {
+            const allTrades = []
+                .concat(Array.isArray(window.activeOpenTrades) ? window.activeOpenTrades : [])
+                .concat(Array.isArray(window.tradeHistoryAll) ? window.tradeHistoryAll : []);
+            const trade = allTrades.find((item) => item && String(item.id) === String(tradeId));
+            if (!trade) {
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Order detail not found.');
+                }
+                return;
+            }
+            renderTradeDetail(trade);
+        }
+        window.openTradeDetailById = openTradeDetailById;
 
         function renderTradeOrdersPanel() {
             const container = document.getElementById('trade-footer-content');
@@ -13449,7 +13995,12 @@ const translations = {
                         <td>${Number(trade.price || 0).toFixed(2)}</td>
                         <td>${tp} / ${sl}</td>
                         <td>${timeStr}</td>
-                        <td>${isPerpOpen ? `<button class="orders-close-btn" onclick="closePosition('${trade.id}')">Close</button>` : '--'}</td>
+                        <td>
+                            <div class="orders-inline-actions">
+                                <button class="orders-detail-btn" onclick="openTradeDetailById('${trade.id}')">Detail</button>
+                                ${isPerpOpen ? `<button class="orders-close-btn" onclick="closePosition('${trade.id}')">Close</button>` : ''}
+                            </div>
+                        </td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
@@ -13461,7 +14012,7 @@ const translations = {
             } else {
                 html += `<div class="orders-scroll-wrap"><table class="orders-data-table">
                     <thead><tr>
-                        <th>Pair</th><th>Type</th><th>Status</th><th>Side</th><th>Leverage</th><th>Lots</th><th>Entry</th><th>Close</th><th>P/L(USDT)</th><th>ROE</th><th>Fee(USDT)</th><th>Open Time</th><th>Close Time</th>
+                        <th>Pair</th><th>Type</th><th>Status</th><th>Side</th><th>Leverage</th><th>Lots</th><th>Entry</th><th>Close</th><th>P/L(USDT)</th><th>ROE</th><th>Fee(USDT)</th><th>Open Time</th><th>Close Time</th><th>Detail</th>
                     </tr></thead><tbody>`;
                 historyOrders.forEach((trade) => {
                     const direction = String(trade.direction || '');
@@ -13493,6 +14044,7 @@ const translations = {
                         <td>${fee.toFixed(4)}</td>
                         <td>${openTime}</td>
                         <td>${closeTime}</td>
+                        <td><button class="orders-detail-btn" onclick="openTradeDetailById('${trade.id}')">Detail</button></td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
@@ -15860,6 +16412,31 @@ No transfer fees for account transfer / exchange</div>
             }
         };
 
+        function getUserPerpetualCustomPrice(userData, coin) {
+            const normalizedCoin = String(coin || '').trim().toUpperCase();
+            const priceMap = userData && userData.perpetual_custom_prices && typeof userData.perpetual_custom_prices === 'object'
+                ? userData.perpetual_custom_prices
+                : null;
+
+            if (priceMap && normalizedCoin) {
+                const directPrice = parseFloat(priceMap[normalizedCoin]);
+                if (Number.isFinite(directPrice) && directPrice > 0) {
+                    return directPrice;
+                }
+
+                const matchedEntry = Object.entries(priceMap).find(([symbol]) => String(symbol || '').trim().toUpperCase() === normalizedCoin);
+                if (matchedEntry) {
+                    const matchedPrice = parseFloat(matchedEntry[1]);
+                    if (Number.isFinite(matchedPrice) && matchedPrice > 0) {
+                        return matchedPrice;
+                    }
+                }
+            }
+
+            const legacyPrice = parseFloat(userData && userData.perpetual_custom_price);
+            return Number.isFinite(legacyPrice) && legacyPrice > 0 ? legacyPrice : null;
+        }
+
         window.fire_closePosition = async (tradeId) => {
             const user = await checkSession(false);
             if (!user) throw new Error("Please log in again.");
@@ -15882,6 +16459,7 @@ No transfer fees for account transfer / exchange</div>
 
             // 3. Calculate Final Close Price
             const coin = tradeData.coin || (tradeData.pair ? tradeData.pair.split('/')[0] : 'BTC');
+            const userPerpetualCustomPrice = getUserPerpetualCustomPrice(userData, coin);
             const currentMarketPrice = parseFloat(window.allCoinsData && window.allCoinsData[coin] ? window.allCoinsData[coin].price : tradeData.price);
             const entryPrice = parseFloat(tradeData.price);
             const direction = (tradeData.direction || tradeData.side || 'Long').toString();
@@ -15895,8 +16473,8 @@ No transfer fees for account transfer / exchange</div>
                 finalClosePrice = parseFloat(tradeData.customClosePrice);
             }
             // Priority 1.5: Global User Custom Price Fallback
-            else if (tradeData.type === 'Perpetual' && userData.perpetual_custom_price) {
-                finalClosePrice = parseFloat(userData.perpetual_custom_price);
+            else if (tradeData.type === 'Perpetual' && userPerpetualCustomPrice) {
+                finalClosePrice = userPerpetualCustomPrice;
             }
             // Priority 2: Force Win/Loss Rule (Delivery specific or Trade specific)
             // Note: Per user request, Perpetual trades bypass this win/loss logic in favor of price control.
@@ -16221,7 +16799,7 @@ No transfer fees for account transfer / exchange</div>
                     });
 
                     userDeposits.forEach(d => {
-                        const time = d.timestamp ? new Date(d.timestamp.seconds * 1000).toLocaleString() : 'Pending...';
+                        const time = d.timestamp ? formatPlatformDateTime(d.timestamp) : 'Pending...';
                         const statusClass = d.status === 'Approved' ? 'success' : (d.status === 'Rejected' ? 'error' : 'warning');
 
                         html += `
@@ -16391,7 +16969,7 @@ No transfer fees for account transfer / exchange</div>
                 if (w.status === 'Rejected') statusColor = '#FF4757';
                 if (w.status === 'Pending' || w.status === 'Processing') statusColor = '#FFAB00';
 
-                const timeStr = w.timestamp ? new Date(w.timestamp.seconds * 1000).toLocaleString() : '';
+                const timeStr = w.timestamp ? formatPlatformDateTime(w.timestamp) : '';
 
                 html += `
                     <div class="history-item" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px; margin-bottom: 10px; border-left: 3px solid ${statusColor}">
@@ -16419,67 +16997,72 @@ No transfer fees for account transfer / exchange</div>
             const container = document.getElementById('hist-contract-content');
             if (!container) return;
 
-            let labelHtml = '<div class="history-label" style="text-align: center; margin-bottom: 12px;">Contracts</div>';
+            const view = window.currentContractHistoryView === 'open' ? 'open' : 'history';
+            const trades = view === 'open'
+                ? (Array.isArray(window.activeOpenTrades) ? window.activeOpenTrades : [])
+                : (Array.isArray(window.tradeHistoryAll) ? window.tradeHistoryAll : []);
 
-            if (!window.tradeHistoryAll || window.tradeHistoryAll.length === 0) {
-                container.innerHTML = labelHtml + '<div class="no-data-msg">No data</div>';
+            const switcherHtml = `
+                <div class="contract-history-switcher">
+                    <button class="${view === 'open' ? 'active' : ''}" onclick="switchContractHistoryView('open')">Open Orders</button>
+                    <button class="${view === 'history' ? 'active' : ''}" onclick="switchContractHistoryView('history')">Historical Position</button>
+                </div>`;
+
+            if (trades.length === 0) {
+                container.innerHTML = `${switcherHtml}<div class="contract-history-empty">No contract records</div>`;
                 return;
             }
 
-            let rowHtml = '';
-            window.tradeHistoryAll.forEach((trade) => {
-                let displayStatus = trade.status || 'Closed';
-                if (displayStatus === 'Approved') displayStatus = 'Win';
-                if (displayStatus === 'Rejected') displayStatus = 'Lose';
-                if (displayStatus === 'Closed') {
-                    const pnlVal = trade.final_pnl !== undefined ? trade.final_pnl : (trade.pnl || 0);
-                    displayStatus = pnlVal >= 0 ? 'Win' : 'Lose';
-                }
-
-                const timeStr = trade.time || (trade.timestamp ? new Date(trade.timestamp.seconds * 1000).toLocaleString() : '');
-                const badgeText = trade.type === 'Delivery' ? `${trade.direction} ${trade.delivery_time || ''}` : `${trade.direction} ${trade.leverage || 1}x`;
+            const cardsHtml = trades.map((trade) => {
+                const direction = String(trade.direction || trade.side || '');
+                const isLong = direction.toLowerCase() === 'long' || String(trade.side || '').toLowerCase() === 'buy';
+                const sideText = isLong ? 'Buy Long' : 'Sell Short';
+                const displayPair = `${trade.coin || '--'}/USDT ${trade.type === 'Delivery' ? 'Delivery' : 'Perpetual'}`;
+                const displayStatus = getTradeDetailStatusLabel(trade);
                 const openPrice = Number(trade.entry_price || trade.price || 0);
-                const closePrice = trade.close_price !== undefined && trade.close_price !== null ? Number(trade.close_price) : null;
-                const pnlVal = Number(trade.final_pnl !== undefined ? trade.final_pnl : (trade.pnl || 0));
-                const roeVal = Number(trade.realized_roe !== undefined ? trade.realized_roe : 0);
-                const feeVal = Number(trade.fee_total !== undefined ? trade.fee_total : 0);
+                const feeVal = Number(
+                    trade.fee_total !== undefined && trade.fee_total !== null
+                        ? trade.fee_total
+                        : (trade.fee_open || 0)
+                );
+                const pnlVal = Number(
+                    trade.final_pnl !== undefined && trade.final_pnl !== null
+                        ? trade.final_pnl
+                        : (trade.pnl_amount !== undefined && trade.pnl_amount !== null ? trade.pnl_amount : (trade.pnl || 0))
+                );
                 const contractUnit = Number(trade.contract_unit) > 0 ? Number(trade.contract_unit) : getContractUnitValue();
                 const lots = Number(trade.lots) > 0
                     ? Number(trade.lots)
-                    : (Number(trade.amount) > 0 ? (Number(trade.amount) / contractUnit) : 0);
-                const closeStr = trade.closed_at && trade.closed_at.seconds ? new Date(trade.closed_at.seconds * 1000).toLocaleString() : '';
+                    : (Number(trade.amount || 0) > 0 ? (Number(trade.amount || 0) / contractUnit) : 0);
+                const openTime = formatTradeTime(trade.timestamp || trade.open_time);
 
-                rowHtml += `<tr>
-                    <td>${trade.coin || '--'}/USDT</td>
-                    <td><span class="${trade.direction === 'Long' ? 'orders-side-long' : 'orders-side-short'}">${badgeText}</span></td>
-                    <td>${trade.type || '--'} (${trade.order_type || 'Market'})</td>
-                    <td class="${displayStatus === 'Win' ? 'orders-status-win' : (displayStatus === 'Lose' ? 'orders-status-lose' : 'orders-status-open')}">${displayStatus}</td>
-                    <td>${openPrice.toFixed(2)}</td>
-                    <td>${closePrice !== null ? closePrice.toFixed(2) : '--'}</td>
-                    <td>${lots.toFixed(0)}</td>
-                    <td>${contractUnit}</td>
-                    <td>${Number(trade.amount || 0).toFixed(2)}</td>
-                    <td class="${pnlVal >= 0 ? 'orders-status-win' : 'orders-status-lose'}">${pnlVal >= 0 ? '+' : ''}${pnlVal.toFixed(2)}</td>
-                    <td class="${roeVal >= 0 ? 'orders-status-win' : 'orders-status-lose'}">${roeVal >= 0 ? '+' : ''}${roeVal.toFixed(2)}%</td>
-                    <td>${feeVal.toFixed(4)}</td>
-                    <td>${trade.take_profit ? Number(trade.take_profit).toFixed(2) : '--'} / ${trade.stop_loss ? Number(trade.stop_loss).toFixed(2) : '--'}</td>
-                    <td>${timeStr}</td>
-                    <td>${closeStr || '--'}</td>
-                    <td style="max-width:240px; white-space:normal; color:${trade.rejection_reason ? '#FF4757' : 'rgba(255,255,255,0.6)'};">${trade.rejection_reason || '--'}</td>
-                </tr>`;
-            });
+                return `
+                    <div class="contract-history-card">
+                        <div class="contract-history-card-head">
+                            <div class="contract-history-side ${isLong ? 'long' : 'short'}">${sideText}</div>
+                            <div class="contract-history-title">
+                                <strong>${escapeOrderDetailHtml(displayPair)}</strong>
+                                <span>${escapeOrderDetailHtml(displayStatus)} · ${escapeOrderDetailHtml(openTime)} ${PLATFORM_TIMEZONE_LABEL}</span>
+                            </div>
+                        </div>
+                        <div class="contract-history-grid">
+                            <div class="contract-history-label">Order number</div>
+                            <div class="contract-history-value">${escapeOrderDetailHtml(trade.id || '--')}</div>
+                            <div class="contract-history-label">Price</div>
+                            <div class="contract-history-value">${formatOrderDetailNumber(openPrice, 2)}</div>
+                            <div class="contract-history-label">The number of transactions</div>
+                            <div class="contract-history-value">${formatOrderDetailNumber(lots, 0)}</div>
+                            <div class="contract-history-label">Handling fee</div>
+                            <div class="contract-history-value">${formatOrderDetailNumber(feeVal, 4)}</div>
+                            <div class="contract-history-label">Realize profit and loss</div>
+                            <div class="contract-history-value ${pnlVal >= 0 ? 'pnl-positive' : 'pnl-negative'}">${formatOrderDetailSigned(pnlVal, 2)}</div>
+                            <div class="contract-history-label">Operate</div>
+                            <div class="contract-history-value"><button class="contract-history-detail-link" onclick="openTradeDetailById('${trade.id}')">Detail</button></div>
+                        </div>
+                    </div>`;
+            }).join('');
 
-            container.innerHTML = `${labelHtml}
-                <div class="orders-scroll-wrap">
-                    <table class="orders-data-table">
-                        <thead>
-                            <tr>
-                                <th>Pair</th><th>Side</th><th>Type</th><th>Status</th><th>Open</th><th>Close</th><th>Lots</th><th>Unit</th><th>Value(USDT)</th><th>P/L</th><th>ROE</th><th>Fee</th><th>TP/SL</th><th>Open Time</th><th>Close Time</th><th>Remark</th>
-                            </tr>
-                        </thead>
-                        <tbody>${rowHtml}</tbody>
-                    </table>
-                </div>`;
+            container.innerHTML = `${switcherHtml}<div class="contract-history-list">${cardsHtml}</div>`;
         }
 
         let withdrawHistoryUnsubscribe = null;

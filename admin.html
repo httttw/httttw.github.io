@@ -3429,6 +3429,179 @@
             }
         };
 
+        const PERPETUAL_CONTROL_SYMBOLS = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE', 'BNB', 'LTC', 'BCH', 'LINK', 'AVAX', 'DOT', 'ETC', 'TRX', 'HBAR', 'SUI', 'TON'];
+
+        function normalizePerpetualCoinSymbol(value) {
+            return String(value || '')
+                .trim()
+                .toUpperCase()
+                .replace('/USDT', '')
+                .replace('/USD', '');
+        }
+
+        function parsePerpetualPriceValue(value) {
+            const parsed = parseFloat(value);
+            return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+        }
+
+        function getUserPerpetualPriceMap(user) {
+            const source = user && user.perpetual_custom_prices && typeof user.perpetual_custom_prices === 'object'
+                ? user.perpetual_custom_prices
+                : {};
+            const normalized = {};
+
+            Object.entries(source).forEach(([coin, price]) => {
+                const symbol = normalizePerpetualCoinSymbol(coin);
+                const parsed = parsePerpetualPriceValue(price);
+                if (symbol && parsed !== null) {
+                    normalized[symbol] = parsed;
+                }
+            });
+
+            return normalized;
+        }
+
+        function getActivePerpetualCoins(uid) {
+            return Array.from(new Set(
+                Object.values(window.tradeDataMap || {})
+                    .filter(trade => (trade.user_uid === uid || trade.uid === uid) && trade.status === 'Open' && trade.type === 'Perpetual')
+                    .map(trade => normalizePerpetualCoinSymbol(trade.coin || trade.pair))
+                    .filter(Boolean)
+            )).sort();
+        }
+
+        function collectPerpetualCoinPriceInputs() {
+            const priceMap = {};
+            document.querySelectorAll('.perpetual-coin-price-row').forEach((row) => {
+                const coin = normalizePerpetualCoinSymbol(row.getAttribute('data-coin'));
+                const input = row.querySelector('.perpetual-coin-price-input');
+                const parsed = parsePerpetualPriceValue(input ? input.value : '');
+                if (coin && parsed !== null) {
+                    priceMap[coin] = parsed;
+                }
+            });
+            return priceMap;
+        }
+
+        function getAvailablePerpetualCoins(uid) {
+            const configuredCoins = Object.keys(window.editUserPerpetualPriceMap || {});
+            const visibleCoins = Array.isArray(window.editUserPerpetualCoins) ? window.editUserPerpetualCoins : [];
+            return Array.from(new Set([
+                ...PERPETUAL_CONTROL_SYMBOLS,
+                ...getActivePerpetualCoins(uid),
+                ...configuredCoins,
+                ...visibleCoins
+            ])).sort();
+        }
+
+        function syncPerpetualCoinStateFromInputs() {
+            window.editUserPerpetualPriceMap = collectPerpetualCoinPriceInputs();
+        }
+
+        function renderPerpetualCoinPriceInputs(user, uid) {
+            const container = document.getElementById('editUserPerpetualCoinPrices');
+            const selector = document.getElementById('editUserPerpetualCoinSelect');
+            if (!container || !selector) return;
+
+            const safeUid = uid || window.currentEditUid;
+            const safeUser = user || window.allUsersData[safeUid] || {};
+            const isFreshUser = !!safeUid && safeUid !== window._lastRenderedPerpetualUid;
+            const currentInputMap = collectPerpetualCoinPriceInputs();
+
+            if (!Array.isArray(window.editUserPerpetualCoins)) {
+                window.editUserPerpetualCoins = [];
+            }
+
+            if (isFreshUser) {
+                const baseMap = getUserPerpetualPriceMap(safeUser);
+                window.editUserPerpetualPriceMap = { ...baseMap };
+                window.editUserPerpetualCoins = Array.from(new Set([
+                    ...Object.keys(baseMap),
+                    ...getActivePerpetualCoins(safeUid)
+                ])).sort();
+                window._lastRenderedPerpetualUid = safeUid;
+            } else {
+                window.editUserPerpetualPriceMap = {
+                    ...(window.editUserPerpetualPriceMap || {}),
+                    ...currentInputMap
+                };
+
+                const visibleCoinSet = new Set(window.editUserPerpetualCoins);
+                Object.keys(window.editUserPerpetualPriceMap).forEach((coin) => {
+                    if (visibleCoinSet.has(coin) && !(coin in currentInputMap)) {
+                        delete window.editUserPerpetualPriceMap[coin];
+                    }
+                });
+            }
+
+            const visibleCoins = [...window.editUserPerpetualCoins].sort();
+            if (visibleCoins.length === 0) {
+                container.innerHTML = `
+                    <div class="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+                        No coin-specific perpetual override configured. Use the selector above to add a symbol.
+                    </div>
+                `;
+            } else {
+                container.innerHTML = visibleCoins.map((coin) => {
+                    const activeTag = getActivePerpetualCoins(safeUid).includes(coin)
+                        ? '<span class="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-100 px-2 py-1 rounded-full">ACTIVE</span>'
+                        : '<span class="text-[10px] font-semibold text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded-full">CONFIG</span>';
+                    const value = window.editUserPerpetualPriceMap && window.editUserPerpetualPriceMap[coin] !== undefined
+                        ? window.editUserPerpetualPriceMap[coin]
+                        : '';
+                    return `
+                        <div class="perpetual-coin-price-row border border-gray-200 rounded-xl px-4 py-3 bg-white shadow-sm" data-coin="${coin}">
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-gray-800">${coin}/USDT</span>
+                                    ${activeTag}
+                                </div>
+                                <button type="button" onclick="window.removePerpetualCoinPriceInput('${coin}')"
+                                    class="text-xs font-semibold text-red-500 hover:text-red-600">
+                                    Remove
+                                </button>
+                            </div>
+                            <input type="number" step="0.0001" value="${value}"
+                                placeholder="Set close price for ${coin}"
+                                class="perpetual-coin-price-input w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
+                            <p class="text-[10px] text-gray-400 mt-2">Coin-specific price overrides the default fallback price for ${coin} perpetual positions.</p>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const availableCoins = getAvailablePerpetualCoins(safeUid).filter(coin => !visibleCoins.includes(coin));
+            selector.innerHTML = availableCoins.length > 0
+                ? availableCoins.map((coin) => `<option value="${coin}">${coin}/USDT</option>`).join('')
+                : '<option value="">No more symbols</option>';
+            selector.disabled = availableCoins.length === 0;
+        }
+
+        window.addPerpetualCoinPriceInput = function () {
+            const selector = document.getElementById('editUserPerpetualCoinSelect');
+            const nextCoin = normalizePerpetualCoinSymbol(selector ? selector.value : '');
+            if (!nextCoin) return;
+
+            syncPerpetualCoinStateFromInputs();
+            if (!Array.isArray(window.editUserPerpetualCoins)) {
+                window.editUserPerpetualCoins = [];
+            }
+            if (!window.editUserPerpetualCoins.includes(nextCoin)) {
+                window.editUserPerpetualCoins.push(nextCoin);
+            }
+            renderPerpetualCoinPriceInputs();
+        };
+
+        window.removePerpetualCoinPriceInput = function (coin) {
+            syncPerpetualCoinStateFromInputs();
+            const symbol = normalizePerpetualCoinSymbol(coin);
+            if (window.editUserPerpetualPriceMap) {
+                delete window.editUserPerpetualPriceMap[symbol];
+            }
+            window.editUserPerpetualCoins = (window.editUserPerpetualCoins || []).filter(item => item !== symbol);
+            renderPerpetualCoinPriceInputs();
+        };
+
         window.editUser = function (uid) {
             const user = window.allUsersData[uid];
             if (!user) {
@@ -3447,6 +3620,10 @@
             if (document.getElementById('editUserPerpetualPrice')) {
                 document.getElementById('editUserPerpetualPrice').value = user.perpetual_custom_price || '';
             }
+            window.editUserPerpetualCoins = null;
+            window.editUserPerpetualPriceMap = getUserPerpetualPriceMap(user);
+            window._lastRenderedPerpetualUid = null;
+            renderPerpetualCoinPriceInputs(user, uid);
             if (document.getElementById('editUserDeliveryRule')) {
                 document.getElementById('editUserDeliveryRule').value = user.delivery_rule || 'normal';
             }
@@ -3542,6 +3719,7 @@
             const status = document.getElementById('editUserStatus').value;
             const kyc = document.getElementById('editUserKyc').value;
             const perpetualPrice = document.getElementById('editUserPerpetualPrice').value;
+            const perpetualPriceMap = collectPerpetualCoinPriceInputs();
             const deliveryRule = document.getElementById('editUserDeliveryRule').value;
 
             try {
@@ -3551,6 +3729,7 @@
                     status: status,
                     kyc_status: kyc,
                     perpetual_custom_price: perpetualPrice ? parseFloat(perpetualPrice) : null,
+                    perpetual_custom_prices: Object.keys(perpetualPriceMap).length > 0 ? perpetualPriceMap : null,
                     delivery_rule: deliveryRule
                 });
 
@@ -4706,16 +4885,35 @@
                     <div id="sectionPerpetualRule" class="space-y-4">
                         <div class="bg-purple-50 p-3 rounded-lg border border-purple-100 mb-3">
                             <p class="text-xs text-purple-700 font-medium"><i class="ri-information-line mr-1"></i>
-                                Global custom price for all future Perpetual trades by this user.</p>
+                                Perpetual outcome control supports a fallback price plus coin-specific overrides.</p>
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-1">Default Custom Close Price
-                                (Optional)</label>
+                                (Fallback)</label>
                             <input type="number" id="editUserPerpetualPrice" step="0.0001"
-                                placeholder="Force all future trades to this price"
+                                placeholder="Leave empty to use live market settlement"
                                 class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-purple-500 outline-none shadow-sm">
-                            <p class="text-[10px] text-gray-400 mt-1">If set, every new Perpetual trade for this user
-                                will inherit this price.</p>
+                            <p class="text-[10px] text-gray-400 mt-1">This remains as a legacy fallback. Coin-specific prices below will override it when the trade symbol matches.</p>
+                        </div>
+
+                        <div class="border border-purple-100 rounded-xl bg-white p-4 space-y-3">
+                            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700">Coin-Specific Close Prices</label>
+                                    <p class="text-[10px] text-gray-400 mt-1">Use this to control ETH, SOL, XRP and other perpetual symbols independently instead of a single BTC-style price.</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <select id="editUserPerpetualCoinSelect"
+                                        class="border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 outline-none shadow-sm"></select>
+                                    <button type="button" onclick="window.addPerpetualCoinPriceInput()"
+                                        class="px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-semibold hover:bg-purple-700 transition-colors">
+                                        Add Coin
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="editUserPerpetualCoinPrices" class="space-y-3">
+                                <!-- Dynamically populated -->
+                            </div>
                         </div>
 
                         <!-- Active Perpetual Trades Container -->
