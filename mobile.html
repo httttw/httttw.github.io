@@ -13893,6 +13893,20 @@ const translations = {
             return `${orderType} / ${action} ${getTradeDetailPair(trade)}`;
         }
 
+        function getTradeLivePrice(trade, fallbackPrice) {
+            const fallback = Number(fallbackPrice);
+            const coin = String((trade && (trade.coin || (trade.pair ? String(trade.pair).split('/')[0] : ''))) || '').toUpperCase();
+            if (coin && window.allCoinsData && window.allCoinsData[coin]) {
+                const p = Number(window.allCoinsData[coin].price);
+                if (Number.isFinite(p) && p > 0) return p;
+            }
+            if (coin && window.localData && window.localData[coin]) {
+                const p = Number(window.localData[coin].price);
+                if (Number.isFinite(p) && p > 0) return p;
+            }
+            return Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
+        }
+
         function renderTradeDetail(trade) {
             if (!trade) return;
 
@@ -13912,12 +13926,12 @@ const translations = {
                     ? trade.fee_total
                     : (trade.fee_open !== undefined && trade.fee_open !== null ? trade.fee_open : 0)
             );
-            const pnl = Number(
+            let pnl = Number(
                 trade.final_pnl !== undefined && trade.final_pnl !== null
                     ? trade.final_pnl
                     : (trade.pnl_amount !== undefined && trade.pnl_amount !== null ? trade.pnl_amount : (trade.pnl || 0))
             );
-            const roe = Number(trade.realized_roe !== undefined && trade.realized_roe !== null ? trade.realized_roe : 0);
+            let roe = Number(trade.realized_roe !== undefined && trade.realized_roe !== null ? trade.realized_roe : 0);
             const entryPrice = Number(trade.entry_price || trade.price || 0);
             const closePrice = getTradeDetailClosePrice(trade);
             const contractUnit = Number(trade.contract_unit) > 0 ? Number(trade.contract_unit) : getContractUnitValue();
@@ -13934,6 +13948,22 @@ const translations = {
             const slText = trade.stop_loss ? formatOrderDetailNumber(trade.stop_loss, 2) : '--';
             const buyPrice = isLongPosition ? entryPrice : closePrice;
             const sellPrice = isLongPosition ? closePrice : entryPrice;
+
+            // For open/pending perpetual positions, calculate live P/L and ROE from market price.
+            if (statusTone === 'open' && String(trade.type || '').toLowerCase() === 'perpetual') {
+                const livePrice = getTradeLivePrice(trade, entryPrice);
+                if (entryPrice > 0 && livePrice > 0 && amount > 0) {
+                    const rawPnl = isLongPosition
+                        ? ((livePrice - entryPrice) / entryPrice) * amount
+                        : ((entryPrice - livePrice) / entryPrice) * amount;
+                    const paidFee = Number(trade.fee_open || 0);
+                    pnl = rawPnl - (Number.isFinite(paidFee) ? paidFee : 0);
+                    roe = margin > 0 ? (pnl / margin) * 100 : 0;
+                }
+            }
+
+            if (!Number.isFinite(pnl)) pnl = 0;
+            if (!Number.isFinite(roe)) roe = 0;
 
             pairEl.textContent = pairText;
             profitEl.className = `order-detail-profit-value ${pnl >= 0 ? 'is-positive' : 'is-negative'}`;
