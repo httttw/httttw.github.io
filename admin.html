@@ -2540,24 +2540,101 @@
         window.transactionFilter = 'All';
         window.txDataMap = {};
         window.orderDataMap = {};
+        window.ADMIN_TIMEZONE = 'America/New_York';
+        window.ADMIN_TIMEZONE_LABEL = 'ET';
 
         window.toSafeNumber = function (value) {
             const n = Number(value);
             return Number.isFinite(n) ? n : 0;
         };
 
+        window.normalizeAdminDateInput = function (value) {
+            if (!value && value !== 0) return null;
+            if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+            if (typeof value === 'object' && typeof value.toDate === 'function') {
+                const date = value.toDate();
+                return Number.isNaN(date.getTime()) ? null : date;
+            }
+            if (typeof value === 'object' && typeof value.seconds === 'number') {
+                const date = new Date(value.seconds * 1000);
+                return Number.isNaN(date.getTime()) ? null : date;
+            }
+            if (typeof value === 'number' || typeof value === 'string') {
+                const date = new Date(value);
+                return Number.isNaN(date.getTime()) ? null : date;
+            }
+            return null;
+        };
+
+        window.formatAdminDateTime = function (value) {
+            const date = window.normalizeAdminDateInput(value);
+            if (!date) return '---';
+            try {
+                const formatter = new Intl.DateTimeFormat('en-CA', {
+                    timeZone: window.ADMIN_TIMEZONE,
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hourCycle: 'h23'
+                });
+                const parts = formatter.formatToParts(date);
+                const part = (type) => (parts.find((item) => item.type === type) || {}).value || '';
+                return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}:${part('second')} ${window.ADMIN_TIMEZONE_LABEL}`;
+            } catch (err) {
+                return `${date.toISOString().replace('T', ' ').slice(0, 19)} ${window.ADMIN_TIMEZONE_LABEL}`;
+            }
+        };
+
+        window.formatAdminDate = function (value) {
+            const date = window.normalizeAdminDateInput(value);
+            if (!date) return '---';
+            try {
+                return new Intl.DateTimeFormat('en-US', {
+                    timeZone: window.ADMIN_TIMEZONE,
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                }).format(date);
+            } catch (err) {
+                return date.toISOString().slice(0, 10);
+            }
+        };
+
+        window.formatAdminTime = function (value) {
+            const date = window.normalizeAdminDateInput(value);
+            if (!date) return '---';
+            try {
+                const formatter = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: window.ADMIN_TIMEZONE,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hourCycle: 'h23'
+                });
+                return `${formatter.format(date)} ${window.ADMIN_TIMEZONE_LABEL}`;
+            } catch (err) {
+                return `${date.toISOString().slice(11, 16)} ${window.ADMIN_TIMEZONE_LABEL}`;
+            }
+        };
+
         window.getRecordTimeMs = function (data) {
             if (!data) return 0;
-            if (data.timestamp?.seconds) return data.timestamp.seconds * 1000;
-            if (data.submitted_at) return new Date(data.submitted_at).getTime() || 0;
-            if (data.created_at) return new Date(data.created_at).getTime() || 0;
-            if (data.joined) return new Date(data.joined).getTime() || 0;
+            const timestamp = window.normalizeAdminDateInput(data.timestamp);
+            if (timestamp) return timestamp.getTime();
+            const submittedAt = window.normalizeAdminDateInput(data.submitted_at);
+            if (submittedAt) return submittedAt.getTime();
+            const createdAt = window.normalizeAdminDateInput(data.created_at);
+            if (createdAt) return createdAt.getTime();
+            const joinedAt = window.normalizeAdminDateInput(data.joined);
+            if (joinedAt) return joinedAt.getTime();
             return 0;
         };
 
         window.formatDateTime = function (data) {
             const time = window.getRecordTimeMs(data);
-            return time > 0 ? new Date(time).toLocaleString() : '---';
+            return time > 0 ? window.formatAdminDateTime(time) : '---';
         };
 
         window.toTxStatusClass = function (status) {
@@ -2826,8 +2903,8 @@
                 const user = act.user_email || act.email || window.getDisplayUserId(window.allUsersData ? window.allUsersData[act.uid] : null, act.uid) || 'User';
                 const platform = act.platform || 'System';
                 const amount = act.amount ? `${act.amount} ${act.coin || ''}` : '---';
-                const time = act.timestamp ? new Date(act.timestamp.seconds * 1000).toLocaleString() :
-                    (act.submitted_at ? new Date(act.submitted_at).toLocaleString() : '---');
+                const time = act.timestamp ? window.formatAdminDateTime(act.timestamp) :
+                    (act.submitted_at ? window.formatAdminDateTime(act.submitted_at) : '---');
 
                 let statusClass = 'bg-gray-100 text-gray-800';
                 const status = act.status || 'Pending';
@@ -2937,7 +3014,7 @@
                     totalUsers++;
                     if (data.kyc_status === 'Pending') pendingKYC++;
 
-                    const joinedDate = data.joined ? new Date(data.joined).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '---';
+                    const joinedDate = data.joined ? window.formatAdminDate(data.joined) : '---';
 
                     html += `
                         <tr>
@@ -3208,7 +3285,7 @@
                     if (data.status === 'Approved') verifiedCount++;
                     if (data.status === 'Rejected') rejectedCount++;
 
-                    const submitDate = data.submitted_at ? new Date(data.submitted_at).toLocaleString() : '---';
+                    const submitDate = data.submitted_at ? window.formatAdminDateTime(data.submitted_at) : '---';
                     const name = data.real_name || 'Unknown';
                     const nat = data.nationality || '---';
 
@@ -3278,8 +3355,7 @@
                     if (doc.id === 'INITIAL_SETUP') return;
 
                     totalUnread += (data.unread_count_admin || 0);
-                    const timestamp = data.timestamp?.toDate() || new Date();
-                    const timeStr = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const timeStr = window.formatAdminTime(data.timestamp || new Date());
                     const isActive = window.currentChatUserId === doc.id;
 
                     html += `
@@ -3354,7 +3430,7 @@
                 snapshot.forEach((msgDoc) => {
                     const msg = msgDoc.data();
                     const isUser = msg.sender === 'user';
-                    const time = msg.timestamp?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) || '';
+                    const time = msg.timestamp ? window.formatAdminTime(msg.timestamp) : '';
 
                     const msgRow = document.createElement('div');
                     msgRow.className = `chat-message ${isUser ? 'user' : 'admin'}`;
@@ -3899,9 +3975,9 @@
                         if (status === 'Active') activeCount++;
                         else if (status === 'Pending') pendingCount++;
                         else inactiveCount++;
-                        const updatedDate = netData.updatedAt?.seconds
-                            ? new Date(netData.updatedAt.seconds * 1000).toLocaleString()
-                            : (data.lastUpdated?.seconds ? new Date(data.lastUpdated.seconds * 1000).toLocaleString() : '---');
+                        const updatedDate = netData.updatedAt
+                            ? window.formatAdminDateTime(netData.updatedAt)
+                            : (data.lastUpdated ? window.formatAdminDateTime(data.lastUpdated) : '---');
                         const tr = document.createElement('tr');
                         tr.className = 'border-b border-gray-100 hover:bg-gray-50';
                         tr.innerHTML = `
@@ -4506,7 +4582,7 @@
                     }
                 }
 
-                const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : '---';
+                const date = data.timestamp ? window.formatAdminDateTime(data.timestamp) : '---';
 
                 html += `
                     <tr class="hover:bg-gray-50">
@@ -4600,7 +4676,7 @@
 
                 if (status === 'Completed') totalWithdrawals += amount;
 
-                const date = data.timestamp ? new Date(data.timestamp.seconds * 1000).toLocaleString() : '---';
+                const date = data.timestamp ? window.formatAdminDateTime(data.timestamp) : '---';
 
                 html += `
                     <tr class="hover:bg-gray-50">

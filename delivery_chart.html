@@ -477,7 +477,7 @@
                     <div
                         class="h-10 border-b border-[#2b3139] flex items-center px-4 text-xs text-[#848e9c] bg-[#1e2329] shrink-0">
                         <div class="w-16">Coin</div>
-                        <div class="w-32">Opening time</div>
+                        <div class="w-32">Opening time (ET)</div>
                         <div class="w-16">Side</div>
                         <div class="w-24">Amount</div>
                         <div class="w-20">Fee</div>
@@ -499,13 +499,13 @@
                     <div
                         class="h-10 border-b border-[#2b3139] flex items-center px-4 text-xs text-[#848e9c] bg-[#1e2329] shrink-0">
                         <div class="w-16">Coin</div>
-                        <div class="w-32">Opening time</div>
+                        <div class="w-32">Opening time (ET)</div>
                         <div class="w-16">Side</div>
                         <div class="w-24">Amount</div>
                         <div class="w-24">Purchase price</div>
                         <div class="w-24">Settlement price</div>
                         <div class="w-24">Profit and loss</div>
-                        <div class="w-32">Settlement time</div>
+                        <div class="w-32">Settlement time (ET)</div>
                         <div class="flex-1 text-right">Status</div>
                     </div>
                     <div id="historical-position-list" class="flex-1 overflow-y-auto">
@@ -575,7 +575,7 @@
                 <div class="flex px-3 pb-1 text-xs text-[#848e9c] gap-1">
                     <div class="w-1/3">Price(USDT)</div>
                     <div class="w-1/3 text-right">Amount</div>
-                    <div class="w-1/3 text-right">Opening time</div>
+                    <div class="w-1/3 text-right">Opening time (ET)</div>
                 </div>
                 <div class="flex-1 overflow-hidden relative">
                     <div id="market-trades-container" class="absolute inset-0 overflow-y-auto px-3 pb-2">
@@ -709,6 +709,25 @@
     </script>
     <script>
         let currentTradeType = 'long';
+        const DESKTOP_TIMEZONE = 'America/New_York';
+        const DESKTOP_TIMEZONE_LABEL = 'ET';
+
+        function formatDesktopTime(value) {
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return `--:--:-- ${DESKTOP_TIMEZONE_LABEL}`;
+            try {
+                const formatter = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: DESKTOP_TIMEZONE,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hourCycle: 'h23'
+                });
+                return `${formatter.format(date)} ${DESKTOP_TIMEZONE_LABEL}`;
+            } catch (err) {
+                return `${date.toISOString().slice(11, 19)} ${DESKTOP_TIMEZONE_LABEL}`;
+            }
+        }
 
         function setTradeType(type) {
             currentTradeType = type;
@@ -870,7 +889,7 @@
             if (noOpen) noOpen.style.display = 'none';
 
             const now = new Date();
-            const timeStr = now.toLocaleTimeString([], { hour12: false });
+            const timeStr = formatDesktopTime(now);
 
             const holdRow = document.createElement('div');
             holdRow.id = activeTradeId;
@@ -1021,7 +1040,7 @@
             if (noHistory) noHistory.style.display = 'none';
 
             const now = new Date();
-            const timeStr = now.toLocaleTimeString([], { hour12: false });
+            const timeStr = formatDesktopTime(now);
 
             const historyRow = document.createElement('div');
             historyRow.className = "flex items-center px-4 py-2 text-xs text-[#eaecef] border-b border-[#2b3139] hover:bg-[#2b3139] transition-colors";
@@ -1152,7 +1171,7 @@
             const amountMultiplier = price > 1000 ? 0.3 : (price > 10 ? 5 : 200);
 
             const now = new Date();
-            const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`;
+            const timeStr = formatDesktopTime(now);
 
             const newTrade = {
                 price: price.toFixed(decimals),
@@ -1169,7 +1188,7 @@
                 let pastTime = new Date(now.getTime());
                 for (let i = 0; i < 19; i++) {
                     pastTime = new Date(pastTime.getTime() - (Math.random() * 3000 + 1000));
-                    let pastTimeStr = `${pastTime.getHours().toString().padStart(2, '0')}:${pastTime.getMinutes().toString().padStart(2, '0')}:${pastTime.getSeconds().toString().padStart(2, '0')}`;
+                    let pastTimeStr = formatDesktopTime(pastTime);
                     let isUpPast = Math.random() > 0.5;
                     let tick = price > 1000 ? 0.2 : (price > 1 ? 0.05 : 0.001);
                     pastPrice = isUpPast ? pastPrice - tick : pastPrice + tick;
@@ -1449,7 +1468,7 @@
                 "height": "100%",
                 "symbol": `BINANCE:${cleanSymbol}`,
                 "interval": tvInterval,
-                "timezone": "Etc/UTC",
+                "timezone": DESKTOP_TIMEZONE,
                 "theme": "dark",
                 "style": "1",
                 "locale": "en",

@@ -606,7 +606,7 @@
                     <div class="table-head">
                         <span>Price(USDT)</span>
                         <span>Amount</span>
-                        <span>Opening time</span>
+                        <span>Opening time (ET)</span>
                     </div>
                     <div id="perp-market-trades-list" class="orderbook-list">
                         <div class="order-row"><span>--</span><span>--</span><span>--</span></div>
@@ -741,12 +741,32 @@
             return `BINANCE:${cleanPairSymbol(pair).replace('/', '')}`;
         }
 
+        const DESKTOP_TIMEZONE = 'America/New_York';
+        const DESKTOP_TIMEZONE_LABEL = 'ET';
+
         function formatPrice(num) {
             const val = Number(num);
             if (!Number.isFinite(val)) return '--';
             if (val >= 1000) return val.toLocaleString(undefined, { maximumFractionDigits: 2 });
             if (val >= 1) return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
             return val.toFixed(6);
+        }
+
+        function formatDesktopTime(value) {
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return `-- ${DESKTOP_TIMEZONE_LABEL}`;
+            try {
+                const formatter = new Intl.DateTimeFormat('en-GB', {
+                    timeZone: DESKTOP_TIMEZONE,
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hourCycle: 'h23'
+                });
+                return `${formatter.format(date)} ${DESKTOP_TIMEZONE_LABEL}`;
+            } catch (err) {
+                return `${date.toISOString().slice(11, 19)} ${DESKTOP_TIMEZONE_LABEL}`;
+            }
         }
 
         function formatCompact(num) {
@@ -842,7 +862,7 @@
                 const drift = ((i % 2 === 0) ? 1 : -1) * (0.0003 + (i * 0.00002));
                 const tradePx = px * (1 + drift);
                 const amount = 0.01 + ((i * 13) % 17) * 0.02;
-                const time = new Date(now - i * 3000).toLocaleTimeString([], { hour12: false });
+                const time = formatDesktopTime(now - i * 3000);
                 const cls = drift >= 0 ? 'up' : 'down';
                 html += `<div class="order-row ${cls}"><span>${formatPrice(tradePx)}</span><span>${amount.toFixed(4)}</span><span>${time}</span></div>`;
             }
@@ -912,7 +932,7 @@
                 autosize: true,
                 symbol: getTradingViewSymbol(currentPair),
                 interval: currentChartInterval,
-                timezone: "Etc/UTC",
+                timezone: DESKTOP_TIMEZONE,
                 theme: "dark",
                 style: "1",
                 locale: "en",
