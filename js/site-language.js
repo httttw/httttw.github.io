@@ -5,34 +5,40 @@
   var LEGACY_KEY = "ec_language";
   var CACHE_PREFIX = "ec_i18n_cache_v5_";
 
-  var SUPPORTED = ["en", "zh", "de"];
+  var SUPPORTED = ["en", "zh", "de", "ja", "ko"];
   var LANG_LABEL = {
     en: "EN",
     zh: "\u4e2d\u6587",
-    de: "DE"
+    de: "DE",
+    ja: "JA",
+    ko: "KO"
   };
   var LEGACY_LABEL = {
     en: "English",
     zh: "\u4e2d\u6587",
-    de: "Deutsch"
+    de: "Deutsch",
+    ja: "\u65e5\u672c\u8a9e",
+    ko: "\ud55c\uad6d\uc5b4"
   };
   var TARGET_LOCALE = {
     zh: "zh-CN",
-    de: "de"
+    de: "de",
+    ja: "ja",
+    ko: "ko"
   };
   var UX_ROUTE_RULES = [
-    { re: /\b(instant buy|buy|sell)\b|快捷买币|买入|卖出|sofortkauf|kaufen|verkaufen/i, to: "buy-sell.html" },
-    { re: /\b(market|markets|rates|tracker)\b|行情|市场|markt|märkte|maerkte/i, to: "markets.html" },
-    { re: /\b(contract|perpetual|delivery|trade)\b|合约|永续|交割|交易|vertrag|kontrakt|handel/i, to: "trade.html" },
-    { re: /\b(wallet|funds|assets?)\b|钱包|资产|资金|vermögen|vermoegen|wallet/i, to: "fund.html" },
-    { re: /\b(order|orders|history)\b|订单|历史|auftrag|aufträge|auftraege|verlauf/i, to: "dashboard.html" },
-    { re: /\b(dashboard)\b|总览|仪表盘|übersicht|uebersicht/i, to: "dashboard.html" },
-    { re: /\b(login|sign in)\b|登录|anmelden/i, to: "login.html" },
-    { re: /\b(register|sign up|create account)\b|注册|创建账户|registrieren|konto erstellen/i, to: "signup.html" },
-    { re: /\b(download app|mobile|app)\b|下载|移动端|手机端|app下载|app herunterladen|mobil/i, to: "mobile.html" },
-    { re: /\b(help|support)\b|帮助|客服|hilfe|support/i, to: "mobile.html" },
-    { re: /\b(about|blog|learn|careers|otc|institutional|smsf)\b|关于|资讯|学习|karriere|über uns|ueber uns/i, to: "index.html" },
-    { re: /\b(terms|privacy)\b|条款|隐私|bedingungen|datenschutz/i, to: "mobile.html" }
+    { re: /\b(instant buy|buy|sell)\b|快捷买币|买入|卖出|sofortkauf|kaufen|verkaufen|購入|売却|즉시 구매|매수|매도/i, to: "buy-sell.html" },
+    { re: /\b(market|markets|rates|tracker)\b|行情|市场|markt|märkte|maerkte|相場|市場|마켓|시장/i, to: "markets.html" },
+    { re: /\b(contract|perpetual|delivery|trade)\b|合约|永续|交割|交易|vertrag|kontrakt|handel|契約|無期限|取引|계약|무기한|거래/i, to: "trade.html" },
+    { re: /\b(wallet|funds|assets?)\b|钱包|资产|资金|vermögen|vermoegen|wallet|ウォレット|資産|지갑|자산/i, to: "fund.html" },
+    { re: /\b(order|orders|history)\b|订单|历史|auftrag|aufträge|auftraege|verlauf|注文|履歴|주문|기록/i, to: "dashboard.html" },
+    { re: /\b(dashboard)\b|总览|仪表盘|übersicht|uebersicht|ダッシュボード|대시보드/i, to: "dashboard.html" },
+    { re: /\b(login|sign in)\b|登录|anmelden|ログイン|로그인/i, to: "login.html" },
+    { re: /\b(register|sign up|create account)\b|注册|创建账户|registrieren|konto erstellen|登録|アカウント作成|회원가입|계정 생성/i, to: "signup.html" },
+    { re: /\b(download app|mobile|app)\b|下载|移动端|手机端|app下载|app herunterladen|mobil|アプリ|モバイル|앱|모바일/i, to: "mobile.html" },
+    { re: /\b(help|support)\b|帮助|客服|hilfe|support|ヘルプ|サポート|도움말|고객센터/i, to: "mobile.html" },
+    { re: /\b(about|blog|learn|careers|otc|institutional|smsf)\b|关于|资讯|学习|karriere|über uns|ueber uns|会社情報|学ぶ|소개|학습/i, to: "index.html" },
+    { re: /\b(terms|privacy)\b|条款|隐私|bedingungen|datenschutz|利用規約|プライバシー|약관|개인정보/i, to: "mobile.html" }
   ];
 
   var STATIC_MAP = {
@@ -65,6 +71,68 @@
       "Search markets": "Maerkte suchen",
       "Search coin name": "Coin suchen",
       "Market Overview": "Marktuebersicht"
+    },
+    ja: {
+      "Home": "\u30db\u30fc\u30e0",
+      "Market": "\u30de\u30fc\u30b1\u30c3\u30c8",
+      "Markets": "\u30de\u30fc\u30b1\u30c3\u30c8",
+      "Contract": "\u5951\u7d04",
+      "Trade": "\u53d6\u5f15",
+      "Exchange": "\u4ea4\u63db",
+      "Funds": "\u8cc7\u7523",
+      "Login": "\u30ed\u30b0\u30a4\u30f3",
+      "Logout": "\u30ed\u30b0\u30a2\u30a6\u30c8",
+      "Language": "\u8a00\u8a9e",
+      "Search markets": "\u30de\u30fc\u30b1\u30c3\u30c8\u3092\u691c\u7d22",
+      "Search coin name": "\u30b3\u30a4\u30f3\u540d\u3092\u691c\u7d22",
+      "Market Overview": "\u30de\u30fc\u30b1\u30c3\u30c8\u6982\u8981",
+      "Buy": "\u8cfc\u5165",
+      "Sell": "\u58f2\u5374",
+      "Amount": "\u91d1\u984d",
+      "Price": "\u4fa1\u683c",
+      "Quantity": "\u6570\u91cf",
+      "Available": "\u5229\u7528\u53ef\u80fd",
+      "Order": "\u6ce8\u6587",
+      "Orders": "\u6ce8\u6587\u5c65\u6b74",
+      "Submit": "\u9001\u4fe1",
+      "Sign In": "\u30ed\u30b0\u30a4\u30f3",
+      "Register": "\u767b\u9332",
+      "Create Account": "\u30a2\u30ab\u30a6\u30f3\u30c8\u4f5c\u6210",
+      "Email": "\u30e1\u30fc\u30eb",
+      "Password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+      "Admin Login": "\u7ba1\u7406\u8005\u30ed\u30b0\u30a4\u30f3",
+      "Verification Code": "\u8a8d\u8a3c\u30b3\u30fc\u30c9"
+    },
+    ko: {
+      "Home": "\ud648",
+      "Market": "\ub9c8\ucf13",
+      "Markets": "\ub9c8\ucf13",
+      "Contract": "\uacc4\uc57d",
+      "Trade": "\uac70\ub798",
+      "Exchange": "\uad50\ud658",
+      "Funds": "\uc790\uc0b0",
+      "Login": "\ub85c\uadf8\uc778",
+      "Logout": "\ub85c\uadf8\uc544\uc6c3",
+      "Language": "\uc5b8\uc5b4",
+      "Search markets": "\ub9c8\ucf13 \uac80\uc0c9",
+      "Search coin name": "\ucf54\uc778 \uc774\ub984 \uac80\uc0c9",
+      "Market Overview": "\ub9c8\ucf13 \uac1c\uc694",
+      "Buy": "\ub9e4\uc218",
+      "Sell": "\ub9e4\ub3c4",
+      "Amount": "\uae08\uc561",
+      "Price": "\uac00\uaca9",
+      "Quantity": "\uc218\ub7c9",
+      "Available": "\uc0ac\uc6a9 \uac00\ub2a5",
+      "Order": "\uc8fc\ubb38",
+      "Orders": "\uc8fc\ubb38 \ub0b4\uc5ed",
+      "Submit": "\uc81c\ucd9c",
+      "Sign In": "\ub85c\uadf8\uc778",
+      "Register": "\ud68c\uc6d0\uac00\uc785",
+      "Create Account": "\uacc4\uc815 \uc0dd\uc131",
+      "Email": "\uc774\uba54\uc77c",
+      "Password": "\ube44\ubc00\ubc88\ud638",
+      "Admin Login": "\uad00\ub9ac\uc790 \ub85c\uadf8\uc778",
+      "Verification Code": "\uc778\uc99d \ucf54\ub4dc"
     }
   };
 
@@ -115,18 +183,17 @@
     ["/div>", ""]
   ];
 
-  var memoryCache = {
-    zh: Object.create(null),
-    de: Object.create(null)
-  };
-  var pendingTexts = {
-    zh: new Set(),
-    de: new Set()
-  };
-  var failedAttempts = {
-    zh: Object.create(null),
-    de: Object.create(null)
-  };
+  var memoryCache = Object.create(null);
+  var pendingTexts = Object.create(null);
+  var failedAttempts = Object.create(null);
+
+  for (var si = 0; si < SUPPORTED.length; si += 1) {
+    var langKey = SUPPORTED[si];
+    if (langKey === "en") continue;
+    memoryCache[langKey] = Object.create(null);
+    pendingTexts[langKey] = new Set();
+    failedAttempts[langKey] = Object.create(null);
+  }
 
   var currentLang = "en";
   var flushTimer = null;
@@ -183,6 +250,8 @@
     if (SUPPORTED.indexOf(v) >= 0) return v;
     if (v === "English") return "en";
     if (v === "Deutsch") return "de";
+    if (v === "\u65e5\u672c\u8a9e") return "ja";
+    if (v === "\ud55c\uad6d\uc5b4") return "ko";
     if (v === "\u4e2d\u6587" || v === "\u6d93\ueecb\ue784") return "zh";
     return "";
   }
@@ -483,7 +552,9 @@
     isFlushing = true;
 
     try {
-      var langs = ["zh", "de"];
+      var langs = SUPPORTED.filter(function (l) {
+        return l !== "en";
+      });
       for (var li = 0; li < langs.length; li += 1) {
         var lang = langs[li];
         var pending = Array.from(pendingTexts[lang]);
@@ -526,7 +597,16 @@
       if (currentLang !== "en") {
         applyLanguage(currentLang, document.body, { persist: false, fromFlush: true });
       }
-      if (pendingTexts.zh.size || pendingTexts.de.size) scheduleFlush();
+      var hasPending = false;
+      for (var pi = 0; pi < SUPPORTED.length; pi += 1) {
+        var pendingLang = SUPPORTED[pi];
+        if (pendingLang === "en") continue;
+        if (pendingTexts[pendingLang] && pendingTexts[pendingLang].size) {
+          hasPending = true;
+          break;
+        }
+      }
+      if (hasPending) scheduleFlush();
     }
   }
 
@@ -535,6 +615,10 @@
       document.documentElement.setAttribute("lang", "zh-CN");
     } else if (lang === "de") {
       document.documentElement.setAttribute("lang", "de");
+    } else if (lang === "ja") {
+      document.documentElement.setAttribute("lang", "ja");
+    } else if (lang === "ko") {
+      document.documentElement.setAttribute("lang", "ko");
     } else {
       document.documentElement.setAttribute("lang", "en");
     }
@@ -667,7 +751,9 @@
     var items = [
       { lang: "en", label: "English" },
       { lang: "zh", label: "\u4e2d\u6587" },
-      { lang: "de", label: "Deutsch" }
+      { lang: "de", label: "Deutsch" },
+      { lang: "ja", label: "\u65e5\u672c\u8a9e" },
+      { lang: "ko", label: "\ud55c\uad6d\uc5b4" }
     ];
 
     for (var i = 0; i < items.length; i += 1) {
@@ -757,12 +843,12 @@
     var t = (label || "").toLowerCase();
     if (!t) return "";
 
-    if (/\b(deposit|recharge|einzahlung)\b|充值|入金|存款/.test(t)) return "deposit";
-    if (/\b(wallet|funds|assets?|vermoegen|vermögen|geldboerse|geldbörse)\b|钱包|资产|资金/.test(t)) return "wallet";
-    if (/\b(order|orders|auftrag|auftraege|aufträge|history)\b|订单|历史/.test(t)) return "order";
-    if (/\b(dashboard|uebersicht|übersicht)\b|仪表盘|总览/.test(t)) return "dashboard";
-    if (/\b(logout|sign out|abmelden)\b|退出|登出/.test(t)) return "logout";
-    if (/\b(account|konto|login|sign in)\b|账户|账号|登录/.test(t)) return "account";
+    if (/\b(deposit|recharge|einzahlung)\b|充值|入金|存款|入金|デポジット|입금/.test(t)) return "deposit";
+    if (/\b(wallet|funds|assets?|vermoegen|vermögen|geldboerse|geldbörse)\b|钱包|资产|资金|ウォレット|資産|지갑|자산/.test(t)) return "wallet";
+    if (/\b(order|orders|auftrag|auftraege|aufträge|history)\b|订单|历史|注文|履歴|주문|내역/.test(t)) return "order";
+    if (/\b(dashboard|uebersicht|übersicht)\b|仪表盘|总览|ダッシュボード|대시보드/.test(t)) return "dashboard";
+    if (/\b(logout|sign out|abmelden)\b|退出|登出|ログアウト|로그아웃/.test(t)) return "logout";
+    if (/\b(account|konto|login|sign in)\b|账户|账号|登录|アカウント|ログイン|계정|로그인/.test(t)) return "account";
     return "";
   }
 

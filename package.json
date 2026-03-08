@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "acceptance": "node scripts/acceptance-check.js"
+    "acceptance": "node scripts/acceptance-check.js",
+    "acceptance:i18n": "node scripts/i18n-ja-ko-audit.js"
   },
   "keywords": [],
   "author": "",
