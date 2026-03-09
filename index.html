@@ -45,27 +45,36 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        /* DROPDOWN ENHANCEMENTS */
+        :root {
+            --hero-violet-1: #8548f8;
+            --hero-violet-2: #6a35e2;
+            --hero-violet-3: #4d1aa4;
+            --hero-card-bg: #24252c;
+            --hero-card-line: rgba(255, 255, 255, 0.08);
+            --page-dark: #111;
+            --soft-white: rgba(255, 255, 255, 0.86);
+        }
+
         .l-nav-item {
             position: relative;
         }
 
         .l-dropdown {
             position: absolute;
-            top: calc(100% + 15px);
+            top: calc(100% + 12px);
             left: 0;
-            background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
-            min-width: 260px;
+            min-width: 272px;
             padding: 8px 0;
             border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: #ffffff;
+            box-shadow: 0 26px 48px rgba(16, 10, 41, 0.22);
             list-style: none;
             z-index: 9999;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(31, 24, 60, 0.08);
             pointer-events: none;
         }
 
@@ -77,30 +86,31 @@
         }
 
         .l-dropdown-item a {
-            color: white;
+            color: #241c43;
             text-decoration: none;
-            padding: 12px 20px;
+            padding: 12px 18px;
             display: flex;
             align-items: center;
             gap: 12px;
             font-size: 0.95rem;
-            font-weight: 500;
-            transition: background 0.2s;
+            font-weight: 600;
+            transition: background 0.2s ease, color 0.2s ease;
         }
 
         .l-dropdown-item a:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: #f5f3fb;
+            color: #6a35e2;
         }
 
         .l-dropdown-item small {
             display: block;
             font-size: 0.75rem;
-            opacity: 0.6;
+            opacity: 0.55;
             margin-top: 2px;
         }
 
         .l-nav-link span {
-            transition: transform 0.2s;
+            transition: transform 0.2s ease;
             display: inline-block;
         }
 
@@ -108,19 +118,468 @@
             transform: rotate(180deg);
         }
 
-        /* Ensure no horizontal overflow and solid bottom */
         html,
         body {
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            background-color: #111 !important;
+            background-color: var(--page-dark) !important;
             min-height: 100vh;
         }
 
+        body.landing-mode {
+            background: var(--page-dark) !important;
+        }
+
         #landing-page {
-            background-color: #111;
+            background-color: var(--page-dark);
             min-height: 100vh;
+            overflow-x: clip;
+        }
+
+        .container {
+            max-width: 1180px !important;
+            padding: 0 28px !important;
+        }
+
+        .landing-section {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-stage {
+            position: relative;
+            overflow: hidden;
+            padding-bottom: 96px;
+            background:
+                radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.14), transparent 24%),
+                radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.09), transparent 20%),
+                linear-gradient(135deg, var(--hero-violet-1) 0%, var(--hero-violet-2) 36%, #5b27c4 63%, var(--hero-violet-3) 100%);
+        }
+
+        .hero-stage::before {
+            content: "";
+            position: absolute;
+            inset: -12% auto auto -10%;
+            width: 460px;
+            height: 460px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent 70%);
+            filter: blur(12px);
+            pointer-events: none;
+        }
+
+        .hero-stage::after {
+            content: "";
+            position: absolute;
+            right: -8%;
+            top: -10%;
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12), transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-wave {
+            position: absolute;
+            left: -5%;
+            right: -5%;
+            bottom: -96px;
+            height: 148px;
+            background: #ffffff;
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            transform: rotate(-1deg);
+            z-index: 0;
+        }
+
+        .landing-nav {
+            height: 88px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            z-index: 2;
+        }
+
+        .l-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+            text-decoration: none;
+            margin-right: 32px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.16rem;
+            font-weight: 700;
+        }
+
+        .l-logo-mark {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .l-logo-mark svg {
+            width: 30px;
+            height: 30px;
+            display: block;
+        }
+
+        .l-logo-word {
+            letter-spacing: 0.08em;
+        }
+
+        .l-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .l-nav-link {
+            display: inline-flex;
+            align-items: center;
+            padding: 0;
+            font-size: 0.94rem;
+            color: var(--soft-white);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .l-nav-link span {
+            font-size: 0.62rem;
+            opacity: 0.74;
+            margin-left: 6px;
+        }
+
+        .l-nav-link:hover {
+            color: #fff;
+        }
+
+        .btn-signup {
+            background: #ffffff;
+            color: #1d1438;
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.9rem;
+            box-shadow: 0 16px 28px rgba(17, 10, 44, 0.14);
+        }
+
+        .hero {
+            flex: 1;
+            display: block;
+            padding: 28px 0 0;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(355px, 392px);
+            gap: 72px;
+            align-items: start;
+        }
+
+        .hero-text {
+            max-width: 585px;
+            padding-top: 52px;
+        }
+
+        .hero-text h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.08;
+            letter-spacing: -0.035em;
+            margin-bottom: 1.35rem;
+            max-width: 580px;
+        }
+
+        .subtext {
+            max-width: 550px;
+            font-size: 1.16rem;
+            line-height: 1.58;
+            color: rgba(255, 255, 255, 0.92);
+            margin-bottom: 1rem;
+        }
+
+        .desc {
+            max-width: 555px;
+            font-size: 0.97rem;
+            line-height: 1.72;
+            color: rgba(255, 255, 255, 0.78);
+        }
+
+        .as-featured {
+            padding: 3rem 0 0;
+        }
+
+        .as-featured p {
+            color: rgba(255, 255, 255, 0.73) !important;
+            margin-bottom: 1.55rem !important;
+            font-size: 0.76rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.18em !important;
+            font-weight: 600;
+        }
+
+        .feature-logos {
+            display: flex;
+            align-items: flex-end;
+            gap: 1.35rem;
+            flex-wrap: wrap;
+            opacity: 1;
+        }
+
+        .f-logo-item {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 700;
+            font-size: 1.08rem;
+            white-space: nowrap;
+        }
+
+        .buy-card {
+            background: var(--hero-card-bg) !important;
+            color: #fff !important;
+            padding: 28px 28px 24px !important;
+            border-radius: 10px !important;
+            border: 1px solid var(--hero-card-line);
+            box-shadow: 0 28px 60px rgba(15, 8, 45, 0.34);
+        }
+
+        .buy-card h2 {
+            color: #fff;
+            font-size: 1.72rem;
+            line-height: 1.15;
+            margin-bottom: 1.65rem;
+            text-align: center;
+        }
+
+        .buy-label {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.62);
+            margin-bottom: 0.55rem;
+        }
+
+        .buy-in {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: #ffffff;
+            padding: 13px 16px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.65rem;
+        }
+
+        .buy-in input {
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 1.02rem;
+            font-weight: 600;
+            flex: 1;
+            color: #111;
+        }
+
+        .buy-in input::placeholder {
+            color: #a3a3ad;
+        }
+
+        .buy-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            color: #111;
+        }
+
+        .buy-tag img {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            object-fit: cover;
+        }
+
+        .swap-icon {
+            text-align: center;
+            font-size: 1.35rem;
+            letter-spacing: 0.08em;
+            margin: 0.55rem 0 0.85rem;
+            color: #bfc1cf;
+        }
+
+        .buy-now-btn {
+            width: 100%;
+            background: #18c16e;
+            color: #fff;
+            border: none;
+            padding: 0.95rem 1rem;
+            border-radius: 4px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1.15rem;
+            text-transform: none;
+            box-shadow: 0 14px 28px rgba(24, 193, 110, 0.24);
+        }
+
+        .market-preview-section {
+            background: #ffffff !important;
+            padding: 4.6rem 0 5.25rem !important;
+            color: #111;
+        }
+
+        .market-preview-section h2 {
+            text-align: center;
+            margin-bottom: 2.6rem !important;
+            font-size: 1.82rem !important;
+            color: #181331;
+        }
+
+        .market-shell {
+            max-width: 980px;
+            margin: 0 auto;
+        }
+
+        .preview-tabs {
+            display: flex;
+            gap: 2rem;
+            border-bottom: 1px solid #eceaf3;
+            margin-bottom: 1.45rem;
+        }
+
+        .preview-tab {
+            padding: 0 0 14px;
+            font-size: 0.92rem;
+            color: #8a879d;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .preview-tab.active {
+            color: #f2a43f;
+            border-color: #f2a43f;
+        }
+
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .preview-table th {
+            padding: 12px 10px;
+            font-size: 0.76rem;
+            color: #8f8ca0;
+            font-weight: 600;
+        }
+
+        .preview-table td {
+            padding: 18px 10px;
+            font-size: 0.92rem;
+            border-bottom: 1px solid #f0eef6;
+            color: #2e2942;
+        }
+
+        .pair-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+        }
+
+        .btn-buy-sell {
+            background: #f3f3f8;
+            color: #6c6981;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .how-it-works {
+            background: linear-gradient(135deg, #7c40f0 0%, #6a34e5 38%, #5423b8 100%) !important;
+            padding: 6.5rem 0 5.8rem !important;
+            color: #fff;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .how-it-works::before {
+            content: "";
+            position: absolute;
+            left: -8%;
+            right: -8%;
+            top: -84px;
+            height: 170px;
+            background: #ffffff;
+            border-radius: 0 0 50% 50% / 0 0 100% 100%;
+            transform: rotate(-1.8deg);
+        }
+
+        .how-it-works-alt {
+            background: linear-gradient(135deg, #6d34e7 0%, #5824bf 100%) !important;
+            padding: 5rem 0 5.6rem !important;
+            color: #fff;
+            text-align: center;
+        }
+
+        .testimonials-section {
+            padding: 5.6rem 0 5.3rem !important;
+            background: #ffffff !important;
+            color: #1e293b;
+        }
+
+        .news-section {
+            background: #ffffff !important;
+        }
+
+        .bottom-cta {
+            padding: 7.2rem 0 !important;
+            background: linear-gradient(135deg, #7d40f2 0%, #662fdd 38%, #48199a 100%) !important;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bottom-cta::before {
+            display: none;
+        }
+
+        .footer-logo-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .footer-logo-link .l-logo {
+            margin-right: 0;
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 1100px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 42px;
+            }
+
+            .hero-text {
+                padding-top: 18px;
+                max-width: none;
+            }
+
+            .feature-logos {
+                gap: 1rem;
+            }
         }
     </style>
 </head>
@@ -138,102 +597,107 @@
             </div>
         </div>
 
-        <header class="landing-nav container">
-            <a href="index.html" class="l-logo">
-                <svg width="28" height="28" viewBox="0 0 40 40" fill="white" style="margin-right:4px;">
-                    <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill-opacity="0.2" />
-                    <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" />
-                </svg>
-                EASYCRYPTO
-            </a>
-            <div class="l-nav-links">
-                <div class="l-nav-item">
-                    <button class="l-nav-link" id="buy-sell-toggle">Buy & Sell <span>▼</span></button>
-                    <ul class="l-dropdown" id="buy-sell-dropdown">
-                        <li class="l-dropdown-item">
-                            <a href="#" id="instant-buy-link"><span>•</span> Instant buy & sell</a>
-                        </li>
-                        <li class="l-dropdown-item">
-                            <a href="buy-sell.html#multi-coin"><span></span> Multi-coin order</a>
-                        </li>
-                        <li class="l-dropdown-item">
-                            <a href="buy-sell.html#auto-buy"><span></span> Auto-Buy</a>
-                        </li>
-                        <li class="l-dropdown-item">
-                            <a href="buy-sell.html#swap"><span></span> Swap</a>
-                        </li>
-                        <li class="l-dropdown-item">
-                            <a href="#"><span></span> Institutional</a>
-                        </li>
-                        <li class="l-dropdown-item">
-                            <a href="#"><span></span> OTC</a>
-                        </li>
-                    </ul>
-                </div>
-                <a href="#" class="l-nav-link">Rates</a>
-                <a href="#" class="l-nav-link">Tracker</a>
-                <a href="#" class="l-nav-link">SMSF</a>
-                <a href="#" class="l-nav-link">Learn <span>▼</span></a>
-                <a href="#" class="l-nav-link">About Us</a>
-                <a href="login.html" class="l-nav-link">Sign In</a>
-                <a href="signup.html" class="btn-signup">Sign up</a>
-            </div>
-        </header>
-
-        <main class="hero container landing-section">
-            <div class="hero-grid">
-                <div class="hero-text">
-                    <h1>We trade cryptocurrencies in most countries and regions of the world. Makes trading
-                        cryptocurrencies easier.</h1>
-                    <p class="subtext">You can easily trade contracts and quickly store and withdraw cryptocurrencies on
-                        our exchange.</p>
-                    <p class="desc">Buy and sell instantly with Australia's fastest and safest crypto retailer. Deliver
-                        to any wallet address or withdraw to your bank account in as little as two minutes. Easy!</p>
-
-                    <div class="as-featured">
-                        <p
-                            style="color:white; opacity:0.7; margin-bottom: 2rem; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">
-                            As featured in</p>
-                        <div class="feature-logos">
-                            <span class="f-logo-item"
-                                style="font-weight:900; letter-spacing:-2px; font-size:2.5rem; font-family:'Outfit';">stuff</span>
-                            <span class="f-logo-item" style="font-size:1.5rem;">:am <small
-                                    style="font-size:0.5rem; display:block; margin-top:-8px;">SHOW</small></span>
-                            <span class="f-logo-item" style="font-size:1.8rem; font-weight:700;">Newshub.</span>
-                            <span class="f-logo-item" style="text-transform:uppercase; font-size:1.8rem;">SCOOP</span>
-                            <span class="f-logo-item" style="font-size:1.8rem;">NBR</span>
-                        </div>
+        <div class="hero-stage">
+            <header class="landing-nav container">
+                <a href="index.html" class="l-logo" aria-label="EasyCrypto home">
+                    <span class="l-logo-mark" aria-hidden="true">
+                        <svg viewBox="0 0 40 40" fill="white">
+                            <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill-opacity="0.2" />
+                            <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" />
+                        </svg>
+                    </span>
+                    <span class="l-logo-word">EASYCRYPTO</span>
+                </a>
+                <div class="l-nav-links">
+                    <div class="l-nav-item">
+                        <button class="l-nav-link" id="buy-sell-toggle">Buy & Sell <span>&#9662;</span></button>
+                        <ul class="l-dropdown" id="buy-sell-dropdown">
+                            <li class="l-dropdown-item">
+                                <a href="#" id="instant-buy-link"><span>&#8226;</span> Instant buy & sell</a>
+                            </li>
+                            <li class="l-dropdown-item">
+                                <a href="buy-sell.html#multi-coin"><span></span> Multi-coin order</a>
+                            </li>
+                            <li class="l-dropdown-item">
+                                <a href="buy-sell.html#auto-buy"><span></span> Auto-Buy</a>
+                            </li>
+                            <li class="l-dropdown-item">
+                                <a href="buy-sell.html#swap"><span></span> Swap</a>
+                            </li>
+                            <li class="l-dropdown-item">
+                                <a href="#"><span></span> Institutional</a>
+                            </li>
+                            <li class="l-dropdown-item">
+                                <a href="#"><span></span> OTC</a>
+                            </li>
+                        </ul>
                     </div>
+                    <a href="#" class="l-nav-link">Rates</a>
+                    <a href="#" class="l-nav-link">Tracker</a>
+                    <a href="#" class="l-nav-link">SMSF</a>
+                    <a href="#" class="l-nav-link">Learn <span>&#9662;</span></a>
+                    <a href="#" class="l-nav-link">About Us</a>
+                    <a href="login.html" class="l-nav-link">Sign In</a>
+                    <a href="signup.html" class="btn-signup">Sign up</a>
                 </div>
+            </header>
 
-                <div class="buy-card">
-                    <h2>Start Investing in Crypto Today</h2>
+            <main class="hero container landing-section">
+                <div class="hero-grid">
+                    <div class="hero-text">
+                        <h1>We trade cryptocurrencies in most countries and regions of the world. Makes trading
+                            cryptocurrencies easier.</h1>
+                        <p class="subtext">You can easily trade contracts and quickly store and withdraw cryptocurrencies
+                            on our exchange.</p>
+                        <p class="desc">Buy and sell instantly with Australia's fastest and safest crypto retailer.
+                            Deliver to any wallet address or withdraw to your bank account in as little as two minutes.
+                            Easy!</p>
 
-                    <div class="buy-label">From Australian dollar (AUD)...</div>
-                    <div class="buy-in">
-                        <input type="text" placeholder="Enter amount...">
-                        <div class="buy-tag">
-                            <img src="https://flagcdn.com/w80/au.png" alt="AUD">
-                            AUD
+                        <div class="as-featured">
+                            <p>As featured in</p>
+                            <div class="feature-logos">
+                                <span class="f-logo-item"
+                                    style="font-weight:900; letter-spacing:-2px; font-size:2.35rem; font-family:'Outfit';">stuff</span>
+                                <span class="f-logo-item" style="font-size:1.38rem;">:am <small
+                                        style="font-size:0.52rem; display:block; margin-top:-8px;">SHOW</small></span>
+                                <span class="f-logo-item" style="font-size:1.6rem; font-weight:700;">Newshub.</span>
+                                <span class="f-logo-item" style="text-transform:uppercase; font-size:1.55rem;">SCOOP</span>
+                                <span class="f-logo-item" style="font-size:1.55rem;">NBR</span>
+                                <span class="f-logo-item" style="font-size:1.18rem;">The Spinoff</span>
+                                <span class="f-logo-item" style="font-size:1.18rem;">RNZ</span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="swap-icon">&lt;-&gt;</div>
+                    <div class="buy-card">
+                        <h2>Start Investing<br>in Crypto Today</h2>
 
-                    <div class="buy-label">To Bitcoin...</div>
-                    <div class="buy-in">
-                        <input type="text" placeholder="Minimum $100...">
-                        <div class="buy-tag">
-                            <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="BTC"
-                                style="width:20px; height:20px;">
-                            BTC
+                        <div class="buy-label">From Australian dollar (AUD)...</div>
+                        <div class="buy-in">
+                            <input type="text" placeholder="Enter amount...">
+                            <div class="buy-tag">
+                                <img src="https://flagcdn.com/w80/au.png" alt="AUD">
+                                AUD
+                            </div>
                         </div>
-                    </div>
 
-                    <button class="buy-now-btn">Buy now</button>
+                        <div class="swap-icon">&#8597;</div>
+
+                        <div class="buy-label">To Bitcoin...</div>
+                        <div class="buy-in">
+                            <input type="text" placeholder="Minimum $100...">
+                            <div class="buy-tag">
+                                <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="BTC">
+                                BTC
+                            </div>
+                        </div>
+
+                        <button class="buy-now-btn">Buy now</button>
+                    </div>
                 </div>
-            </div>
-        </main>
+            </main>
+            <div class="hero-wave" aria-hidden="true"></div>
+        </div>
 
         <!-- SECTION 2: MARKET PREVIEW -->
         <section class="market-preview-section landing-section">
@@ -241,99 +705,101 @@
                 <h2 style="text-align: center; margin-bottom: 3rem; font-size: 1.85rem;">Track the Market and Watch Your
                     Portfolio Grow</h2>
 
-                <div class="preview-tabs">
-                    <div class="preview-tab active">market</div>
-                    <div class="preview-tab">Hot</div>
-                    <div class="preview-tab">24-hour increase list</div>
-                </div>
+                <div class="market-shell">
+                    <div class="preview-tabs">
+                        <div class="preview-tab active">market</div>
+                        <div class="preview-tab">Hot</div>
+                        <div class="preview-tab">24-hour increase list</div>
+                    </div>
 
-                <table class="preview-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Latest price</th>
-                            <th>24H change</th>
-                            <th>24H transaction volume</th>
-                            <th style="text-align: right;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <div class="pair-info">
-                                    <div
-                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
-                                        B</div>
-                                    BTC/USDT
-                                </div>
-                            </td>
-                            <td style="font-weight: 500;">$ 0.0000</td>
-                            <td style="color: #94a3b8;">0.00 %</td>
-                            <td>$ 0</td>
-                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="pair-info">
-                                    <div
-                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#6366f1; font-weight:900;">
-                                        E</div>
-                                    ETH/USDT
-                                </div>
-                            </td>
-                            <td style="font-weight: 500;">$ 0.0000</td>
-                            <td style="color: #94a3b8;">0.00 %</td>
-                            <td>$ 0</td>
-                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="pair-info">
-                                    <div
-                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#111; font-weight:900;">
-                                        H</div>
-                                    HBAR/USDT
-                                </div>
-                            </td>
-                            <td style="font-weight: 500;">$ 0.0000</td>
-                            <td style="color: #94a3b8;">0.00 %</td>
-                            <td>$ 0</td>
-                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="pair-info">
-                                    <div
-                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
-                                        IP</div>
-                                    IP/USDT
-                                </div>
-                            </td>
-                            <td style="font-weight: 500;">$ 0.0000</td>
-                            <td style="color: #94a3b8;">0.00 %</td>
-                            <td>$ 0</td>
-                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <div class="pair-info">
-                                    <div
-                                        style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
-                                        W</div>
-                                    WBT/USDT
-                                </div>
-                            </td>
-                            <td style="font-weight: 500;">$ 0.0000</td>
-                            <td style="color: #94a3b8;">0.00 %</td>
-                            <td>$ 0</td>
-                            <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
-                        </tr>
-                    </tbody>
-                </table>
+                    <table class="preview-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Latest price</th>
+                                <th>24H change</th>
+                                <th>24H transaction volume</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="pair-info">
+                                        <div
+                                            style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
+                                            B</div>
+                                        BTC/USDT
+                                    </div>
+                                </td>
+                                <td style="font-weight: 500;">$ 0.0000</td>
+                                <td style="color: #94a3b8;">0.00 %</td>
+                                <td>$ 0</td>
+                                <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="pair-info">
+                                        <div
+                                            style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#6366f1; font-weight:900;">
+                                            E</div>
+                                        ETH/USDT
+                                    </div>
+                                </td>
+                                <td style="font-weight: 500;">$ 0.0000</td>
+                                <td style="color: #94a3b8;">0.00 %</td>
+                                <td>$ 0</td>
+                                <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="pair-info">
+                                        <div
+                                            style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#111; font-weight:900;">
+                                            H</div>
+                                        HBAR/USDT
+                                    </div>
+                                </td>
+                                <td style="font-weight: 500;">$ 0.0000</td>
+                                <td style="color: #94a3b8;">0.00 %</td>
+                                <td>$ 0</td>
+                                <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="pair-info">
+                                        <div
+                                            style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
+                                            IP</div>
+                                        IP/USDT
+                                    </div>
+                                </td>
+                                <td style="font-weight: 500;">$ 0.0000</td>
+                                <td style="color: #94a3b8;">0.00 %</td>
+                                <td>$ 0</td>
+                                <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="pair-info">
+                                        <div
+                                            style="width:32px; height:32px; background:#f0f0f0; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#f59e0b; font-weight:900;">
+                                            W</div>
+                                        WBT/USDT
+                                    </div>
+                                </td>
+                                <td style="font-weight: 500;">$ 0.0000</td>
+                                <td style="color: #94a3b8;">0.00 %</td>
+                                <td>$ 0</td>
+                                <td style="text-align: right;"><button class="btn-buy-sell">Buy/sell</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
 
-                <div style="text-align: center; margin-top: 3rem;">
-                    <a href="#" style="color: #8147ff; text-decoration: none; font-size: 0.9rem; font-weight: 500;">View
-                        All Markets</a>
+                    <div style="text-align: center; margin-top: 3rem;">
+                        <a href="#" style="color: #8147ff; text-decoration: none; font-size: 0.9rem; font-weight: 500;">View
+                            All Markets</a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -510,7 +976,7 @@
 
                 <div style="text-align: center; margin-top: 4rem; opacity: 0.8;">
                     <p style="font-size: 1.1rem; font-weight: 500;">Check out our <strong>1,998 reviews</strong> <span
-                            style="color: #10b981;">★★★★★</span> <strong
+                            style="color: #10b981;">&#9733;&#9733;&#9733;&#9733;&#9733;</span> <strong
                             style="color: #10b981; font-size: 1.2rem;">Trustpilot</strong></p>
                 </div>
             </div>
@@ -649,23 +1115,23 @@
 
                         <ul style="list-style: none; display: flex; flex-direction: column; gap: 1rem;">
                             <li style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem;"><span
-                                    style="color: #10b981;">✓</span> It's a better way to move money</li>
+                                    style="color: #10b981;">&#10003;</span> It's a better way to move money</li>
                             <li style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem;"><span
-                                    style="color: #10b981;">✓</span> It's a new type of investment</li>
+                                    style="color: #10b981;">&#10003;</span> It's a new type of investment</li>
                             <li style="display: flex; align-items: center; gap: 0.75rem; font-size: 1.1rem;"><span
-                                    style="color: #10b981;">✓</span> It's true financial freedom</li>
+                                    style="color: #10b981;">&#10003;</span> It's true financial freedom</li>
                         </ul>
                     </div>
 
                     <div class="buy-card" style="margin-top: 0;">
-                        <h2>Start Investing in Crypto Today</h2>
+                        <h2>Start Investing<br>in Crypto Today</h2>
                         <div class="buy-label">From Australian dollar (AUD)...</div>
                         <div class="buy-in">
                             <input type="text" placeholder="Enter amount...">
                             <div class="buy-tag"><img src="https://flagcdn.com/w80/au.png" alt="AUD"
                                     style="width:20px;"> AUD</div>
                         </div>
-                        <div class="swap-icon" style="margin: 1rem 0; text-align: center; color: #94a3b8;"><-></div>
+                        <div class="swap-icon" style="margin: 1rem 0; text-align: center; color: #94a3b8;">&#8597;</div>
                         <div class="buy-label">To Bitcoin...</div>
                         <div class="buy-in">
                             <input type="text" placeholder="Minimum $100...">
@@ -684,8 +1150,17 @@
                         style="display: flex; justify-content: space-between; gap: 4rem; flex-wrap: wrap; margin-bottom: 4rem;">
                         <!-- LEFT COLUMN -->
                         <div style="flex: 2; min-width: 300px;">
-                            <div class="l-logo" style="font-size: 1.5rem; color: white; margin-bottom: 1.5rem;">
-                                EASYCRYPTO</div>
+                            <a href="index.html" class="footer-logo-link" style="margin-bottom: 1.5rem;">
+                                <span class="l-logo">
+                                    <span class="l-logo-mark" aria-hidden="true">
+                                        <svg viewBox="0 0 40 40" fill="white">
+                                            <path d="M20 0L37.3205 10V30L20 40L2.67949 30V10L20 0Z" fill-opacity="0.2" />
+                                            <path d="M20 8L30.3923 14V26L20 32L9.6077 26V14L20 8Z" />
+                                        </svg>
+                                    </span>
+                                    <span class="l-logo-word">EASYCRYPTO</span>
+                                </span>
+                            </a>
                             <p style="line-height: 1.6; margin-bottom: 1.5rem; max-width: 400px;">Easy Crypto wants to
                                 make it easy for anyone to get into the crypto market - no matter how much they have to
                                 invest.</p>
@@ -932,6 +1407,7 @@
 
 
 </html>
+
 
 
 
