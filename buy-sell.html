@@ -96,12 +96,21 @@
                 .coin-item img {
                         width: 28px;
                         height: 28px;
+                        object-fit: contain;
+                        flex-shrink: 0;
                 }
 
                 .coin-item span {
                         font-weight: 600;
                         color: #334155;
                         font-size: 0.95rem;
+                }
+
+                .coin-icon-safe {
+                        object-fit: contain;
+                        flex-shrink: 0;
+                        background: white;
+                        border-radius: 999px;
                 }
 
                 body.modal-open {
@@ -2243,6 +2252,7 @@
                         window.addEventListener('hashchange', handleHash);
                 });
         </script>
+    <script src="/js/buy-sell-icon-fallback.js"></script>
     <script src="/js/site-language.js"></script>
 </body>
 
