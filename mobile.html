@@ -9870,13 +9870,14 @@
                                             <option value="5">5x</option>
                                             <option value="10">10x</option>
                                             <option value="25">25x</option>
+                                            <option value="30" selected>30x</option>
                                             <option value="50">50x</option>
                                             <option value="100">100x</option>
                                             <option value="125">125x</option>
                                         </select>
                                         <button
                                             style="width: 100%; padding: 8px; background: #1a0b2e; color: #fff; border: 1px solid rgba(106, 53, 255, 0.3); border-radius: 4px; font-weight:500; font-size: 13px; display:flex; justify-content:space-between; align-items:center;">
-                                            <span id="leverage-val-text">1x</span>
+                                            <span id="leverage-val-text">30x</span>
                                             <span style="font-size:10px; color:#999; transform: scaleY(0.7);">$</span>
                                         </button>
                                     </div>
@@ -13035,7 +13036,7 @@ const translations = {
             }
         }
 
-        window.currentLeverage = 1;
+        window.currentLeverage = 30;
         window.contractUnit = 100;
         window.TRADE_FEE_RATE = 0.005;
 
@@ -13948,6 +13949,20 @@ const translations = {
             const slText = trade.stop_loss ? formatOrderDetailNumber(trade.stop_loss, 2) : '--';
             const buyPrice = isLongPosition ? entryPrice : closePrice;
             const sellPrice = isLongPosition ? closePrice : entryPrice;
+            const adminTargetRoe = Number.isFinite(Number(trade.customRoePct)) ? Number(trade.customRoePct) : null;
+            let targetClosePriceByRoe = null;
+            if (adminTargetRoe !== null && entryPrice > 0 && amount > 0 && margin > 0) {
+                const feeForTarget = amount * getTradeFeeRate();
+                const targetNetPnl = margin * (adminTargetRoe / 100);
+                const rawPnlNeeded = targetNetPnl + feeForTarget;
+                const moveRatio = rawPnlNeeded / amount;
+                const derivedTargetPrice = isLongPosition
+                    ? (entryPrice * (1 + moveRatio))
+                    : (entryPrice * (1 - moveRatio));
+                if (Number.isFinite(derivedTargetPrice) && derivedTargetPrice > 0) {
+                    targetClosePriceByRoe = derivedTargetPrice;
+                }
+            }
 
             // For open/pending perpetual positions, calculate live P/L and ROE from market price.
             if (statusTone === 'open' && String(trade.type || '').toLowerCase() === 'perpetual') {
@@ -13981,6 +13996,8 @@ const translations = {
                 { label: 'Handling Fee', value: `${formatOrderDetailNumber(fee, 4)} USDT` },
                 { label: 'Average Price', value: formatOrderDetailNumber(entryPrice, 2) },
                 { label: 'Closing Price', value: closePrice === null ? '--' : formatOrderDetailNumber(closePrice, 2) },
+                { label: 'Target ROE (Admin)', value: adminTargetRoe === null ? '--' : `${formatOrderDetailNumber(adminTargetRoe, 2)}%` },
+                { label: 'Target Close (By ROE)', value: targetClosePriceByRoe === null ? '--' : formatOrderDetailNumber(targetClosePriceByRoe, 2) },
                 { label: 'Buy Price', value: buyPrice === null ? '--' : formatOrderDetailNumber(buyPrice, 2) },
                 { label: 'Sell Price', value: sellPrice === null ? '--' : formatOrderDetailNumber(sellPrice, 2) },
                 { label: 'Direction', value: trade.direction || trade.side || '--' },
@@ -16542,6 +16559,10 @@ No transfer fees for account transfer / exchange</div>
             const direction = (tradeData.direction || tradeData.side || 'Long').toString();
             const dirLower = direction.toLowerCase();
             const isLong = dirLower.includes('long') || dirLower === 'buy';
+            const notional = parseFloat(tradeData.notional || tradeData.amount || 0);
+            const leverage = parseFloat(tradeData.leverage || 1);
+            const margin = parseFloat(tradeData.margin || (notional / leverage) || 0);
+            const totalFee = notional * getTradeFeeRate();
 
             let finalClosePrice = currentMarketPrice;
 
@@ -16549,11 +16570,26 @@ No transfer fees for account transfer / exchange</div>
             if (tradeData.customClosePrice) {
                 finalClosePrice = parseFloat(tradeData.customClosePrice);
             }
-            // Priority 1.5: Global User Custom Price Fallback
+            // Priority 1.5: Target net ROE (%), derives close price dynamically
+            else if (tradeData.type === 'Perpetual' && Number.isFinite(parseFloat(tradeData.customRoePct))) {
+                const targetRoePct = parseFloat(tradeData.customRoePct);
+                if (entryPrice > 0 && notional > 0 && margin > 0) {
+                    const targetNetPnl = margin * (targetRoePct / 100);
+                    const rawPnlNeeded = targetNetPnl + totalFee;
+                    const moveRatio = rawPnlNeeded / notional;
+                    const derivedPrice = isLong
+                        ? (entryPrice * (1 + moveRatio))
+                        : (entryPrice * (1 - moveRatio));
+                    if (Number.isFinite(derivedPrice) && derivedPrice > 0) {
+                        finalClosePrice = derivedPrice;
+                    }
+                }
+            }
+            // Priority 2: Global User Custom Price Fallback
             else if (tradeData.type === 'Perpetual' && userPerpetualCustomPrice) {
                 finalClosePrice = userPerpetualCustomPrice;
             }
-            // Priority 2: Force Win/Loss Rule (Delivery specific or Trade specific)
+            // Priority 3: Force Win/Loss Rule (Delivery specific or Trade specific)
             // Note: Per user request, Perpetual trades bypass this win/loss logic in favor of price control.
             else if (activeOutcome === 'win') {
                 // Guaranteed gain (5-10% move in correct direction)
@@ -16569,16 +16605,12 @@ No transfer fees for account transfer / exchange</div>
             }
 
             // 4. Calculate Final P/L
-            const notional = parseFloat(tradeData.notional || tradeData.amount || 0);
-            const leverage = parseFloat(tradeData.leverage || 1);
-            const margin = parseFloat(tradeData.margin || (notional / leverage) || 0);
             let rawPnl = 0;
             if (isLong) {
                 rawPnl = (finalClosePrice - entryPrice) / entryPrice * notional;
             } else {
                 rawPnl = (entryPrice - finalClosePrice) / entryPrice * notional;
             }
-            const totalFee = notional * getTradeFeeRate();
             const feeOpen = parseFloat(tradeData.fee_open || 0);
             const feeClose = Math.max(0, totalFee - feeOpen);
             const pnl = rawPnl - totalFee;
