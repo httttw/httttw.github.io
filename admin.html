@@ -3158,6 +3158,11 @@
 
                     const status = data.status || 'Pending';
                     const type = data.type || 'Perpetual';
+                    const targetSettlementMetrics = buildAdminPerpetualSettlementMetrics(data);
+                    const useTargetSettlementDisplay = shouldUseAdminTargetSettlementDisplay(data, targetSettlementMetrics);
+                    const effectiveClosedPnl = useTargetSettlementDisplay
+                        ? Number(targetSettlementMetrics.finalPnl)
+                        : Number(data.final_pnl);
 
                     // Statistical counts (independent of filter)
                     if (status === 'Open') openCount++;
@@ -3165,7 +3170,7 @@
                     else if (status === 'Approved') approvedCount++;
                     else if (status === 'Rejected') rejectedCount++;
                     else if (status === 'Closed') {
-                        if (data.final_pnl >= 0) approvedCount++;
+                        if (effectiveClosedPnl >= 0) approvedCount++;
                         else rejectedCount++;
                     }
 
@@ -3177,8 +3182,8 @@
                     else if (f === 'Delivery' && type === 'Delivery') show = true;
                     else if (f === 'Pending' && status === 'Pending') show = true;
                     else if (f === 'Open' && status === 'Open') show = true;
-                    else if (f === 'Win' && (status === 'Approved' || (status === 'Closed' && data.final_pnl >= 0))) show = true;
-                    else if (f === 'Lose' && (status === 'Rejected' || (status === 'Closed' && data.final_pnl < 0))) show = true;
+                    else if (f === 'Win' && (status === 'Approved' || (status === 'Closed' && effectiveClosedPnl >= 0))) show = true;
+                    else if (f === 'Lose' && (status === 'Rejected' || (status === 'Closed' && effectiveClosedPnl < 0))) show = true;
 
                     if (!show) return;
 
@@ -3186,7 +3191,7 @@
                     if (displayStatus === 'Approved') displayStatus = 'Win';
                     if (displayStatus === 'Rejected') displayStatus = 'Lose';
                     if (displayStatus === 'Closed') {
-                        displayStatus = (data.final_pnl >= 0) ? 'Win' : 'Lose';
+                        displayStatus = (effectiveClosedPnl >= 0) ? 'Win' : 'Lose';
                     }
 
                     let statusClass = 'bg-yellow-100 text-yellow-800';
@@ -3201,9 +3206,11 @@
                     const coin = data.coin || (data.pair ? String(data.pair).split('/')[0] : '');
                     const livePrice = window.toSafeNumber(window.allCoinsData && window.allCoinsData[coin] ? window.allCoinsData[coin].price : 0);
                     const closePrice = window.toSafeNumber(data.close_price);
-                    const markPrice = closePrice || window.toSafeNumber(data.mark_price) || livePrice || entryPrice;
+                    const markPrice = useTargetSettlementDisplay
+                        ? window.toSafeNumber(targetSettlementMetrics.closePrice)
+                        : (closePrice || window.toSafeNumber(data.mark_price) || livePrice || entryPrice);
                     const notional = window.toSafeNumber(data.notional || data.amount);
-                    let pnl = Number(data.final_pnl);
+                    let pnl = useTargetSettlementDisplay ? Number(targetSettlementMetrics.finalPnl) : Number(data.final_pnl);
                     if (!Number.isFinite(pnl)) {
                         if (entryPrice > 0 && notional > 0) {
                             const ratio = (markPrice - entryPrice) / entryPrice;
@@ -3840,6 +3847,9 @@
                         const parsedRoe = parseFloat(roeInput.value);
                         tradeUpdate.customRoePct = Number.isFinite(parsedRoe) ? parsedRoe : null;
                     }
+                    if (tradeUpdate.customClosePrice !== null && tradeUpdate.customRoePct !== null) {
+                        throw new Error(`Trade ${tid}: use either custom close price or target ROE, not both.`);
+                    }
                     if (outcomeSelect) {
                         tradeUpdate.admin_outcome = outcomeSelect.value === 'normal' ? null : outcomeSelect.value;
                     }
@@ -4224,6 +4234,83 @@
             }
         };
 
+        function getAdminTradeFeeRate(trade) {
+            const directRate = Number(trade && trade.fee_rate);
+            if (Number.isFinite(directRate) && directRate >= 0) return directRate;
+            return 0.005;
+        }
+
+        function buildAdminPerpetualSettlementMetrics(trade, overrides = {}) {
+            if (!trade) return null;
+
+            const entryPrice = window.toSafeNumber(overrides.entryPrice !== undefined ? overrides.entryPrice : (trade.entry_price || trade.price));
+            const notional = window.toSafeNumber(overrides.notional !== undefined ? overrides.notional : (trade.notional || trade.amount));
+            const leverage = Math.max(window.toSafeNumber(overrides.leverage !== undefined ? overrides.leverage : (trade.leverage || 1)), 1);
+            const margin = window.toSafeNumber(overrides.margin !== undefined ? overrides.margin : (trade.margin || (notional / leverage)));
+            const sideText = String(overrides.direction !== undefined ? overrides.direction : (trade.direction || trade.side || '')).toLowerCase();
+            const isLong = sideText.includes('long') || sideText === 'buy';
+            const customClosePrice = Number(overrides.customClosePrice !== undefined ? overrides.customClosePrice : trade.customClosePrice);
+            const customRoePct = Number(overrides.customRoePct !== undefined ? overrides.customRoePct : trade.customRoePct);
+            const feeRate = getAdminTradeFeeRate(trade);
+            const feeOpen = Math.max(0, window.toSafeNumber(trade.fee_open || 0));
+
+            if (!(entryPrice > 0) || !(notional > 0) || !(margin > 0)) return null;
+
+            let finalClosePrice = null;
+            if (Number.isFinite(customClosePrice) && customClosePrice > 0) {
+                finalClosePrice = customClosePrice;
+            } else if (Number.isFinite(customRoePct)) {
+                const targetNetPnl = margin * (customRoePct / 100);
+                const totalFeeForTarget = notional * feeRate;
+                const rawPnlNeeded = targetNetPnl + totalFeeForTarget;
+                const moveRatio = rawPnlNeeded / notional;
+                const derivedPrice = isLong
+                    ? (entryPrice * (1 + moveRatio))
+                    : (entryPrice * (1 - moveRatio));
+                if (Number.isFinite(derivedPrice) && derivedPrice > 0) {
+                    finalClosePrice = derivedPrice;
+                }
+            } else {
+                const storedClosePrice = window.toSafeNumber(trade.close_price);
+                if (storedClosePrice > 0) finalClosePrice = storedClosePrice;
+            }
+
+            if (!(finalClosePrice > 0)) return null;
+
+            const totalFee = notional * feeRate;
+            const rawPnl = isLong
+                ? ((finalClosePrice - entryPrice) / entryPrice) * notional
+                : ((entryPrice - finalClosePrice) / entryPrice) * notional;
+            const finalPnl = rawPnl - totalFee;
+            const realizedRoe = margin > 0 ? (finalPnl / margin) * 100 : 0;
+
+            return {
+                closePrice: finalClosePrice,
+                rawPnl,
+                finalPnl,
+                realizedRoe,
+                totalFee,
+                feeClose: Math.max(0, totalFee - feeOpen)
+            };
+        }
+
+        function shouldUseAdminTargetSettlementDisplay(trade, targetMetrics) {
+            if (!trade || !targetMetrics) return false;
+            if (String(trade.type || '').toLowerCase() !== 'perpetual') return false;
+
+            const fixedClose = Number(trade.customClosePrice);
+            if (Number.isFinite(fixedClose) && fixedClose > 0) return false;
+
+            const storedClosePrice = window.toSafeNumber(trade.close_price);
+            const storedPnl = Number(trade.final_pnl);
+            const storedRoe = Number(trade.realized_roe);
+
+            if (!Number.isFinite(storedClosePrice) || Math.abs(storedClosePrice - targetMetrics.closePrice) > 0.01) return true;
+            if (!Number.isFinite(storedPnl) || Math.abs(storedPnl - targetMetrics.finalPnl) > 0.05) return true;
+            if (!Number.isFinite(storedRoe) || Math.abs(storedRoe - targetMetrics.realizedRoe) > 0.05) return true;
+            return false;
+        }
+
         window.openOperateModal = function (tradeId) {
             const trade = window.tradeDataMap[tradeId];
             if (!trade) return;
@@ -4254,8 +4341,21 @@
                 if (restoreBtn) restoreBtn.classList.remove('hidden');
 
                 // Populate data
-                document.getElementById('operateCustomPrice').value = trade.customClosePrice ?? '';
-                document.getElementById('operateCustomRoe').value = trade.customRoePct ?? '';
+                const priceInput = document.getElementById('operateCustomPrice');
+                const roeInput = document.getElementById('operateCustomRoe');
+                priceInput.value = trade.customClosePrice ?? '';
+                roeInput.value = trade.customRoePct ?? '';
+
+                priceInput.oninput = () => {
+                    if (String(priceInput.value || '').trim()) {
+                        roeInput.value = '';
+                    }
+                };
+                roeInput.oninput = () => {
+                    if (String(roeInput.value || '').trim()) {
+                        priceInput.value = '';
+                    }
+                };
             } else {
                 titleEl.innerText = "Set Win/Loss Outcome";
                 applyBtnText.innerText = "Save Changes";
@@ -4299,6 +4399,10 @@
                 } else {
                     customRoe = null;
                 }
+
+                if (customPrice !== null && customRoe !== null) {
+                    return alert("Use either a custom closing price or a target ROE, not both.");
+                }
             } else {
                 strategy = document.getElementById('operateDeliveryStrategy').value;
             }
@@ -4310,8 +4414,44 @@
             };
 
             try {
-                // Ensure we use the global Firebase functions correctly
+                const tradeRef = window._doc(window._db, 'trades', tradeId);
+                const tradeSnap = await window._getDoc(tradeRef);
+                if (!tradeSnap.exists()) {
+                    throw new Error('Trade not found.');
+                }
+
+                const tradeData = tradeSnap.data();
+                let balanceDelta = 0;
+
+                if (String(category).toLowerCase() === 'perpetual' && String(tradeData.status || '').toLowerCase() === 'closed') {
+                    const settlementMetrics = buildAdminPerpetualSettlementMetrics(tradeData, {
+                        customClosePrice: customPrice,
+                        customRoePct: customRoe
+                    });
+
+                    if (settlementMetrics && (customPrice !== null || customRoe !== null)) {
+                        const previousPnl = Number(tradeData.final_pnl || 0);
+                        balanceDelta = settlementMetrics.finalPnl - (Number.isFinite(previousPnl) ? previousPnl : 0);
+                        Object.assign(updateData, {
+                            close_price: settlementMetrics.closePrice,
+                            raw_pnl: settlementMetrics.rawPnl,
+                            final_pnl: settlementMetrics.finalPnl,
+                            fee_close: settlementMetrics.feeClose,
+                            fee_total: settlementMetrics.totalFee,
+                            realized_roe: settlementMetrics.realizedRoe,
+                            settlement_source: customPrice !== null ? 'admin_custom_price' : 'admin_target_roe'
+                        });
+                    }
+                }
+
                 await window._updateDoc(window._doc(window._db, 'trades', tradeId), updateData);
+
+                if (Math.abs(balanceDelta) > 0.000001 && tradeData.user_uid) {
+                    await window._updateDoc(window._doc(window._db, 'users', tradeData.user_uid), {
+                        balance: window._increment(balanceDelta)
+                    });
+                }
+
                 alert("Trade configuration applied successfully.");
                 closeModal('contractOperateModal');
             } catch (e) {
