@@ -91,11 +91,47 @@
             .replace(/[^A-Z0-9]/g, '');
     }
 
+    function deriveSymbolFromSrc(img) {
+        const src = String(img.getAttribute('src') || img.src || '');
+        if (!src) return '';
+
+        const fileName = src.split('/').pop() || '';
+        const cryptoLogosMatch = fileName.match(/-([a-z0-9]+)-logo\.(png|svg|webp)$/i);
+        if (cryptoLogosMatch && cryptoLogosMatch[1]) {
+            return cleanSymbol(cryptoLogosMatch[1]);
+        }
+
+        const cmcMatch = src.match(/\/(\d+)\.(png|svg|webp)$/i);
+        if (cmcMatch) {
+            const entry = Object.entries(CMC_IDS).find(([, id]) => String(id) === cmcMatch[1]);
+            if (entry) return entry[0];
+        }
+
+        return '';
+    }
+
+    function deriveSymbolFromText(img) {
+        const scopeText = img.parentElement ? String(img.parentElement.textContent || '') : '';
+        const parenMatch = scopeText.match(/\(([A-Za-z0-9]{2,10})\)/);
+        if (parenMatch && parenMatch[1]) {
+            return cleanSymbol(parenMatch[1]);
+        }
+
+        const tokenMatch = scopeText.match(/\b([A-Za-z0-9]{2,10})\b/);
+        if (tokenMatch && tokenMatch[1]) {
+            return cleanSymbol(tokenMatch[1]);
+        }
+
+        return '';
+    }
+
     function deriveSymbol(img) {
         const alt = cleanSymbol(img.getAttribute('alt'));
         if (alt) return alt;
-        const text = img.parentElement ? cleanSymbol(img.parentElement.textContent.split(/\s+/)[0]) : '';
-        if (text) return text;
+        const srcSymbol = deriveSymbolFromSrc(img);
+        if (srcSymbol) return srcSymbol;
+        const textSymbol = deriveSymbolFromText(img);
+        if (textSymbol) return textSymbol;
         return 'COIN';
     }
 
@@ -150,10 +186,16 @@
     function scanIcons(root) {
         const selector = [
             '.coin-item img',
-            '#buy-sell-view img[alt]',
-            '#auto-buy-view img[alt]',
-            '#multi-section img[alt]',
-            '.modal-currency img[alt]'
+            '#buy-sell-view img[src*="cryptologos.cc"]',
+            '#buy-sell-view img[src*="coinmarketcap.com"]',
+            '#buy-sell-view img[src*="spothq/cryptocurrency-icons"]',
+            '#auto-buy-view img[src*="cryptologos.cc"]',
+            '#auto-buy-view img[src*="coinmarketcap.com"]',
+            '#auto-buy-view img[src*="spothq/cryptocurrency-icons"]',
+            '#multi-section img[src*="cryptologos.cc"]',
+            '#multi-section img[src*="coinmarketcap.com"]',
+            '#multi-section img[src*="spothq/cryptocurrency-icons"]',
+            '.modal-currency img'
         ].join(',');
 
         root.querySelectorAll(selector).forEach((img) => patchImage(img));
