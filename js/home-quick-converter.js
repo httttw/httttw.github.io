@@ -19,11 +19,17 @@
         { code: 'EUR', name: 'Euro', icon: 'https://flagcdn.com/w80/eu.png' }
     ];
 
+    const CRYPTO_ICON_CMC_IDS = {
+        BTC: 1,
+        ETH: 1027,
+        USDT: 825
+    };
+
     const CRYPTO_OPTIONS = [
-        { code: 'BTC', name: 'Bitcoin', icon: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png' },
-        { code: 'ETH', name: 'Ethereum', icon: 'https://cryptologos.cc/logos/ethereum-eth-logo.png' },
-        { code: 'USDT', name: 'Tether', icon: 'https://cryptologos.cc/logos/tether-usdt-logo.png' },
-        { code: 'WBT', name: 'WhiteBIT Coin', icon: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2626.png' }
+        { code: 'BTC', name: 'Bitcoin', icon: getPrimaryCryptoIcon('BTC') },
+        { code: 'ETH', name: 'Ethereum', icon: getPrimaryCryptoIcon('ETH') },
+        { code: 'USDT', name: 'Tether', icon: getPrimaryCryptoIcon('USDT') },
+        { code: 'WBT', name: 'WhiteBIT Coin', icon: getPrimaryCryptoIcon('WBT') }
     ];
 
     const COINGECKO_SYMBOL_TO_ID = {
@@ -58,6 +64,58 @@
     dropdownEl.className = 'quick-currency-dropdown';
     dropdownEl.setAttribute('aria-hidden', 'true');
     document.body.appendChild(dropdownEl);
+
+    function makeCryptoSvgFallback(code) {
+        const token = String(code || 'COIN').trim().toUpperCase().slice(0, 4) || 'COIN';
+        const colors = ['#2563eb', '#0f766e', '#059669', '#dc2626', '#7c3aed', '#ea580c'];
+        let hash = 0;
+        for (let i = 0; i < token.length; i += 1) {
+            hash = ((hash << 5) - hash) + token.charCodeAt(i);
+        }
+        const bg = colors[Math.abs(hash) % colors.length];
+        const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+                <circle cx="32" cy="32" r="32" fill="${bg}" />
+                <text x="32" y="38" text-anchor="middle" font-family="Arial, sans-serif" font-size="${token.length > 3 ? 16 : 20}" font-weight="700" fill="#ffffff">${token}</text>
+            </svg>
+        `.trim();
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    function getCryptoIconCandidates(code) {
+        const normalized = String(code || '').trim().toUpperCase();
+        const lower = normalized.toLowerCase();
+        const urls = [];
+
+        if (CRYPTO_ICON_CMC_IDS[normalized]) {
+            urls.push(`https://s2.coinmarketcap.com/static/img/coins/64x64/${CRYPTO_ICON_CMC_IDS[normalized]}.png`);
+        }
+
+        urls.push(`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/32/color/${lower}.png`);
+        urls.push(`https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/32/color/${lower}.png`);
+        urls.push(makeCryptoSvgFallback(normalized));
+        return urls;
+    }
+
+    function getPrimaryCryptoIcon(code) {
+        return getCryptoIconCandidates(code)[0];
+    }
+
+    function installCryptoIconFallback(img, code) {
+        if (!img || !code || !isCrypto(code)) return;
+
+        const candidates = getCryptoIconCandidates(code);
+        let currentIndex = 0;
+
+        const applyNext = () => {
+            if (currentIndex >= candidates.length) return;
+            img.src = candidates[currentIndex];
+            currentIndex += 1;
+        };
+
+        img.onerror = applyNext;
+        applyNext();
+    }
 
     function isFiat(code) {
         return FIAT_SET.has(String(code || '').toUpperCase());
@@ -132,6 +190,9 @@
         const info = getCurrencyInfo(code);
         const icon = info.icon ? `<img src="${info.icon}" alt="${info.code}">` : '';
         el.innerHTML = `${icon} ${info.code}`;
+        if (isCrypto(info.code)) {
+            installCryptoIconFallback(el.querySelector('img'), info.code);
+        }
     }
 
     function setWidgetMeta(widget, text) {
@@ -258,6 +319,13 @@
                 <span class="quick-currency-option-name">${option.name}</span>
             </button>
         `).join('');
+
+        dropdownEl.querySelectorAll('[data-code]').forEach((optionEl) => {
+            const code = String(optionEl.getAttribute('data-code') || '').toUpperCase();
+            if (isCrypto(code)) {
+                installCryptoIconFallback(optionEl.querySelector('img'), code);
+            }
+        });
 
         dropdownEl.querySelectorAll('[data-code]').forEach((optionEl) => {
             optionEl.addEventListener('click', () => {
