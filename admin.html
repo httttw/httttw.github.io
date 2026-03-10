@@ -3520,7 +3520,12 @@
             }
         };
 
-        const PERPETUAL_CONTROL_SYMBOLS = ['BTC', 'ETH', 'SOL', 'XRP', 'ADA', 'DOGE', 'BNB', 'LTC', 'BCH', 'LINK', 'AVAX', 'DOT', 'ETC', 'TRX', 'HBAR', 'SUI', 'TON'];
+        const PERPETUAL_CONTROL_SYMBOLS = [
+            'BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'DOT', 'LTC', 'BCH',
+            'LINK', 'AVAX', 'MATIC', 'UNI', 'ATOM', 'ETC', 'HBAR', 'IP', 'WBT', 'XMR',
+            'ALGO', 'NEO', 'IOTA', 'XTZ', 'AXS', 'SAND', 'MANA', 'USDC', 'CHZ', 'HYPE',
+            'SUI', 'TON', 'TRX', 'XLM', 'USDE', 'ICP', 'DAI', 'VET', 'YFI', 'OKB'
+        ];
 
         function normalizePerpetualCoinSymbol(value) {
             return String(value || '')
