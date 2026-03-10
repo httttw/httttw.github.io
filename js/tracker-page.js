@@ -30,6 +30,8 @@
         return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
     })();
 
+    const DONUT_COLORS = ['#6c39ec', '#3f87ff', '#f59b1f', '#1cb16a', '#de4f88', '#16a5b8'];
+
     const COPY = {
         en: {
             searchPlaceholder: 'Search asset',
@@ -40,7 +42,8 @@
             assetsCount: '{count} assets tracked',
             splitLabel: '{wins} up / {losses} down',
             moverUp: 'Gainer',
-            moverDown: 'Loser'
+            moverDown: 'Loser',
+            coins: 'Coins'
         },
         zh: {
             searchPlaceholder: '搜索币种',
@@ -51,7 +54,8 @@
             assetsCount: '已追踪 {count} 个资产',
             splitLabel: '上涨 {wins} / 下跌 {losses}',
             moverUp: '涨幅',
-            moverDown: '跌幅'
+            moverDown: '跌幅',
+            coins: '币种'
         },
         de: {
             searchPlaceholder: 'Asset suchen',
@@ -62,7 +66,8 @@
             assetsCount: '{count} Assets verfolgt',
             splitLabel: '{wins} steigend / {losses} fallend',
             moverUp: 'Gewinner',
-            moverDown: 'Verlierer'
+            moverDown: 'Verlierer',
+            coins: 'Coins'
         },
         ja: {
             searchPlaceholder: '銘柄を検索',
@@ -73,7 +78,8 @@
             assetsCount: '{count} 資産を追跡中',
             splitLabel: '上昇 {wins} / 下落 {losses}',
             moverUp: '上昇',
-            moverDown: '下落'
+            moverDown: '下落',
+            coins: '銘柄'
         },
         ko: {
             searchPlaceholder: '자산 검색',
@@ -84,22 +90,27 @@
             assetsCount: '{count}개 자산 추적 중',
             splitLabel: '상승 {wins} / 하락 {losses}',
             moverUp: '상승',
-            moverDown: '하락'
+            moverDown: '하락',
+            coins: '코인'
         }
     };
 
     const dom = {
         updatedAt: document.getElementById('tracker-updated-at'),
         totalValue: document.getElementById('tracker-total-value'),
-        dayPnl: document.getElementById('tracker-day-pnl'),
-        dayPnlRate: document.getElementById('tracker-day-pnl-rate'),
-        openCount: document.getElementById('tracker-open-count'),
-        openSplit: document.getElementById('tracker-open-split'),
-        volatility: document.getElementById('tracker-volatility'),
-        marketDepth: document.getElementById('tracker-market-depth'),
         investedValue: document.getElementById('tracker-invested-value'),
+        panelInvestedValue: document.getElementById('tracker-panel-invested-value'),
         currentValue: document.getElementById('tracker-current-value'),
         unrealizedValue: document.getElementById('tracker-unrealized-value'),
+        panelUnrealizedValue: document.getElementById('tracker-panel-unrealized-value'),
+        totalReturnRate: document.getElementById('tracker-total-return-rate'),
+        weeklyChange: document.getElementById('tracker-weekly-change'),
+        dayChange: document.getElementById('tracker-day-change'),
+        openCount: document.getElementById('tracker-open-count'),
+        marketDepth: document.getElementById('tracker-market-depth'),
+        chartSvg: document.getElementById('tracker-networth-chart'),
+        donutRing: document.getElementById('tracker-donut-ring'),
+        donutLegend: document.getElementById('tracker-donut-legend'),
         allocationList: document.getElementById('tracker-allocation-list'),
         moversList: document.getElementById('tracker-movers-list'),
         searchInput: document.getElementById('tracker-search-input'),
@@ -109,7 +120,9 @@
         emptyState: document.getElementById('tracker-empty-state')
     };
 
-    if (Object.keys(dom).some((key) => !dom[key])) return;
+    if (!dom.searchInput || !dom.sortSelect || !dom.refreshBtn || !dom.tableBody || !dom.allocationList || !dom.moversList || !dom.emptyState || !dom.chartSvg || !dom.donutRing || !dom.donutLegend) {
+        return;
+    }
 
     const state = {
         lang: 'en',
@@ -117,6 +130,7 @@
         sort: dom.sortSelect.value || 'value',
         rows: [],
         marketMeta: {},
+        history: [],
         isLoading: false,
         errorText: '',
         lastMetaAt: 0,
@@ -155,18 +169,24 @@
         return String(value || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    function formatMoney(value) {
+    function formatMoney(value, compact) {
         const num = toNumber(value, 0);
         const abs = Math.abs(num);
-        let max = 2;
-        if (abs > 0 && abs < 1) max = 6;
-        else if (abs < 100) max = 4;
-        return '$' + new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: max }).format(num);
+        let max = compact ? 2 : 2;
+        if (!compact) {
+            if (abs > 0 && abs < 1) max = 6;
+            else if (abs < 100) max = 4;
+        }
+        return '$' + new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: compact ? 0 : 2,
+            maximumFractionDigits: max,
+            notation: compact ? 'compact' : 'standard'
+        }).format(num);
     }
 
-    function formatSignedMoney(value) {
+    function formatSignedMoney(value, compact) {
         const num = toNumber(value, 0);
-        return (num > 0 ? '+' : '') + formatMoney(num);
+        return (num > 0 ? '+' : '') + formatMoney(num, compact);
     }
 
     function formatPercent(value) {
@@ -192,6 +212,7 @@
     }
 
     function applyTone(el, value) {
+        if (!el) return;
         el.classList.remove('tracker-positive', 'tracker-negative');
         if (value > 0) el.classList.add('tracker-positive');
         else if (value < 0) el.classList.add('tracker-negative');
@@ -320,32 +341,174 @@
         return '<span class="' + className + '">' + escapeHtml(text) + '</span>';
     }
 
-    function renderSummary(rows) {
+    function ensureHistory(totalValue) {
+        if (state.history.length) return;
+        const points = 160;
+        const start = Math.max(1000, totalValue * 0.38);
+        const rows = [];
+        for (let i = 0; i < points; i += 1) {
+            const p = i / (points - 1);
+            const trend = start + (totalValue - start) * Math.pow(p, 1.32);
+            const wave = Math.sin(i * 0.21) * totalValue * 0.028 + Math.cos(i * 0.047 + 1.6) * totalValue * 0.015;
+            const micro = (Math.sin(i * 0.73) + Math.cos(i * 0.36)) * totalValue * 0.0035;
+            rows.push(Math.max(500, trend + wave + micro));
+        }
+        const scale = totalValue > 0 ? totalValue / rows[rows.length - 1] : 1;
+        state.history = rows.map((value) => Math.max(500, value * scale));
+    }
+
+    function updateHistory(totalValue) {
+        ensureHistory(totalValue);
+        if (!state.history.length) return;
+        const prev = state.history[state.history.length - 1] || totalValue;
+        const blended = prev + ((totalValue - prev) * 0.65);
+        state.history.push(Math.max(500, blended));
+        state.history[state.history.length - 1] = Math.max(500, totalValue);
+        while (state.history.length > 190) state.history.shift();
+    }
+
+    function renderNetWorthChart() {
+        const series = state.history.slice();
+        if (!series.length) {
+            dom.chartSvg.innerHTML = '';
+            return;
+        }
+
+        const width = 920;
+        const height = 390;
+        const margin = { top: 16, right: 14, bottom: 40, left: 78 };
+        const plotW = width - margin.left - margin.right;
+        const plotH = height - margin.top - margin.bottom;
+
+        const minRaw = Math.min.apply(null, series);
+        const maxRaw = Math.max.apply(null, series);
+        const pad = Math.max(600, (maxRaw - minRaw) * 0.13);
+        const min = Math.max(0, minRaw - pad);
+        const max = maxRaw + pad;
+        const range = Math.max(1, max - min);
+
+        function pxX(i) {
+            return margin.left + (i / (series.length - 1)) * plotW;
+        }
+
+        function pxY(v) {
+            return margin.top + ((max - v) / range) * plotH;
+        }
+
+        const points = series.map((value, index) => {
+            return { x: pxX(index), y: pxY(value), value: value };
+        });
+
+        const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2)).join(' ');
+        const areaPath = linePath + ' L ' + points[points.length - 1].x.toFixed(2) + ' ' + (margin.top + plotH).toFixed(2)
+            + ' L ' + points[0].x.toFixed(2) + ' ' + (margin.top + plotH).toFixed(2) + ' Z';
+
+        const lines = [];
+        const labels = [];
+        const steps = 6;
+        for (let i = 0; i <= steps; i += 1) {
+            const y = margin.top + (plotH / steps) * i;
+            const value = max - ((max - min) / steps) * i;
+            lines.push('<line x1="' + margin.left + '" y1="' + y.toFixed(2) + '" x2="' + (margin.left + plotW) + '" y2="' + y.toFixed(2) + '" stroke="#ebeaf4" stroke-width="1" />');
+            labels.push('<text x="' + (margin.left - 12) + '" y="' + (y + 4).toFixed(2) + '" text-anchor="end" font-size="11" fill="#71768a">' + escapeHtml(formatMoney(value, true)) + '</text>');
+        }
+
+        const xLabels = [];
+        const now = new Date();
+        for (let i = 0; i <= 5; i += 1) {
+            const ratio = i / 5;
+            const x = margin.left + ratio * plotW;
+            const d = new Date(now);
+            d.setMonth(now.getMonth() - (5 - i));
+            const label = d.toLocaleString('en-US', { month: 'short' }) + ' ' + ("'" + String(d.getFullYear()).slice(-2));
+            xLabels.push('<text x="' + x.toFixed(2) + '" y="' + (height - 12) + '" text-anchor="middle" font-size="11" fill="#7f8496">' + escapeHtml(label) + '</text>');
+        }
+
+        dom.chartSvg.innerHTML = ''
+            + '<defs>'
+            + '  <linearGradient id="trackerAreaGrad" x1="0" y1="0" x2="0" y2="1">'
+            + '    <stop offset="0%" stop-color="#6e3de9" stop-opacity="0.58" />'
+            + '    <stop offset="100%" stop-color="#6e3de9" stop-opacity="0.16" />'
+            + '  </linearGradient>'
+            + '</defs>'
+            + lines.join('')
+            + '<path d="' + areaPath + '" fill="url(#trackerAreaGrad)"></path>'
+            + '<path d="' + linePath + '" fill="none" stroke="#6130d6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>'
+            + labels.join('')
+            + xLabels.join('');
+    }
+
+    function renderDonut(rows) {
+        if (!rows.length) {
+            dom.donutRing.style.background = '#ececf4';
+            dom.donutLegend.innerHTML = '';
+            if (dom.marketDepth) dom.marketDepth.innerHTML = '--';
+            return;
+        }
+
+        const top = rows.slice().sort((a, b) => b.allocation - a.allocation).slice(0, 6);
+        let angle = 0;
+        const stops = [];
+        const legend = [];
+
+        for (let i = 0; i < top.length; i += 1) {
+            const row = top[i];
+            const color = DONUT_COLORS[i % DONUT_COLORS.length];
+            const span = Math.max(0, row.allocation * 3.6);
+            const next = Math.min(360, angle + span);
+            stops.push(color + ' ' + angle.toFixed(2) + 'deg ' + next.toFixed(2) + 'deg');
+            angle = next;
+
+            legend.push('<div class="tracker-donut-item">'
+                + '<span class="tracker-donut-left"><i class="tracker-donut-dot" style="background:' + color + '"></i><span class="tracker-donut-name">' + escapeHtml(row.symbol) + '</span></span>'
+                + '<strong class="tracker-donut-pct">' + formatPercentUnsigned(row.allocation) + '</strong>'
+                + '</div>');
+        }
+
+        if (angle < 360) stops.push('#ececf4 ' + angle.toFixed(2) + 'deg 360deg');
+        dom.donutRing.style.background = 'conic-gradient(' + stops.join(',') + ')';
+        dom.donutLegend.innerHTML = legend.join('');
+        if (dom.marketDepth) dom.marketDepth.innerHTML = rows.length + '<br>' + escapeHtml(t('coins'));
+    }
+    function renderStats(rows) {
         const totalValue = rows.reduce((sum, row) => sum + row.positionValue, 0);
         const invested = rows.reduce((sum, row) => sum + row.invested, 0);
         const unrealized = totalValue - invested;
+        const totalReturnRate = invested > 0 ? (unrealized / invested) * 100 : 0;
         const dayPnl = rows.reduce((sum, row) => sum + row.dayPnl, 0);
-        const dayBase = totalValue - dayPnl;
-        const dayRate = dayBase > 0 ? (dayPnl / dayBase) * 100 : 0;
+        const weeklyPnl = dayPnl * 7;
         const winners = rows.filter((row) => Number.isFinite(row.dayChange) && row.dayChange > 0).length;
         const losers = rows.filter((row) => Number.isFinite(row.dayChange) && row.dayChange < 0).length;
-        const volatility = rows.length ? rows.reduce((sum, row) => sum + Math.abs(toNumber(row.dayChange, 0)), 0) / rows.length : 0;
 
-        dom.totalValue.textContent = formatMoney(totalValue);
-        dom.dayPnl.textContent = formatSignedMoney(dayPnl);
-        dom.dayPnlRate.textContent = formatPercent(dayRate);
-        dom.openCount.textContent = String(rows.length);
-        dom.openSplit.textContent = interpolate(t('splitLabel'), { wins: winners, losses: losers });
-        dom.volatility.textContent = formatPercentUnsigned(volatility);
-        dom.marketDepth.textContent = interpolate(t('assetsCount'), { count: rows.length });
-        dom.investedValue.textContent = formatMoney(invested);
-        dom.currentValue.textContent = formatMoney(totalValue);
-        dom.unrealizedValue.textContent = formatSignedMoney(unrealized);
-        dom.updatedAt.textContent = state.lastUpdatedAt ? interpolate(t('updatedAt'), { time: formatClock(state.lastUpdatedAt) }) : t('loading');
+        if (dom.totalValue) dom.totalValue.textContent = formatMoney(totalValue);
+        if (dom.investedValue) dom.investedValue.textContent = formatMoney(invested);
+        if (dom.panelInvestedValue) dom.panelInvestedValue.textContent = formatMoney(invested);
+        if (dom.currentValue) dom.currentValue.textContent = formatMoney(totalValue);
+        if (dom.unrealizedValue) dom.unrealizedValue.textContent = formatSignedMoney(unrealized);
+        if (dom.panelUnrealizedValue) dom.panelUnrealizedValue.textContent = formatSignedMoney(unrealized);
+        if (dom.totalReturnRate) dom.totalReturnRate.textContent = formatPercent(totalReturnRate);
+        if (dom.weeklyChange) dom.weeklyChange.textContent = (weeklyPnl >= 0 ? '▲ ' : '▼ ') + formatSignedMoney(weeklyPnl, true).replace('+', '');
+        if (dom.dayChange) dom.dayChange.textContent = (dayPnl >= 0 ? '▲ ' : '▼ ') + formatSignedMoney(dayPnl, true).replace('+', '');
+        if (dom.openCount) dom.openCount.textContent = String(rows.length);
 
-        applyTone(dom.dayPnl, dayPnl);
-        applyTone(dom.dayPnlRate, dayRate);
+        if (dom.updatedAt) {
+            dom.updatedAt.textContent = state.lastUpdatedAt
+                ? interpolate(t('updatedAt'), { time: formatClock(state.lastUpdatedAt) })
+                : t('loading');
+        }
+
         applyTone(dom.unrealizedValue, unrealized);
+        applyTone(dom.panelUnrealizedValue, unrealized);
+        applyTone(dom.totalReturnRate, totalReturnRate);
+        applyTone(dom.weeklyChange, weeklyPnl);
+        applyTone(dom.dayChange, dayPnl);
+
+        if (dom.marketDepth && dom.marketDepth.nodeType === 1 && dom.marketDepth.tagName !== 'SPAN') {
+            dom.marketDepth.textContent = interpolate(t('assetsCount'), { count: rows.length }) + ' | ' + interpolate(t('splitLabel'), { wins: winners, losses: losers });
+        }
+
+        updateHistory(totalValue);
+        renderNetWorthChart();
     }
 
     function renderAllocation(rows) {
@@ -356,7 +519,7 @@
         dom.allocationList.innerHTML = rows.slice().sort((a, b) => b.positionValue - a.positionValue).slice(0, 6).map((row) => {
             return '<div class="tracker-allocation-item">'
                 + '<div class="tracker-allocation-head"><span>' + escapeHtml(row.name) + ' (' + escapeHtml(row.symbol) + ')</span><span>' + formatPercentUnsigned(row.allocation) + '</span></div>'
-                + '<div class="tracker-allocation-meta"><span>' + formatQty(row.qty) + ' ' + escapeHtml(row.symbol) + '</span><span>' + formatMoney(row.positionValue) + '</span></div>'
+                + '<div class="tracker-allocation-meta"><span>' + formatQty(row.qty) + ' ' + escapeHtml(row.symbol) + '</span><span>' + formatMoney(row.positionValue, true) + '</span></div>'
                 + '<div class="tracker-progress"><span style="width:' + Math.max(0, Math.min(100, row.allocation)).toFixed(2) + '%"></span></div>'
                 + '</div>';
         }).join('');
@@ -399,9 +562,10 @@
     }
 
     function render() {
-        renderSummary(state.rows);
+        renderStats(state.rows);
         renderAllocation(state.rows);
         renderMovers(state.rows);
+        renderDonut(state.rows);
 
         const tableRows = sortedRows(filteredRows());
         renderTable(tableRows);
@@ -421,6 +585,7 @@
     function applyI18n() {
         state.lang = getLang();
         dom.searchInput.placeholder = t('searchPlaceholder');
+        if (dom.marketDepth && !state.rows.length) dom.marketDepth.innerHTML = '--';
         render();
     }
 
@@ -477,6 +642,9 @@
         });
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) refreshRows(false);
+        });
+        window.addEventListener('resize', () => {
+            renderNetWorthChart();
         });
         window.addEventListener('storage', (event) => {
             if (event.key === 'ec_site_lang' || event.key === 'ec_language') applyI18n();

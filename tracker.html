@@ -70,28 +70,59 @@
         </header>
 
         <main class="tracker-main">
-            <section class="tracker-summary-section tracker-container">
-                <div class="tracker-summary-grid">
-                    <article class="tracker-summary-card">
-                        <span class="tracker-summary-label" data-tracker-i18n="totalValue">Total Value</span>
-                        <strong id="tracker-total-value">$--</strong>
-                        <small id="tracker-updated-at" data-tracker-i18n="loading">Loading...</small>
+            <section class="tracker-worth-section tracker-container">
+                <div class="tracker-worth-grid">
+                    <article class="tracker-worth-panel">
+                        <h2 class="tracker-worth-title">Net Worth</h2>
+                        <p class="tracker-worth-note">
+                            This is currently showing demo data - please make a trade to start tracking your own data
+                        </p>
+                        <div class="tracker-networth-wrap">
+                            <svg id="tracker-networth-chart" viewBox="0 0 920 390" preserveAspectRatio="none"
+                                aria-label="Net worth chart"></svg>
+                        </div>
+                        <div id="tracker-updated-at" class="tracker-updated-at">Loading...</div>
                     </article>
-                    <article class="tracker-summary-card">
-                        <span class="tracker-summary-label" data-tracker-i18n="dayPnl">24h P/L</span>
-                        <strong id="tracker-day-pnl">$--</strong>
-                        <small id="tracker-day-pnl-rate">--</small>
-                    </article>
-                    <article class="tracker-summary-card">
-                        <span class="tracker-summary-label" data-tracker-i18n="openPositions">Open Positions</span>
-                        <strong id="tracker-open-count">0</strong>
-                        <small id="tracker-open-split">--</small>
-                    </article>
-                    <article class="tracker-summary-card">
-                        <span class="tracker-summary-label" data-tracker-i18n="avgVolatility">Avg. Volatility</span>
-                        <strong id="tracker-volatility">--</strong>
-                        <small id="tracker-market-depth" data-tracker-i18n="liveAcrossAssets">Live across assets</small>
-                    </article>
+
+                    <aside class="tracker-stats-panel">
+                        <h3 class="tracker-stats-title">Overall Stats</h3>
+                        <div class="tracker-stats-table">
+                            <div class="tracker-stats-row">
+                                <span>Market value</span>
+                                <strong id="tracker-total-value">$--</strong>
+                            </div>
+                            <div class="tracker-stats-row">
+                                <span>Net fiat invested</span>
+                                <strong id="tracker-invested-value">$--</strong>
+                            </div>
+                            <div class="tracker-stats-row">
+                                <span>Total return</span>
+                                <strong id="tracker-unrealized-value">$--</strong>
+                            </div>
+                            <div class="tracker-stats-row">
+                                <span>Total return</span>
+                                <strong id="tracker-total-return-rate">--</strong>
+                            </div>
+                            <div class="tracker-stats-row">
+                                <span>Weekly change</span>
+                                <strong id="tracker-weekly-change">--</strong>
+                            </div>
+                            <div class="tracker-stats-row">
+                                <span>Daily change</span>
+                                <strong id="tracker-day-change">--</strong>
+                            </div>
+                            <div class="tracker-stats-row">
+                                <span>Total coins</span>
+                                <strong id="tracker-open-count">0</strong>
+                            </div>
+                        </div>
+                        <div class="tracker-donut-block">
+                            <div id="tracker-donut-ring" class="tracker-donut-ring">
+                                <span id="tracker-market-depth">--</span>
+                            </div>
+                            <div id="tracker-donut-legend" class="tracker-donut-legend"></div>
+                        </div>
+                    </aside>
                 </div>
             </section>
 
@@ -103,7 +134,7 @@
                     <div class="tracker-balance-row">
                         <div>
                             <span data-tracker-i18n="invested">Invested</span>
-                            <strong id="tracker-invested-value">$--</strong>
+                            <strong id="tracker-panel-invested-value">$--</strong>
                         </div>
                         <div>
                             <span data-tracker-i18n="current">Current</span>
@@ -111,7 +142,7 @@
                         </div>
                         <div>
                             <span data-tracker-i18n="unrealized">Unrealized</span>
-                            <strong id="tracker-unrealized-value">$--</strong>
+                            <strong id="tracker-panel-unrealized-value">$--</strong>
                         </div>
                     </div>
                     <div id="tracker-allocation-list" class="tracker-allocation-list" data-no-translate="1"></div>

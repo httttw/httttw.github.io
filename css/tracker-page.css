@@ -174,47 +174,182 @@ img {
     background: var(--tracker-bg);
 }
 
-.tracker-summary-section {
-    margin-top: -82px;
+.tracker-worth-section {
+    margin-top: -96px;
     padding-bottom: 28px;
 }
 
-.tracker-summary-grid {
+.tracker-worth-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: 1.65fr 0.85fr;
+    gap: 24px;
+    align-items: stretch;
 }
 
-.tracker-summary-card {
-    border-radius: 18px;
+.tracker-worth-panel,
+.tracker-stats-panel {
+    border-radius: 20px;
     border: 1px solid rgba(118, 93, 178, 0.12);
-    background: var(--tracker-surface);
+    background: #fff;
     box-shadow: var(--tracker-shadow);
-    padding: 18px 18px 14px;
 }
 
-.tracker-summary-label {
-    display: block;
-    color: var(--tracker-muted);
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+.tracker-worth-panel {
+    padding: 26px 26px 20px;
 }
 
-.tracker-summary-card strong {
-    display: block;
-    margin-top: 10px;
-    font-size: clamp(24px, 2.2vw, 33px);
+.tracker-worth-title {
+    margin: 0;
+    text-align: center;
     font-family: "Outfit", "Inter", sans-serif;
+    font-size: 42px;
+    font-weight: 700;
     letter-spacing: -0.02em;
 }
 
-.tracker-summary-card small {
+.tracker-worth-note {
+    margin: 14px 0 20px;
+    text-align: center;
+    color: #9ea1ad;
+    font-size: 15px;
+}
+
+.tracker-networth-wrap {
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff 0%, #fbfbfe 100%);
+    border: 1px solid #ececf4;
+    min-height: 392px;
+    overflow: hidden;
+}
+
+#tracker-networth-chart {
     display: block;
-    margin-top: 6px;
+    width: 100%;
+    height: 392px;
+}
+
+.tracker-updated-at {
+    margin-top: 12px;
+    text-align: right;
+    color: #9298aa;
     font-size: 12px;
-    color: var(--tracker-muted);
+}
+
+.tracker-stats-panel {
+    padding: 22px 0 18px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tracker-stats-title {
+    margin: 0 0 14px;
+    text-align: center;
+    font-family: "Outfit", "Inter", sans-serif;
+    font-size: 36px;
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+}
+
+.tracker-stats-table {
+    border-top: 1px solid #ececf4;
+}
+
+.tracker-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #ececf4;
+}
+
+.tracker-stats-row span {
+    color: #1b1d2a;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.tracker-stats-row strong {
+    font-size: 30px;
+    font-family: "Outfit", "Inter", sans-serif;
+    letter-spacing: -0.01em;
+}
+
+.tracker-donut-block {
+    margin: 18px 16px 6px;
+    border-radius: 14px;
+    border: 1px solid #ececf4;
+    background: #fcfcff;
+    padding: 18px 14px 14px;
+}
+
+.tracker-donut-ring {
+    width: 188px;
+    height: 188px;
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    background: conic-gradient(#6b38ea 0deg, #6b38ea 160deg, #3a86ff 160deg, #3a86ff 250deg, #f39a1f 250deg, #f39a1f 360deg);
+    position: relative;
+    display: grid;
+    place-items: center;
+}
+
+.tracker-donut-ring::after {
+    content: "";
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+}
+
+.tracker-donut-ring>span {
+    z-index: 1;
+    text-align: center;
+    color: #24273a;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.tracker-donut-legend {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.tracker-donut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+}
+
+.tracker-donut-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.tracker-donut-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+}
+
+.tracker-donut-name {
+    color: #363a48;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tracker-donut-pct {
+    font-weight: 700;
+    color: #1f2231;
 }
 
 .tracker-positive {
@@ -256,7 +391,7 @@ img {
 .tracker-section-title {
     margin: 0;
     font-family: "Outfit", "Inter", sans-serif;
-    font-size: 26px;
+    font-size: 32px;
     line-height: 1.1;
     letter-spacing: -0.02em;
 }
@@ -708,8 +843,8 @@ img {
 }
 
 @media (max-width: 1200px) {
-    .tracker-summary-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .tracker-worth-grid {
+        grid-template-columns: 1fr;
     }
 
     .tracker-grid-section {
@@ -727,8 +862,42 @@ img {
         font-size: 12px;
     }
 
-    .tracker-summary-grid {
-        grid-template-columns: 1fr;
+    .tracker-worth-panel {
+        padding: 18px 14px 16px;
+    }
+
+    .tracker-worth-title {
+        font-size: 30px;
+    }
+
+    .tracker-worth-note {
+        font-size: 13px;
+    }
+
+    .tracker-stats-title {
+        font-size: 28px;
+    }
+
+    .tracker-stats-row {
+        padding: 12px 14px;
+    }
+
+    .tracker-stats-row span {
+        font-size: 13px;
+    }
+
+    .tracker-stats-row strong {
+        font-size: 22px;
+    }
+
+    .tracker-donut-ring {
+        width: 150px;
+        height: 150px;
+    }
+
+    .tracker-donut-ring::after {
+        width: 86px;
+        height: 86px;
     }
 
     .tracker-footer-grid {
