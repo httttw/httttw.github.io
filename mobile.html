@@ -13908,6 +13908,37 @@ const translations = {
             return Number.isFinite(fallback) && fallback > 0 ? fallback : 0;
         }
 
+        let holdPositionsRefreshTimer = null;
+
+        function scheduleLiveTradePanelRefresh(symbol) {
+            const normalizedSymbol = String(symbol || '').trim().toUpperCase();
+            const hasAffectedOpenTrade = (window.activeOpenTrades || []).some((trade) => {
+                if (!trade || String(trade.status || '').toLowerCase() !== 'open') return false;
+                const tradeCoin = String(trade.coin || (trade.pair ? String(trade.pair).split('/')[0] : '')).trim().toUpperCase();
+                return !normalizedSymbol || tradeCoin === normalizedSymbol;
+            });
+
+            if (!hasAffectedOpenTrade) return;
+            if (holdPositionsRefreshTimer) return;
+
+            holdPositionsRefreshTimer = setTimeout(() => {
+                holdPositionsRefreshTimer = null;
+
+                if (window.currentTradeFooterTab === 'positions') {
+                    renderHoldPositions();
+                }
+
+                if (window.currentOrderDetailTrade && getTradeDetailStatusTone(window.currentOrderDetailTrade) === 'open') {
+                    const tradeId = String(window.currentOrderDetailTrade.id || '');
+                    const latestTrade = (window.activeOpenTrades || []).find((trade) => String(trade.id || '') === tradeId);
+                    if (latestTrade) {
+                        window.currentOrderDetailTrade = latestTrade;
+                        renderTradeDetail(latestTrade);
+                    }
+                }
+            }, 120);
+        }
+
         function getTradeTargetSettlementMetrics(trade, overrides = {}) {
             if (!trade) return null;
 
@@ -14241,11 +14272,14 @@ const translations = {
                 // P/L Calculation for Perpetual
                 let pnl = 0;
                 let roe = 0;
+                let markPrice = parseFloat(trade.price || 0);
                 if (isPerp) {
-                    const curPrice = parseFloat(window.allCoinsData && window.allCoinsData[trade.coin] ? window.allCoinsData[trade.coin].price : (trade.price || 0));
+                    const curPrice = getTradeLivePrice(trade, trade.price || 0);
                     const entryPrice = parseFloat(trade.price || 0);
                     const amount = parseFloat(trade.amount || 0);
                     const margin = parseFloat(trade.margin) || (amount / (parseFloat(trade.leverage) || 1)) || 1;
+                    const feeOpen = Number(trade.fee_open || 0);
+                    markPrice = curPrice > 0 ? curPrice : entryPrice;
 
                     if (entryPrice > 0 && curPrice > 0) {
                         if (trade.direction === 'Long') {
@@ -14253,6 +14287,7 @@ const translations = {
                         } else {
                             pnl = (entryPrice - curPrice) * (amount / entryPrice);
                         }
+                        pnl -= (Number.isFinite(feeOpen) ? feeOpen : 0);
                         roe = (pnl / margin) * 100;
                     }
                 }
@@ -14319,7 +14354,7 @@ const translations = {
                         <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid rgba(255,255,255,0.05); padding-top:12px;">
                             <div>
                                 <div style="color:#999; font-size:11px; margin-bottom:2px;">Mark Price</div>
-                                <div style="color:#fff; font-size:13px;">${window.allCoinsData && window.allCoinsData[trade.coin] ? window.allCoinsData[trade.coin].price : trade.price}</div>
+                                <div style="color:#fff; font-size:13px;">${Number(markPrice || 0).toFixed(markPrice >= 1000 ? 2 : 4)}</div>
                             </div>
                             <div style="display:flex; gap:8px;">
                                 <button onclick="event.stopPropagation();" style="background:#3a2a5a; color:#fff; border:none; border-radius:4px; padding:6px 12px; font-size:12px; cursor:default;">${trade.order_type || 'Market'}</button>
@@ -14881,6 +14916,7 @@ No transfer fees for account transfer / exchange</div>
         };
 
         window.localData = window.localData || {};
+        window.allCoinsData = window.localData;
         // Initially load mock data to prevent zeros if API takes a while or fails
         Object.keys(fallbackMockData).forEach(sym => {
             if (!window.localData[sym]) {
@@ -15001,6 +15037,7 @@ No transfer fees for account transfer / exchange</div>
         function updatePriceUI(sym, price) {
             const pVal = parseFloat(price);
             const formattedPrice = pVal > 1000 ? pVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : pVal.toFixed(4);
+            scheduleLiveTradePanelRefresh(sym);
 
             // Target all price elements including the pair panel
             document.querySelectorAll(`.price-${sym}`).forEach(el => {
@@ -16630,7 +16667,7 @@ No transfer fees for account transfer / exchange</div>
             // 3. Calculate Final Close Price
             const coin = tradeData.coin || (tradeData.pair ? tradeData.pair.split('/')[0] : 'BTC');
             const userPerpetualCustomPrice = getUserPerpetualCustomPrice(userData, coin);
-            const currentMarketPrice = parseFloat(window.allCoinsData && window.allCoinsData[coin] ? window.allCoinsData[coin].price : tradeData.price);
+            const currentMarketPrice = getTradeLivePrice(tradeData, tradeData.price);
             const entryPrice = parseFloat(tradeData.price);
             const direction = (tradeData.direction || tradeData.side || 'Long').toString();
             const dirLower = direction.toLowerCase();
