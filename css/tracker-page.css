@@ -99,12 +99,23 @@ img {
 .tracker-logo {
     display: inline-flex;
     align-items: center;
-    height: 36px;
+    gap: 10px;
+    height: auto;
 }
 
 .tracker-logo img {
-    height: 26px;
-    width: auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.tracker-logo-word {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
 }
 
 .tracker-nav {
@@ -896,6 +907,10 @@ img {
     .tracker-nav {
         gap: 12px;
         font-size: 12px;
+    }
+
+    .tracker-logo-word {
+        font-size: 15px;
     }
 
     .tracker-worth-panel {

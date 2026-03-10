@@ -99,12 +99,23 @@ img {
 .rate-logo {
     display: inline-flex;
     align-items: center;
-    height: 36px;
+    gap: 10px;
+    height: auto;
 }
 
 .rate-logo img {
-    height: 26px;
-    width: auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.rate-logo-word {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
 }
 
 .rate-nav {
@@ -722,6 +733,10 @@ img {
 @media (max-width: 640px) {
     .rate-container {
         width: calc(100vw - 24px);
+    }
+
+    .rate-logo-word {
+        font-size: 15px;
     }
 
     .rate-hero-copy h1 {
