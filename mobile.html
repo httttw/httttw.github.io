@@ -13694,6 +13694,8 @@ const translations = {
             // For order-detail, always return to its explicit source first.
             if (current === 'order-detail') {
                 const detailFallback = normalizeScreenTarget(window.__orderDetailBackTarget);
+                window.currentOrderDetailTrade = null;
+                window.__orderDetailBackTarget = null;
                 if (isNavigableScreenTarget(detailFallback) && detailFallback !== current) {
                     prev = detailFallback;
                 }
@@ -14080,7 +14082,11 @@ const translations = {
                     renderHoldPositions();
                 }
 
-                if (window.currentOrderDetailTrade && getTradeDetailStatusTone(window.currentOrderDetailTrade) === 'open') {
+                const orderDetailScreen = document.getElementById('order-detail-screen');
+                const isOrderDetailVisible = normalizeScreenTarget(currentScreen) === 'order-detail'
+                    && !!orderDetailScreen
+                    && !orderDetailScreen.classList.contains('hidden');
+                if (isOrderDetailVisible && window.currentOrderDetailTrade && getTradeDetailStatusTone(window.currentOrderDetailTrade) === 'open') {
                     const tradeId = String(window.currentOrderDetailTrade.id || '');
                     const latestTrade = (window.activeOpenTrades || []).find((trade) => String(trade.id || '') === tradeId);
                     if (latestTrade) {
