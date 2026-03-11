@@ -13704,21 +13704,21 @@ const translations = {
             const current = normalizeScreenTarget(currentScreen);
             let prev = '';
 
+            // For order-detail, always return to its explicit source first.
+            if (current === 'order-detail') {
+                const detailFallback = normalizeScreenTarget(window.__orderDetailBackTarget);
+                if (isNavigableScreenTarget(detailFallback) && detailFallback !== current) {
+                    prev = detailFallback;
+                }
+            }
+
             // Pop until we find a valid, different target.
-            while (navigationStack.length > 0) {
+            while (!prev && navigationStack.length > 0) {
                 const candidate = normalizeScreenTarget(navigationStack.pop());
                 if (!isNavigableScreenTarget(candidate)) continue;
                 if (candidate === current) continue;
                 prev = candidate;
                 break;
-            }
-
-            // Dedicated fallback for order detail screen.
-            if (!prev && current === 'order-detail') {
-                const detailFallback = normalizeScreenTarget(window.__orderDetailBackTarget);
-                if (isNavigableScreenTarget(detailFallback) && detailFallback !== current) {
-                    prev = detailFallback;
-                }
             }
 
             // Generic safe fallback.
@@ -14051,6 +14051,10 @@ const translations = {
             if (!trade) return;
 
             window.currentOrderDetailTrade = trade;
+            const detailSourceScreen = normalizeScreenTarget(currentScreen);
+            if (detailSourceScreen && detailSourceScreen !== 'order-detail') {
+                window.__orderDetailBackTarget = detailSourceScreen;
+            }
 
             const pairEl = document.getElementById('order-detail-pair');
             const profitEl = document.getElementById('order-detail-profit');
@@ -14134,8 +14138,8 @@ const translations = {
                 { label: 'Closable Amount', value: `${formatOrderDetailNumber(closableAmount, 2)} USDT` },
                 { label: 'Margin', value: `${formatOrderDetailNumber(margin, 2)} USDT` },
                 { label: 'Handling Fee', value: `${formatOrderDetailNumber(fee, 4)} USDT` },
-                { label: 'Average Price', value: formatOrderDetailNumber(entryPrice, 2) },
-                { label: 'Closing Price', value: closePrice === null ? '--' : formatOrderDetailNumber(closePrice, 2) },
+                { label: 'Average Price', value: formatOrderDetailNumber(entryPrice, 4) },
+                { label: 'Closing Price', value: closePrice === null ? '--' : formatOrderDetailNumber(closePrice, 4) },
                 { label: 'Target ROE', value: adminTargetRoe === null ? '--' : `${formatOrderDetailNumber(adminTargetRoe, 2)}%` },
                 { label: 'Target Close (By ROE)', value: targetClosePriceByRoe === null ? '--' : formatOrderDetailNumber(targetClosePriceByRoe, 2) },
                 { label: 'Buy Price', value: buyPrice === null ? '--' : formatOrderDetailNumber(buyPrice, 2) },
@@ -14160,7 +14164,8 @@ const translations = {
                 </div>
             `).join('');
 
-            showScreen('order-detail');
+            // Keep back behavior deterministic for this details page.
+            showScreen('order-detail', false);
             if (window.ecSetSiteLanguage) {
                 window.ecSetSiteLanguage(localStorage.getItem('ec_site_lang') || 'en');
             }
