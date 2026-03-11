@@ -1401,13 +1401,15 @@
 
         .deposit-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 12px;
-            padding: 20px 16px;
+            padding: 16px;
+            max-width: 560px;
+            margin: 0 auto;
         }
 
         .crypto-card {
-            aspect-ratio: 1 / 1;
+            min-height: 108px;
             border: 1px solid rgba(139, 92, 246, 0.3);
             border-radius: 12px;
             display: flex;
@@ -9430,21 +9432,9 @@
                             <div class="crypto-icon-box" style="background:#14f195;">S</div><span
                                 class="crypto-name">SOL</span>
                         </div>
-                        <div class="crypto-card" onclick="selectDepositCoin('DOGE', '#c2a633', 'D')">
-                            <div class="crypto-icon-box" style="background:#c2a633;">D</div><span
-                                class="crypto-name">DOGE</span>
-                        </div>
                         <div class="crypto-card" onclick="selectDepositCoin('BNB', '#f3ba2f', 'B')">
                             <div class="crypto-icon-box" style="background:#f3ba2f;">B</div><span
                                 class="crypto-name">BNB</span>
-                        </div>
-                        <div class="crypto-card" onclick="selectDepositCoin('XRP', '#23292f', 'X')">
-                            <div class="crypto-icon-box" style="background:#23292f;">X</div><span
-                                class="crypto-name">XRP</span>
-                        </div>
-                        <div class="crypto-card" onclick="selectDepositCoin('TRX', '#ef0027', 'T')">
-                            <div class="crypto-icon-box" style="background:#ef0027;">T</div><span
-                                class="crypto-name">TRX</span>
                         </div>
                     </div>
 
@@ -9566,10 +9556,7 @@
                         <option value="ETH">ETH</option>
                         <option value="USDC">USDC</option>
                         <option value="SOL">SOL</option>
-                        <option value="DOGE">DOGE</option>
                         <option value="BNB">BNB</option>
-                        <option value="XRP">XRP</option>
-                        <option value="TRX">TRX</option>
                     </select>
                 </div>
 
