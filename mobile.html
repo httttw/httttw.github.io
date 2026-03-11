@@ -14243,13 +14243,14 @@ const translations = {
             if (!Number.isFinite(pnl)) pnl = 0;
             if (!Number.isFinite(roe)) roe = 0;
             if (!Number.isFinite(rawPnlValue)) rawPnlValue = pnl + (Number.isFinite(fee) ? fee : 0);
+            const amountYieldPct = amount > 0 ? (pnl / amount) * 100 : 0;
 
             const buyPrice = isLongPosition ? entryPrice : closePrice;
             const sellPrice = isLongPosition ? closePrice : entryPrice;
 
             pairEl.textContent = pairText;
             profitEl.className = `order-detail-profit-value ${pnl >= 0 ? 'is-positive' : 'is-negative'}`;
-            profitEl.textContent = `${formatOrderDetailSigned(pnl, 2)} (${formatOrderDetailSigned(roe, 2, '%')})`;
+            profitEl.textContent = `${formatOrderDetailSigned(pnl, 2)} (${formatOrderDetailSigned(roe, 2, '%')} ROE)`;
 
             const rows = [
                 { label: 'Operation', value: buildTradeOperationText(trade) },
@@ -14260,6 +14261,8 @@ const translations = {
                 { label: 'Amount', value: `${formatOrderDetailNumber(amount, 2)} USDT` },
                 { label: 'Closable Amount', value: `${formatOrderDetailNumber(closableAmount, 2)} USDT` },
                 { label: 'Margin', value: `${formatOrderDetailNumber(margin, 2)} USDT` },
+                { label: 'Yield on Amount', value: `${formatOrderDetailSigned(amountYieldPct, 2, '%')}` },
+                { label: 'ROE (on Margin)', value: `${formatOrderDetailSigned(roe, 2, '%')}` },
                 { label: 'Gross P/L (Before Fee)', value: `${formatOrderDetailSigned(rawPnlValue, 2)} USDT` },
                 { label: 'Handling Fee', value: `${formatOrderDetailNumber(fee, 4)} USDT` },
                 { label: 'Net P/L (After Fee)', value: `${formatOrderDetailSigned(pnl, 2)} USDT` },
