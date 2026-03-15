@@ -363,6 +363,11 @@
         });
     </script>
     <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         .fintech-icon {
             width: 20px;
             height: 20px;
@@ -9752,74 +9757,119 @@
                 </div>
 
                 <div id="trade-exchange-content" class="hidden"
-                    style="padding: 20px 16px; display: flex; flex-direction: column;">
+                    style="padding: 20px 16px; display: flex; flex-direction: column; gap: 14px;">
 
-                    <!-- FROM SECTION -->
-                    <div style="margin-bottom: 16px;">
-                        <p
+                    <div
+                        style="background: linear-gradient(180deg, rgba(33,18,58,0.96) 0%, rgba(24,12,43,0.96) 100%); border: 1px solid rgba(106, 53, 255, 0.26); border-radius: 14px; padding: 14px 14px 12px; box-shadow: 0 14px 36px rgba(0,0,0,0.18);">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+                            <div>
+                                <div id="ex-panel-title" style="font-size: 16px; font-weight: 600; color: #fff;">Instant Exchange</div>
+                                <div id="ex-panel-subtitle" style="font-size: 12px; color: #8f97a9; line-height: 1.5; margin-top: 4px;">Convert assets with live market pricing and a fixed 0.50% fee.</div>
+                            </div>
+                            <button id="ex-history-link" type="button" onclick="openTradeHistoryScreen()"
+                                style="border: 1px solid rgba(106, 53, 255, 0.38); background: rgba(106, 53, 255, 0.12); color: #d8d2ff; border-radius: 999px; padding: 7px 12px; font-size: 12px; font-weight: 600; white-space: nowrap;">
+                                History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 2px;">
+                        <p id="ex-from-label"
                             style="font-size: 12px; color: #999; margin-bottom: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">
                             From</p>
                         <div
-                            style="display: flex; align-items: center; background: #1a0b2e; border: 1px solid rgba(106, 53, 255, 0.3); border-radius: 10px; padding: 14px; margin-bottom: 8px; transition: border-color 0.3s;">
+                            style="display: flex; align-items: center; background: #1a0b2e; border: 1px solid rgba(106, 53, 255, 0.3); border-radius: 14px; padding: 16px 14px; margin-bottom: 8px; transition: border-color 0.3s;">
                             <div onclick="openCoinModal('from')"
                                 style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding-right: 12px; border-right: 1px solid rgba(255,255,255,0.05);">
                                 <div id="ex-from-icon"
-                                    style="width: 26px; height: 26px; background: #26a17b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 600;">
+                                    style="width: 28px; height: 28px; background: #26a17b; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 600;">
                                     T</div>
                                 <span id="ex-from-symbol"
-                                    style="font-size: 15px; font-weight: 500; color: #fff;">USDT</span>
-                                <span style="color: #6a35ff; font-size: 10px;">$</span>
+                                    style="font-size: 15px; font-weight: 600; color: #fff;">USDT</span>
+                                <span style="color: #6a35ff; font-size: 12px;">&#9662;</span>
                             </div>
                             <div
                                 style="flex-grow: 1; text-align: right; padding-left: 12px; display: flex; align-items: center;">
                                 <input id="ex-from-amount" type="text" placeholder="0" oninput="onExchangeAmountInput()"
-                                    style="width: 100%; border: none; background: transparent; text-align: right; outline: none; font-size: 18px; font-weight: 500; color: #fff; font-variant-numeric: tabular-nums;">
-                                <span id="ex-max-btn" onclick="fillExchangeMax()"
-                                    style="color: #6a35ff; font-weight: 600; font-size: 12px; margin-left: 12px; cursor: pointer; text-transform: uppercase;">max</span>
+                                    style="width: 100%; border: none; background: transparent; text-align: right; outline: none; font-size: 20px; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums;">
+                                <button id="ex-max-btn" type="button" onclick="fillExchangeMax()"
+                                    style="color: #6a35ff; font-weight: 700; font-size: 12px; margin-left: 12px; cursor: pointer; text-transform: uppercase; background: transparent; border: none;">MAX</button>
                             </div>
                         </div>
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
-                            <p style="font-size: 12px; color: #999; margin: 0;">Quantity Available</p>
+                            <p id="ex-available-label" style="font-size: 12px; color: #999; margin: 0;">Available</p>
                             <p style="font-size: 12px; color: #fff; font-weight: 500; margin: 0;"><span
                                     id="ex-available-text">0 USDT</span></p>
                         </div>
+                        <div style="display:flex; gap:8px; margin-top: 12px;">
+                            <button type="button" onclick="setExchangePercent(25)"
+                                style="flex:1; padding: 10px 0; border-radius: 10px; border: 1px solid rgba(106,53,255,0.22); background: rgba(255,255,255,0.03); color: #d6d9ea; font-size: 12px; font-weight: 600;">25%</button>
+                            <button type="button" onclick="setExchangePercent(50)"
+                                style="flex:1; padding: 10px 0; border-radius: 10px; border: 1px solid rgba(106,53,255,0.22); background: rgba(255,255,255,0.03); color: #d6d9ea; font-size: 12px; font-weight: 600;">50%</button>
+                            <button type="button" onclick="setExchangePercent(75)"
+                                style="flex:1; padding: 10px 0; border-radius: 10px; border: 1px solid rgba(106,53,255,0.22); background: rgba(255,255,255,0.03); color: #d6d9ea; font-size: 12px; font-weight: 600;">75%</button>
+                            <button type="button" onclick="setExchangePercent(100)"
+                                style="flex:1; padding: 10px 0; border-radius: 10px; border: 1px solid rgba(106,53,255,0.22); background: rgba(255,255,255,0.03); color: #d6d9ea; font-size: 12px; font-weight: 600;">100%</button>
+                        </div>
                     </div>
 
-                    <!-- SWAP ICON -->
-                    <div style="text-align: center; margin: 8px 0;">
-                        <button onclick="swapExchangeCoins()"
-                            style="width: 36px; height: 36px; background: #1a0b2e; border: 1px solid rgba(106, 53, 255, 0.4); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #6a35ff; cursor: pointer; box-shadow: 0 0 15px rgba(106, 53, 255, 0.1); transition: all 0.2s;">
-                            $
+                    <div style="text-align: center; margin: 2px 0;">
+                        <button type="button" id="ex-swap-btn" onclick="swapExchangeCoins()"
+                            style="width: 42px; height: 42px; background: #1a0b2e; border: 1px solid rgba(106, 53, 255, 0.4); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; color: #6a35ff; cursor: pointer; box-shadow: 0 0 15px rgba(106, 53, 255, 0.1); transition: all 0.2s;">
+                            &#8645;
                         </button>
                     </div>
 
-                    <!-- TO SECTION -->
-                    <div style="margin-bottom: 32px;">
-                        <p
+                    <div style="margin-bottom: 4px;">
+                        <p id="ex-to-label"
                             style="font-size: 12px; color: #999; margin-bottom: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px;">
                             To</p>
                         <div
-                            style="display: flex; align-items: center; background: #1a0b2e; border: 1px solid rgba(106, 53, 255, 0.3); border-radius: 10px; padding: 14px;">
+                            style="display: flex; align-items: center; background: #1a0b2e; border: 1px solid rgba(106, 53, 255, 0.3); border-radius: 14px; padding: 16px 14px;">
                             <div onclick="openCoinModal('to')"
                                 style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding-right: 12px; border-right: 1px solid rgba(255,255,255,0.05);">
                                 <div id="ex-to-icon"
-                                    style="width: 26px; height: 26px; background: #f7931a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 600;">
-                                    $</div>
+                                    style="width: 28px; height: 28px; background: #f7931a; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 13px; font-weight: 600;">
+                                    B</div>
                                 <span id="ex-to-symbol"
-                                    style="font-size: 15px; font-weight: 500; color: #fff;">BTC</span>
-                                <span style="color: #6a35ff; font-size: 10px;">$</span>
+                                    style="font-size: 15px; font-weight: 600; color: #fff;">BTC</span>
+                                <span style="color: #6a35ff; font-size: 12px;">&#9662;</span>
                             </div>
                             <div style="flex-grow: 1; text-align: right; padding-left: 12px;">
                                 <input id="ex-to-amount" type="text" placeholder="0" disabled
-                                    style="width: 100%; border: none; background: transparent; text-align: right; outline: none; font-size: 18px; font-weight: 500; color: #999; font-variant-numeric: tabular-nums;">
+                                    style="width: 100%; border: none; background: transparent; text-align: right; outline: none; font-size: 20px; font-weight: 600; color: #d1d5e7; font-variant-numeric: tabular-nums;">
                             </div>
                         </div>
                     </div>
 
-                    <!-- ACTION BUTTON -->
+                    <div
+                        style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding: 14px 14px 10px; margin-top: 2px;">
+                        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; font-size:13px;">
+                            <span id="ex-rate-label" style="color:#8f97a9;">Market rate</span>
+                            <span id="ex-rate-text" style="color:#fff; font-weight:600; text-align:right;">--</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; font-size:13px;">
+                            <span id="ex-fee-label" style="color:#8f97a9;">Fee</span>
+                            <span id="ex-fee-text" style="color:#fff; font-weight:600; text-align:right;">--</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; font-size:13px;">
+                            <span id="ex-receive-label" style="color:#8f97a9;">You receive</span>
+                            <span id="ex-receive-text" style="color:#fff; font-weight:600; text-align:right;">--</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; gap:10px; font-size:13px;">
+                            <span id="ex-execution-label" style="color:#8f97a9;">Execution</span>
+                            <span id="ex-execution-text" style="color:#fff; font-weight:600; text-align:right;">Instant market conversion</span>
+                        </div>
+                    </div>
+
+                    <div id="ex-status-note"
+                        style="font-size: 12px; line-height: 1.5; color: #8f97a9; padding: 0 2px 2px;">
+                        Enter an amount to preview the quote.
+                    </div>
+
                     <button id="ex-submit-btn" onclick="submitExchangeOrder()" class="pwd-confirm-btn"
-                        style="margin-top: auto; border-radius: 10px; background: linear-gradient(135deg, #6a35ff 0%, #a044ff 100%); box-shadow: 0 6px 20px rgba(106, 53, 255, 0.25); border: none; padding: 16px; font-weight: 600; font-size: 16px; color: #fff; cursor: pointer;">
+                        style="margin-top: auto; border-radius: 12px; background: linear-gradient(135deg, #6a35ff 0%, #a044ff 100%); box-shadow: 0 6px 20px rgba(106, 53, 255, 0.25); border: none; padding: 16px; font-weight: 700; font-size: 16px; color: #fff; cursor: pointer;">
                         Exchange
                     </button>
                 </div>
@@ -10422,14 +10472,14 @@
             <div class="profile-top-bar"
                 style="background: #1a0b2e; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #fff;">
                 <span onclick="goBack()" style="cursor:pointer;">&lt;</span>
-                <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Flash history</span>
+                <span id="ex-history-title" style="font-size: 18px; font-weight: 500; color: #ffffff;">Exchange History</span>
                 <span style="visibility: hidden;">🕘</span>
             </div>
             <div class="scroll-area">
                 <div
                     style="display: flex; justify-content: space-between; padding: 16px 20px; color: #999; font-size: 14px; border-bottom: 1px solid #f9f9f9;">
-                    <span>From</span>
-                    <span>To</span>
+                    <span id="ex-history-col-from">From</span>
+                    <span id="ex-history-col-to">Received</span>
                 </div>
                 <div id="flash-history-list" style="text-align: center; padding: 100px 20px; color: #999; font-size: 14px;">
                     No exchange history
@@ -11433,6 +11483,12 @@ const translations = {
                 }
             });
 
+            if (typeof updateExchangeStaticText === 'function') {
+                updateExchangeStaticText();
+            }
+            if (typeof updateExchangeSubmitState === 'function') {
+                updateExchangeSubmitState();
+            }
             updateLanguageSelectionUI(currentLanguage);
         }
 
@@ -11452,6 +11508,12 @@ const translations = {
             localStorage.setItem('ec_site_lang', langCode);
             localStorage.setItem('ec_language', langName);
             updateLanguageSelectionUI(langName);
+            if (typeof updateExchangeStaticText === 'function') {
+                updateExchangeStaticText();
+            }
+            if (typeof renderExchangeHistory === 'function') {
+                renderExchangeHistory();
+            }
         });
 
         let currentUserBalance = 0;
@@ -12340,6 +12402,169 @@ const translations = {
             { s: 'ALGO', i: 'A', c: '#000000' }, { s: 'XTZ', i: 'X', c: '#2c7df7' }
         ];
 
+        const EXCHANGE_UI_TEXT = {
+            en: {
+                panelTitle: 'Instant Exchange',
+                panelSubtitle: 'Convert assets with live market pricing and a fixed 0.50% fee.',
+                history: 'History',
+                from: 'From',
+                to: 'To',
+                available: 'Available',
+                marketRate: 'Market rate',
+                fee: 'Fee',
+                receive: 'You receive',
+                execution: 'Execution',
+                executionValue: 'Instant market conversion',
+                previewHint: 'Enter an amount to preview the quote.',
+                readyHint: 'Quoted using current market prices. Fee is already included.',
+                sameAssetHint: 'Select different assets to continue.',
+                quoteUnavailableHint: 'Live quote unavailable for this pair.',
+                insufficientHint: 'Insufficient {symbol} balance.',
+                noBalanceHint: 'No available {symbol} balance.',
+                historyTitle: 'Exchange History',
+                historyFrom: 'From',
+                historyTo: 'Received',
+                historyEmpty: 'No exchange history',
+                selected: 'Selected',
+                btnDefault: 'Exchange',
+                btnEnterAmount: 'Enter amount',
+                btnQuoteUnavailable: 'Quote unavailable',
+                btnSameAsset: 'Select assets',
+                btnInsufficient: 'Insufficient {symbol}',
+                btnReady: 'Exchange now',
+                processing: 'Processing...',
+                statusCompleted: 'Completed'
+            },
+            zh: {
+                panelTitle: '\u5373\u65f6\u5151\u6362',
+                panelSubtitle: '\u6309\u5f53\u524d\u5e02\u573a\u4ef7\u683c\u5373\u65f6\u6362\u6c47\uff0c\u624b\u7eed\u8d39\u56fa\u5b9a 0.50%\u3002',
+                history: '\u5386\u53f2',
+                from: '\u4ece',
+                to: '\u5230',
+                available: '\u53ef\u7528',
+                marketRate: '\u5e02\u573a\u6c47\u7387',
+                fee: '\u624b\u7eed\u8d39',
+                receive: '\u9884\u8ba1\u5230\u8d26',
+                execution: '\u6267\u884c\u65b9\u5f0f',
+                executionValue: '\u6309\u5e02\u4ef7\u5373\u65f6\u5151\u6362',
+                previewHint: '\u8f93\u5165\u6570\u91cf\u540e\u5373\u53ef\u9884\u89c8\u5151\u6362\u62a5\u4ef7\u3002',
+                readyHint: '\u62a5\u4ef7\u57fa\u4e8e\u5f53\u524d\u5e02\u573a\u4ef7\u683c\uff0c\u5df2\u5305\u542b\u624b\u7eed\u8d39\u3002',
+                sameAssetHint: '\u8bf7\u9009\u62e9\u4e0d\u540c\u7684\u5e01\u79cd\u3002',
+                quoteUnavailableHint: '\u8be5\u4ea4\u6613\u5bf9\u6682\u65e0\u53ef\u7528\u62a5\u4ef7\u3002',
+                insufficientHint: '{symbol} \u4f59\u989d\u4e0d\u8db3\u3002',
+                noBalanceHint: '\u6682\u65e0\u53ef\u7528 {symbol} \u4f59\u989d\u3002',
+                historyTitle: '\u5151\u6362\u5386\u53f2',
+                historyFrom: '\u6362\u51fa',
+                historyTo: '\u6536\u5230',
+                historyEmpty: '\u6682\u65e0\u5151\u6362\u8bb0\u5f55',
+                selected: '\u5df2\u9009',
+                btnDefault: '\u5151\u6362',
+                btnEnterAmount: '\u8f93\u5165\u6570\u91cf',
+                btnQuoteUnavailable: '\u62a5\u4ef7\u4e0d\u53ef\u7528',
+                btnSameAsset: '\u9009\u62e9\u5e01\u79cd',
+                btnInsufficient: '{symbol} \u4f59\u989d\u4e0d\u8db3',
+                btnReady: '\u7acb\u5373\u5151\u6362',
+                processing: '\u5904\u7406\u4e2d...',
+                statusCompleted: '\u5df2\u5b8c\u6210'
+            },
+            de: {
+                panelTitle: 'Soforttausch',
+                panelSubtitle: 'Tauschen Sie Assets mit Live-Marktpreisen und einer festen Gebuehr von 0,50%.',
+                history: 'Historie',
+                from: 'Von',
+                to: 'Zu',
+                available: 'Verfuegbar',
+                marketRate: 'Marktkurs',
+                fee: 'Gebuehr',
+                receive: 'Sie erhalten',
+                execution: 'Ausfuehrung',
+                executionValue: 'Sofortige Marktausfuehrung',
+                previewHint: 'Geben Sie einen Betrag ein, um das Angebot zu sehen.',
+                readyHint: 'Das Angebot basiert auf aktuellen Marktpreisen. Die Gebuehr ist bereits enthalten.',
+                sameAssetHint: 'Bitte waehlen Sie unterschiedliche Assets.',
+                quoteUnavailableHint: 'Live-Angebot fuer dieses Paar ist nicht verfuegbar.',
+                insufficientHint: 'Nicht genug {symbol} vorhanden.',
+                noBalanceHint: 'Kein verfuegbares Guthaben in {symbol}.',
+                historyTitle: 'Tauschhistorie',
+                historyFrom: 'Von',
+                historyTo: 'Erhalten',
+                historyEmpty: 'Keine Tauschhistorie',
+                selected: 'Aktiv',
+                btnDefault: 'Tauschen',
+                btnEnterAmount: 'Betrag eingeben',
+                btnQuoteUnavailable: 'Kein Angebot',
+                btnSameAsset: 'Assets waehlen',
+                btnInsufficient: 'Zu wenig {symbol}',
+                btnReady: 'Jetzt tauschen',
+                processing: 'Wird verarbeitet...',
+                statusCompleted: 'Abgeschlossen'
+            },
+            ja: {
+                panelTitle: '\u5373\u6642\u4ea4\u63db',
+                panelSubtitle: '\u30e9\u30a4\u30d6\u5e02\u5834\u4fa1\u683c\u3067\u8cc7\u7523\u3092\u5373\u6642\u4ea4\u63db\u3057\u3001\u624b\u6570\u6599\u306f 0.50% \u3067\u56fa\u5b9a\u3067\u3059\u3002',
+                history: '\u5c65\u6b74',
+                from: '\u9001\u91d1\u5143',
+                to: '\u53d7\u53d6',
+                available: '\u5229\u7528\u53ef\u80fd',
+                marketRate: '\u5e02\u5834\u30ec\u30fc\u30c8',
+                fee: '\u624b\u6570\u6599',
+                receive: '\u53d7\u53d6\u898b\u8fbc\u307f',
+                execution: '\u57f7\u884c\u65b9\u5f0f',
+                executionValue: '\u6210\u884c\u3067\u5373\u6642\u4ea4\u63db',
+                previewHint: '\u91d1\u984d\u3092\u5165\u529b\u3059\u308b\u3068\u898b\u7a4d\u3082\u308a\u304c\u8868\u793a\u3055\u308c\u307e\u3059\u3002',
+                readyHint: '\u898b\u7a4d\u3082\u308a\u306f\u73fe\u5728\u306e\u5e02\u5834\u4fa1\u683c\u306b\u57fa\u3065\u304d\u3001\u624b\u6570\u6599\u3092\u542b\u3093\u3067\u3044\u307e\u3059\u3002',
+                sameAssetHint: '\u7570\u306a\u308b\u8cc7\u7523\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002',
+                quoteUnavailableHint: '\u3053\u306e\u30da\u30a2\u306e\u30ec\u30fc\u30c8\u306f\u73fe\u5728\u5229\u7528\u3067\u304d\u307e\u305b\u3093\u3002',
+                insufficientHint: '{symbol} \u306e\u6b8b\u9ad8\u304c\u4e0d\u8db3\u3057\u3066\u3044\u307e\u3059\u3002',
+                noBalanceHint: '\u5229\u7528\u53ef\u80fd\u306a {symbol} \u6b8b\u9ad8\u304c\u3042\u308a\u307e\u305b\u3093\u3002',
+                historyTitle: '\u4ea4\u63db\u5c65\u6b74',
+                historyFrom: '\u9001\u91d1\u5143',
+                historyTo: '\u53d7\u53d6',
+                historyEmpty: '\u4ea4\u63db\u5c65\u6b74\u306f\u3042\u308a\u307e\u305b\u3093',
+                selected: '\u9078\u629e\u4e2d',
+                btnDefault: '\u4ea4\u63db',
+                btnEnterAmount: '\u91d1\u984d\u3092\u5165\u529b',
+                btnQuoteUnavailable: '\u898b\u7a4d\u3082\u308a\u4e0d\u53ef',
+                btnSameAsset: '\u8cc7\u7523\u3092\u9078\u629e',
+                btnInsufficient: '{symbol} \u4e0d\u8db3',
+                btnReady: '\u3059\u3050\u306b\u4ea4\u63db',
+                processing: '\u51e6\u7406\u4e2d...',
+                statusCompleted: '\u5b8c\u4e86'
+            },
+            ko: {
+                panelTitle: '\uc989\uc2dc \uad50\ud658',
+                panelSubtitle: '\uc2e4\uc2dc\uac04 \uc2dc\uc7a5\uac00\ub85c \uc790\uc0b0\uc744 \uad50\ud658\ud558\uba70 \uc218\uc218\ub8cc\ub294 0.50%\ub85c \uace0\uc815\ub429\ub2c8\ub2e4.',
+                history: '\uae30\ub85d',
+                from: '\ubcf4\ub0bc \uc790\uc0b0',
+                to: '\ubc1b\uc744 \uc790\uc0b0',
+                available: '\uc0ac\uc6a9 \uac00\ub2a5',
+                marketRate: '\uc2dc\uc7a5 \ud658\uc728',
+                fee: '\uc218\uc218\ub8cc',
+                receive: '\uc608\uc0c1 \uc218\ub839',
+                execution: '\uccb4\uacb0 \ubc29\uc2dd',
+                executionValue: '\uc989\uc2dc \uc2dc\uc7a5\uac00 \uad50\ud658',
+                previewHint: '\uc218\ub7c9\uc744 \uc785\ub825\ud558\uba74 \uacac\uc801\uc744 \ubbf8\ub9ac \ubcfc \uc218 \uc788\uc2b5\ub2c8\ub2e4.',
+                readyHint: '\ud604\uc7ac \uc2dc\uc7a5\uac00 \uae30\uc900 \uacac\uc801\uc774\uba70 \uc218\uc218\ub8cc\uac00 \ud3ec\ud568\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4.',
+                sameAssetHint: '\ub2e4\ub978 \uc790\uc0b0\uc744 \uc120\ud0dd\ud574 \uc8fc\uc138\uc694.',
+                quoteUnavailableHint: '\ud574\ub2f9 \ud398\uc5b4\uc758 \uc2e4\uc2dc\uac04 \uacac\uc801\uc744 \ubd88\ub7ec\uc62c \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.',
+                insufficientHint: '{symbol} \uc794\uc561\uc774 \ubd80\uc871\ud569\ub2c8\ub2e4.',
+                noBalanceHint: '\uc0ac\uc6a9 \uac00\ub2a5\ud55c {symbol} \uc794\uc561\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.',
+                historyTitle: '\uad50\ud658 \uae30\ub85d',
+                historyFrom: '\ubcf4\ub0c4',
+                historyTo: '\ubc1b\uc74c',
+                historyEmpty: '\uad50\ud658 \uae30\ub85d\uc774 \uc5c6\uc2b5\ub2c8\ub2e4',
+                selected: '\uc120\ud0dd\ub428',
+                btnDefault: '\uad50\ud658',
+                btnEnterAmount: '\uae08\uc561 \uc785\ub825',
+                btnQuoteUnavailable: '\uacac\uc801 \ubd88\uac00',
+                btnSameAsset: '\uc790\uc0b0 \uc120\ud0dd',
+                btnInsufficient: '{symbol} \ubd80\uc871',
+                btnReady: '\uc9c0\uae08 \uad50\ud658',
+                processing: '\ucc98\ub9ac \uc911...',
+                statusCompleted: '\uc644\ub8cc'
+            }
+        };
+
         let exFrom = 'USDT';
         let exTo = 'BTC';
         let modalTarget = 'from';
@@ -12412,6 +12637,47 @@ const translations = {
             return Number.isFinite(num) && num > 0 ? num : 0;
         }
 
+        function formatExchangeTemplate(text, vars = {}) {
+            return String(text || '').replace(/\{(\w+)\}/g, (_, key) => {
+                return Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : '';
+            });
+        }
+
+        function getExchangeUiText() {
+            const langCode = String(localStorage.getItem('ec_site_lang') || languageToCode(currentLanguage) || 'en').toLowerCase();
+            return EXCHANGE_UI_TEXT[langCode] || EXCHANGE_UI_TEXT.en;
+        }
+
+        function setExchangeText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        }
+
+        function setExchangeStatusNote(message, color) {
+            const note = document.getElementById('ex-status-note');
+            if (!note) return;
+            note.textContent = message;
+            note.style.color = color || '#8f97a9';
+        }
+
+        function updateExchangeStaticText() {
+            const copy = getExchangeUiText();
+            setExchangeText('ex-panel-title', copy.panelTitle);
+            setExchangeText('ex-panel-subtitle', copy.panelSubtitle);
+            setExchangeText('ex-history-link', copy.history);
+            setExchangeText('ex-from-label', copy.from);
+            setExchangeText('ex-to-label', copy.to);
+            setExchangeText('ex-available-label', copy.available);
+            setExchangeText('ex-rate-label', copy.marketRate);
+            setExchangeText('ex-fee-label', copy.fee);
+            setExchangeText('ex-receive-label', copy.receive);
+            setExchangeText('ex-execution-label', copy.execution);
+            setExchangeText('ex-execution-text', copy.executionValue);
+            setExchangeText('ex-history-title', copy.historyTitle);
+            setExchangeText('ex-history-col-from', copy.historyFrom);
+            setExchangeText('ex-history-col-to', copy.historyTo);
+        }
+
         function computeExchangeQuote(fromSymbol, toSymbol, fromAmount) {
             const amount = Number(fromAmount);
             const fromPrice = getCoinUsdPriceForExchange(fromSymbol);
@@ -12431,19 +12697,70 @@ const translations = {
             };
         }
 
+        function updateExchangeQuoteDetails(amount, quote) {
+            const copy = getExchangeUiText();
+            const fromPrice = getCoinUsdPriceForExchange(exFrom);
+            const toPrice = getCoinUsdPriceForExchange(exTo);
+            const rateText = (quote.valid && quote.rate > 0)
+                ? `1 ${exFrom} ≈ ${formatExchangeAmount(quote.rate, exTo)} ${exTo}`
+                : '--';
+            const feeText = (quote.valid && quote.feeAmount >= 0)
+                ? `${formatExchangeAmount(quote.feeAmount, exTo)} ${exTo} (0.50%)`
+                : '0.50%';
+            const receiveText = (quote.valid && quote.toNetAmount > 0)
+                ? `${formatExchangeAmount(quote.toNetAmount, exTo)} ${exTo}`
+                : '--';
+            const executionText = (amount > 0 && fromPrice > 0 && toPrice > 0)
+                ? `${copy.executionValue} · ${formatExchangeAmount(amount * fromPrice, 'USDT')} USDT`
+                : copy.executionValue;
+
+            setExchangeText('ex-rate-text', rateText);
+            setExchangeText('ex-fee-text', feeText);
+            setExchangeText('ex-receive-text', receiveText);
+            setExchangeText('ex-execution-text', executionText);
+        }
         function updateExchangeSubmitState() {
             const btn = document.getElementById('ex-submit-btn');
             const amountInput = document.getElementById('ex-from-amount');
             if (!btn || !amountInput) return;
+            const copy = getExchangeUiText();
             const amount = parseExchangeAmount(amountInput.value);
             const available = getExchangeBalance(exFrom);
             const quote = computeExchangeQuote(exFrom, exTo, amount);
-            const canSubmit = amount > 0 && amount <= available && quote.valid && quote.toNetAmount > 0;
+            const sameAsset = exFrom === exTo;
+            let canSubmit = false;
+            let buttonText = copy.btnDefault;
+
+            updateExchangeQuoteDetails(amount, quote);
+
+            if (sameAsset) {
+                buttonText = copy.btnSameAsset;
+                setExchangeStatusNote(copy.sameAssetHint, '#f59e0b');
+            } else if (!(amount > 0)) {
+                buttonText = copy.btnEnterAmount;
+                setExchangeStatusNote(copy.previewHint, '#8f97a9');
+            } else if (!(available > 0)) {
+                buttonText = formatExchangeTemplate(copy.btnInsufficient, { symbol: exFrom });
+                setExchangeStatusNote(formatExchangeTemplate(copy.noBalanceHint, { symbol: exFrom }), '#ef4444');
+            } else if (amount > available) {
+                buttonText = formatExchangeTemplate(copy.btnInsufficient, { symbol: exFrom });
+                setExchangeStatusNote(formatExchangeTemplate(copy.insufficientHint, { symbol: exFrom }), '#ef4444');
+            } else if (!quote.valid || quote.toNetAmount <= 0) {
+                buttonText = copy.btnQuoteUnavailable;
+                setExchangeStatusNote(copy.quoteUnavailableHint, '#f59e0b');
+            } else {
+                canSubmit = true;
+                buttonText = `${copy.btnReady} · ${exFrom} → ${exTo}`;
+                setExchangeStatusNote(copy.readyHint, '#52c41a');
+            }
+
             btn.disabled = !canSubmit;
             btn.style.opacity = canSubmit ? '1' : '0.55';
             btn.style.cursor = canSubmit ? 'pointer' : 'not-allowed';
+            if (btn.dataset.loading !== '1') {
+                btn.textContent = buttonText;
+            }
         }
-
         function onExchangeAmountInput() {
             const fromInput = document.getElementById('ex-from-amount');
             const toInput = document.getElementById('ex-to-amount');
@@ -12466,16 +12783,53 @@ const translations = {
         }
         window.fillExchangeMax = fillExchangeMax;
 
+        function setExchangePercent(percent) {
+            const fromInput = document.getElementById('ex-from-amount');
+            if (!fromInput) return;
+            const available = getExchangeBalance(exFrom);
+            const ratio = Math.max(0, Math.min(100, Number(percent) || 0)) / 100;
+            const amount = available * ratio;
+            fromInput.value = amount > 0 ? formatExchangeAmount(amount, exFrom) : '';
+            onExchangeAmountInput();
+        }
+        window.setExchangePercent = setExchangePercent;
+
         function openCoinModal(target) {
             modalTarget = target;
             const modal = document.getElementById('coin-modal');
             const listContainer = document.getElementById('modal-coin-list');
+            const copy = getExchangeUiText();
+            const selectedSymbol = modalTarget === 'from' ? exFrom : exTo;
             listContainer.innerHTML = '';
-            exchangeCoins.forEach(c => {
+            const sortedCoins = exchangeCoins.slice().sort((a, b) => {
+                const aSelected = a.s === selectedSymbol ? 1 : 0;
+                const bSelected = b.s === selectedSymbol ? 1 : 0;
+                if (aSelected !== bSelected) return bSelected - aSelected;
+                const aBal = getExchangeBalance(a.s);
+                const bBal = getExchangeBalance(b.s);
+                const aHas = aBal > 0 ? 1 : 0;
+                const bHas = bBal > 0 ? 1 : 0;
+                if (aHas !== bHas) return bHas - aHas;
+                if (Math.abs(bBal - aBal) > 0.0000001) return bBal - aBal;
+                return a.s.localeCompare(b.s);
+            });
+            sortedCoins.forEach(c => {
+                const available = getExchangeBalance(c.s);
+                const isSelected = c.s === selectedSymbol;
                 const row = document.createElement('div');
                 row.className = 'coin-list-row';
                 row.onclick = () => selectExchangeCoin(c.s);
-                row.innerHTML = `<div class="coin-icon-sm">${getCoinIconHtml(c.s, c.i)}</div><span style="font-weight:600; font-size:16px;">${c.s}</span>`;
+                row.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:12px;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="coin-icon-sm">${getCoinIconHtml(c.s, c.i)}</div>
+                            <div>
+                                <div style="font-weight:600; font-size:16px;">${c.s}</div>
+                                <div style="font-size:12px; color:#8f97a9;">${copy.available} ${formatExchangeAmount(available, c.s)} ${c.s}</div>
+                            </div>
+                        </div>
+                        <div style="font-size:11px; color:${isSelected ? '#6a35ff' : '#8f97a9'}; font-weight:600;">${isSelected ? copy.selected : ''}</div>
+                    </div>`;
                 listContainer.appendChild(row);
             });
             modal.classList.remove('hidden');
@@ -12489,6 +12843,10 @@ const translations = {
             if (modalTarget === 'from') {
                 if (symbol === exTo) return swapExchangeCoins();
                 exFrom = symbol;
+                const fromInput = document.getElementById('ex-from-amount');
+                const toInput = document.getElementById('ex-to-amount');
+                if (fromInput) fromInput.value = '';
+                if (toInput) toInput.value = '';
             } else {
                 if (symbol === exFrom) return swapExchangeCoins();
                 exTo = symbol;
@@ -12498,14 +12856,21 @@ const translations = {
         }
 
         function swapExchangeCoins() {
+            const fromInput = document.getElementById('ex-from-amount');
+            const toInput = document.getElementById('ex-to-amount');
+            const swappedInputAmount = toInput ? parseExchangeAmount(toInput.value) : 0;
             const temp = exFrom;
             exFrom = exTo;
             exTo = temp;
-            updateExchangeUI();
+            updateExchangeUI({ skipQuoteRefresh: true });
+            if (fromInput) {
+                fromInput.value = swappedInputAmount > 0 ? formatExchangeAmount(swappedInputAmount, exFrom) : '';
+            }
+            onExchangeAmountInput();
             closeCoinModal();
         }
 
-        function updateExchangeUI() {
+        function updateExchangeUI(options = {}) {
             const from = exchangeCoins.find(c => c.s === exFrom);
             const to = exchangeCoins.find(c => c.s === exTo);
             if (!from || !to) return;
@@ -12519,19 +12884,25 @@ const translations = {
             document.getElementById('ex-to-icon').innerHTML = getCoinIconHtml(to.s, to.i);
             document.getElementById('ex-to-icon').style.background = '#1a0b2e';
             document.getElementById('ex-to-symbol').innerText = to.s;
-            onExchangeAmountInput();
+            updateExchangeStaticText();
+            if (!options.skipQuoteRefresh) {
+                onExchangeAmountInput();
+            } else {
+                updateExchangeSubmitState();
+            }
         }
 
         function renderExchangeHistory() {
             const container = document.getElementById('flash-history-list');
             if (!container) return;
             const items = Array.isArray(window.exchangeHistoryAll) ? window.exchangeHistoryAll : [];
+            const copy = getExchangeUiText();
             if (items.length === 0) {
                 container.style.textAlign = 'center';
                 container.style.padding = '100px 20px';
                 container.style.color = '#999';
                 container.style.fontSize = '14px';
-                container.innerHTML = 'No exchange history';
+                container.innerHTML = copy.historyEmpty;
                 return;
             }
             const html = items.map((item) => {
@@ -12542,18 +12913,25 @@ const translations = {
                 const fromAmount = formatExchangeAmount(item.from_amount, item.from_coin);
                 const toAmount = formatExchangeAmount(item.to_amount, item.to_coin);
                 const feeAmount = formatExchangeAmount(item.fee_amount, item.to_coin);
+                const rateText = Number(item.rate) > 0
+                    ? `1 ${item.from_coin} ≈ ${formatExchangeAmount(item.rate, item.to_coin)} ${item.to_coin}`
+                    : '--';
                 return `
                     <div style="padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
                             <span style="color:#fff; font-weight:600;">${item.from_coin} → ${item.to_coin}</span>
-                            <span style="color:#8b8fa8; font-size:12px;">${time}</span>
+                            <span style="color:#52c41a; font-size:11px; font-weight:700; border:1px solid rgba(82,196,26,0.25); background:rgba(82,196,26,0.08); padding:3px 8px; border-radius:999px;">${copy.statusCompleted}</span>
                         </div>
-                        <div style="display:flex; justify-content:space-between; color:#c9cce0; font-size:13px;">
+                        <div style="display:flex; justify-content:space-between; color:#c9cce0; font-size:13px; margin-bottom:4px;">
                             <span>${fromAmount} ${item.from_coin}</span>
                             <span>${toAmount} ${item.to_coin}</span>
                         </div>
+                        <div style="display:flex; justify-content:space-between; color:#8b8fa8; font-size:12px; margin-bottom:4px;">
+                            <span>${rateText}</span>
+                            <span>${time}</span>
+                        </div>
                         <div style="margin-top:4px; color:#8b8fa8; font-size:12px;">
-                            Fee: ${feeAmount} ${item.to_coin} (${(Number(item.fee_rate || EXCHANGE_FEE_RATE) * 100).toFixed(2)}%)
+                            ${copy.fee}: ${feeAmount} ${item.to_coin} (${(Number(item.fee_rate || EXCHANGE_FEE_RATE) * 100).toFixed(2)}%)
                         </div>
                     </div>
                 `;
@@ -12612,8 +12990,8 @@ const translations = {
             }
 
             submitBtn.disabled = true;
-            const oldText = submitBtn.innerText;
-            submitBtn.innerText = 'Processing...';
+            submitBtn.dataset.loading = '1';
+            submitBtn.innerHTML = '<span style="display:inline-flex; align-items:center; gap:8px;"><span style="width:14px; height:14px; border:2px solid rgba(255,255,255,0.35); border-top-color:#fff; border-radius:50%; display:inline-block; animation: spin 0.8s linear infinite;"></span><span>' + getExchangeUiText().processing + '</span></span>';
 
             try {
                 const userRef = doc(db, 'users', user.uid);
@@ -12663,8 +13041,8 @@ const translations = {
                 console.error('Exchange submit error:', error);
                 window.showMobileToast(error.message || 'Exchange failed. Please try again.');
             } finally {
+                delete submitBtn.dataset.loading;
                 submitBtn.disabled = false;
-                submitBtn.innerText = oldText;
                 updateExchangeSubmitState();
             }
         }
@@ -12945,6 +13323,10 @@ const translations = {
                 const isContract = (tab === 'contract');
                 tradeTabsContainer.style.display = isContract ? 'none' : 'flex';
                 historyIcon.style.display = isContract ? 'none' : 'inline-block';
+            }
+
+            if (isExc && typeof updateExchangeUI === 'function') {
+                updateExchangeUI();
             }
 
             if (tab === 'contract') {
