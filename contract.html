@@ -286,6 +286,42 @@
             gap: 16px;
         }
 
+        .desktop-perp-view {
+            display: none;
+        }
+
+        .desktop-perp-view.is-active {
+            display: flex;
+        }
+
+        .desktop-balance-strip {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .desktop-balance-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .desktop-balance-label,
+        .desktop-section-label {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .desktop-balance-item strong,
+        .desktop-section-meta strong {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
         .leverage-row {
             display: flex;
             gap: 8px;
@@ -341,6 +377,10 @@
             color: var(--text-secondary);
         }
 
+        .input-box.compact input {
+            font-size: 13px;
+        }
+
         .slider-wrap {
             padding: 0 4px;
             margin: 8px 0;
@@ -375,6 +415,33 @@
         .button-group {
             display: flex;
             gap: 12px;
+        }
+
+        .desktop-quick-row,
+        .desktop-two-col {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .desktop-two-col {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .desktop-quick-btn {
+            border: 1px solid var(--border-color);
+            background: #1a1a1c;
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 10px 0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .desktop-quick-btn:hover {
+            border-color: rgba(59, 130, 246, 0.45);
+            background: rgba(59, 130, 246, 0.12);
         }
 
         .btn-trade {
@@ -417,6 +484,261 @@
 
         .info-row span:last-child {
             color: var(--text-primary);
+        }
+
+        .desktop-info-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .desktop-order-status {
+            border-radius: 8px;
+            padding: 11px 12px;
+            font-size: 12px;
+            line-height: 1.5;
+            border: 1px solid transparent;
+        }
+
+        .desktop-order-status.is-neutral {
+            background: rgba(161, 161, 170, 0.08);
+            border-color: rgba(161, 161, 170, 0.14);
+            color: var(--text-secondary);
+        }
+
+        .desktop-order-status.is-success {
+            background: rgba(16, 185, 129, 0.08);
+            border-color: rgba(16, 185, 129, 0.16);
+            color: #6ee7b7;
+        }
+
+        .desktop-order-status.is-danger {
+            background: rgba(239, 68, 68, 0.08);
+            border-color: rgba(239, 68, 68, 0.16);
+            color: #fca5a5;
+        }
+
+        .desktop-section-meta {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            padding-bottom: 4px;
+        }
+
+        .desktop-section-meta>div {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .desktop-scroll-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 200px;
+        }
+
+        .desktop-empty-state {
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-align: center;
+            padding: 36px 16px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .desktop-trade-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .desktop-trade-card-head,
+        .desktop-trade-card-grid,
+        .desktop-trade-card-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .desktop-trade-card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px 12px;
+        }
+
+        .desktop-trade-kv {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .desktop-trade-kv span {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .desktop-trade-kv strong {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .desktop-side-badge,
+        .desktop-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .desktop-side-badge.long {
+            color: #6ee7b7;
+            background: rgba(16, 185, 129, 0.12);
+        }
+
+        .desktop-side-badge.short {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .desktop-status-badge.open {
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.12);
+        }
+
+        .desktop-status-badge.closed {
+            color: #d4d4d8;
+            background: rgba(161, 161, 170, 0.12);
+        }
+
+        .desktop-pnl-positive {
+            color: var(--up-color) !important;
+        }
+
+        .desktop-pnl-negative {
+            color: var(--down-color) !important;
+        }
+
+        .desktop-link-btn,
+        .desktop-close-btn {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .desktop-link-btn:hover {
+            border-color: rgba(59, 130, 246, 0.45);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .desktop-close-btn {
+            color: #fecaca;
+            border-color: rgba(239, 68, 68, 0.18);
+        }
+
+        .desktop-close-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .desktop-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 9999;
+        }
+
+        .desktop-modal-overlay.hidden {
+            display: none;
+        }
+
+        .desktop-modal-card {
+            width: min(560px, 100%);
+            background: #101012;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+        }
+
+        .desktop-modal-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .desktop-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .desktop-modal-subtitle {
+            margin-top: 4px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .desktop-modal-close {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        .desktop-modal-body {
+            padding: 18px 20px 20px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px 16px;
+        }
+
+        .desktop-modal-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .desktop-modal-item span {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .desktop-modal-item strong {
+            color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.4;
+            word-break: break-word;
         }
 
         .margin-ratio-section {
@@ -617,32 +939,50 @@
 
         <!-- Right Column: Trade Column -->
         <div class="trade-column">
-            <div class="form-tabs">
-                <div class="form-tab active">Open position</div>
-                <div class="form-tab">Hold position</div>
-                <div class="form-tab">Open orders</div>
+            <div class="form-tabs" id="desktop-perp-tabs">
+                <div class="form-tab active" data-tab="open">Open position</div>
+                <div class="form-tab" data-tab="positions">Hold position</div>
+                <div class="form-tab" data-tab="history">Order history</div>
             </div>
-            <div class="trade-form-content">
-                <div class="leverage-row">
-                    <button class="lev-btn">Cross</button>
-                    <button class="lev-btn">30x Fixed</button>
-                </div>
-                <div class="type-selector">
-                    <span class="type-btn">Limit</span>
-                    <span class="type-btn active">Market</span>
+
+            <div id="desktop-perp-open-view" class="trade-form-content desktop-perp-view is-active">
+                <div class="desktop-balance-strip">
+                    <div class="desktop-balance-item">
+                        <span class="desktop-balance-label">Available Balance</span>
+                        <strong id="desktop-available-balance">0.00 USDT</strong>
+                    </div>
+                    <div class="desktop-balance-item">
+                        <span class="desktop-balance-label">Max Size</span>
+                        <strong id="desktop-max-lots">0 Lot</strong>
+                    </div>
+                    <div class="desktop-balance-item">
+                        <span class="desktop-balance-label">Contract Unit</span>
+                        <strong id="desktop-contract-unit">100 USDT/Lot</strong>
+                    </div>
                 </div>
 
-                <div class="info-row" style="font-size:11px;">
-                    <span style="color:var(--text-secondary)">Total Contract Assets</span>
-                    <span>0.00 USDT</span>
+                <div class="leverage-row">
+                    <button class="lev-btn" type="button">Cross</button>
+                    <button class="lev-btn" type="button">30x Fixed</button>
+                </div>
+
+                <div class="type-selector" id="desktop-order-type-switch">
+                    <span class="type-btn active" data-order-type="Market">Market</span>
+                    <span class="type-btn" data-order-type="Limit">Limit</span>
                 </div>
 
                 <div class="input-box">
-                    <input type="number" placeholder="Amount">
+                    <input id="desktop-perp-price" type="number" step="0.0001" placeholder="Price">
+                    <span>USDT</span>
+                </div>
+
+                <div class="input-box">
+                    <input id="desktop-perp-lots" type="number" min="0" step="1" placeholder="Lots">
+                    <span>Lot</span>
                 </div>
 
                 <div class="slider-wrap">
-                    <input type="range" class="range-slider" min="0" max="100" value="0">
+                    <input id="desktop-perp-slider" type="range" class="range-slider" min="0" max="100" value="0">
                     <div class="percentage-marks">
                         <span>0%</span>
                         <span>25%</span>
@@ -652,51 +992,111 @@
                     </div>
                 </div>
 
-                <div class="info-row" style="font-size:11px;">
-                    <span style="color:var(--text-secondary)">Volumes avail</span>
-                    <span>0 Sheets</span>
+                <div class="desktop-quick-row">
+                    <button type="button" class="desktop-quick-btn" data-pct="25">25%</button>
+                    <button type="button" class="desktop-quick-btn" data-pct="50">50%</button>
+                    <button type="button" class="desktop-quick-btn" data-pct="75">75%</button>
+                    <button type="button" class="desktop-quick-btn" data-pct="100">100%</button>
+                </div>
+
+                <div class="desktop-two-col">
+                    <div class="input-box compact">
+                        <input id="desktop-perp-tp" type="number" step="0.0001" placeholder="Take Profit">
+                        <span>TP</span>
+                    </div>
+                    <div class="input-box compact">
+                        <input id="desktop-perp-sl" type="number" step="0.0001" placeholder="Stop Loss">
+                        <span>SL</span>
+                    </div>
                 </div>
 
                 <div class="button-group">
-                    <button class="btn-trade btn-long">Buy Long</button>
-                    <button class="btn-trade btn-short">Buy Short</button>
+                    <button id="desktop-open-long" class="btn-trade btn-long" type="button">Buy Long</button>
+                    <button id="desktop-open-short" class="btn-trade btn-short" type="button">Buy Short</button>
                 </div>
 
-                <div class="info-panel">
+                <div id="desktop-order-status" class="desktop-order-status is-neutral">Enter lots to preview margin and fee.</div>
+
+                <div class="info-panel desktop-info-panel">
                     <div class="info-row">
-                        <span>Contract Amount:</span>
-                        <span>0.00 USDT</span>
+                        <span>Contract Value</span>
+                        <span id="desktop-contract-value">0.00 USDT</span>
                     </div>
                     <div class="info-row">
-                        <span>Margin:</span>
-                        <span>0.00 USDT</span>
+                        <span>Margin</span>
+                        <span id="desktop-margin">0.00 USDT</span>
                     </div>
                     <div class="info-row">
-                        <span>Fee:</span>
-                        <span>0.00 USDT</span>
+                        <span>Fee</span>
+                        <span id="desktop-fee">0.0000 USDT</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Mark Price</span>
+                        <span id="desktop-mark-price">--</span>
                     </div>
                 </div>
 
                 <div class="margin-ratio-section">
-                    <div class="panel-header" style="padding-left:0; font-size:13px; margin-bottom:12px;">Margin
-                        Ratio
-                    </div>
-                    <button class="lev-btn" style="width:100%; margin-bottom:12px;">Single Asset Mode</button>
+                    <div class="panel-header" style="padding-left:0; font-size:13px; margin-bottom:12px;">Margin Overview</div>
+                    <button class="lev-btn" type="button" style="width:100%; margin-bottom:12px;">Single Asset Mode</button>
                     <div class="info-panel">
                         <div class="info-row">
-                            <span>Margin Ratio:</span>
-                            <span style="color:var(--up-color)"><i class="ri-adjust-line"></i> 0.0000</span>
+                            <span>Margin Ratio</span>
+                            <span id="desktop-margin-ratio" style="color:var(--up-color)"><i class="ri-adjust-line"></i> 0.00%</span>
                         </div>
                         <div class="info-row">
-                            <span>Maintenance Margin:</span>
-                            <span>0.00 USDT</span>
+                            <span>Maintenance Margin</span>
+                            <span id="desktop-maintenance-margin">0.00 USDT</span>
                         </div>
                         <div class="info-row">
-                            <span>Margin Balance:</span>
-                            <span>0.00 USDT</span>
+                            <span>Margin Balance</span>
+                            <span id="desktop-margin-balance">0.00 USDT</span>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div id="desktop-perp-positions-view" class="trade-form-content desktop-perp-view">
+                <div class="desktop-section-meta">
+                    <div>
+                        <span class="desktop-section-label">Open Positions</span>
+                        <strong id="desktop-open-count">0</strong>
+                    </div>
+                    <div>
+                        <span class="desktop-section-label">Unrealized P/L</span>
+                        <strong id="desktop-open-pnl">0.00 USDT</strong>
+                    </div>
+                </div>
+                <div id="desktop-open-positions-list" class="desktop-scroll-list"></div>
+            </div>
+
+            <div id="desktop-perp-history-view" class="trade-form-content desktop-perp-view">
+                <div class="desktop-section-meta">
+                    <div>
+                        <span class="desktop-section-label">Historical Orders</span>
+                        <strong id="desktop-history-count">0</strong>
+                    </div>
+                    <div>
+                        <span class="desktop-section-label">Net P/L</span>
+                        <strong id="desktop-history-pnl">0.00 USDT</strong>
+                    </div>
+                </div>
+                <div id="desktop-history-list" class="desktop-scroll-list"></div>
+            </div>
+        </div>
+
+        <div id="desktop-trade-modal" class="desktop-modal-overlay hidden">
+            <div class="desktop-modal-card">
+                <div class="desktop-modal-header">
+                    <div>
+                        <div id="desktop-trade-modal-title" class="desktop-modal-title">Order Detail</div>
+                        <div id="desktop-trade-modal-subtitle" class="desktop-modal-subtitle">Perpetual contract details</div>
+                    </div>
+                    <button id="desktop-trade-modal-close" class="desktop-modal-close" type="button">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div id="desktop-trade-modal-body" class="desktop-modal-body"></div>
             </div>
         </div>
 
@@ -819,6 +1219,15 @@
             if (lowEl) lowEl.textContent = formatPrice(low);
             if (totalEl) totalEl.textContent = formatCompact(volume);
             if (amountEl) amountEl.textContent = formatCompact(volume * (Number.isFinite(last) ? last : currentLastPrice));
+            window.desktopPerpQuote = {
+                pair: currentPair,
+                last,
+                pct,
+                high,
+                low,
+                volume,
+                updatedAt: Date.now()
+            };
         }
 
         function renderOrderBook(basePrice) {
@@ -907,6 +1316,11 @@
                     currentLastPrice = wsPrice;
                     const lastEl = document.getElementById('perp-last-price');
                     if (lastEl) lastEl.textContent = formatPrice(wsPrice);
+                    window.desktopPerpQuote = Object.assign({}, window.desktopPerpQuote || {}, {
+                        pair: currentPair,
+                        last: wsPrice,
+                        updatedAt: Date.now()
+                    });
                     renderOrderBook(wsPrice);
                     renderMarketTrades(wsPrice);
                 } catch (_) { }
@@ -999,17 +1413,7 @@
             setInterval(fetchPerpetualQuote, 8000);
         });
     </script>
-    <script type="module">
-        import { enforceKycAccess } from './firebase-config.js';
-
-        window.addEventListener('DOMContentLoaded', async () => {
-            await enforceKycAccess({
-                requireAuth: true,
-                unauthRedirect: 'login.html',
-                kycRedirect: 'mobile.html'
-            });
-        });
-    </script>
+    <script type="module" src="./js/desktop-perpetual-contract.js"></script>
     <script src="/js/site-language.js"></script>
 </body>
 
