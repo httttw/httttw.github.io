@@ -7196,9 +7196,13 @@
                             <label class="pwd-label" data-t-key="cert_id_number">Document/passport number</label>
                             <div class="pwd-input-wrapper">
                                 <input type="text" id="cert-id-number" class="pwd-input"
-                                    placeholder="Please enter your ID/passport number"
-                                    data-t-key="cert_id_number_placeholder">
-                                <span class="pwd-icon-btn">$</span>
+                                    placeholder="Enter your driver license number, e.g. A1234567"
+                                    data-t-key="cert_id_number_placeholder" maxlength="8" autocapitalize="characters"
+                                    spellcheck="false" inputmode="text" oninput="formatKycIdNumber(this)">
+                                <span class="pwd-icon-btn">ID</span>
+                            </div>
+                            <div style="margin-top: 8px; color: #8f97a9; font-size: 12px;" data-t-key="cert_id_number_hint">
+                                Format: 1 letter + 7 digits, for example A1234567
                             </div>
                         </div>
 
@@ -7223,24 +7227,18 @@
                         </div>
 
                         <div class="safe-subtitle" style="font-size: 18px; margin-top: 32px;"
-                            data-t-key="cert_shooting_example">Shooting example</div>
+                            data-t-key="cert_shooting_example">Example</div>
                         <div class="upload-grid" style="grid-template-columns: 1fr 1fr; margin-top: 15px;">
-                            <div class="upload-box" style="border: none; background: #f5f5f5;">
-                                <svg width="60" height="40" viewBox="0 0 60 40" fill="none">
-                                    <rect width="60" height="40" rx="4" fill="#E8B99F" />
-                                    <rect x="5" y="5" width="20" height="2" fill="white" fill-opacity="0.6" />
-                                    <rect x="5" y="9" width="30" height="2" fill="white" fill-opacity="0.6" />
-                                    <rect x="5" y="13" width="25" height="2" fill="white" fill-opacity="0.6" />
-                                    <circle cx="45" cy="25" r="8" fill="white" fill-opacity="0.6" />
-                                </svg>
+                            <div class="upload-box" style="border: none; background: #f5f5f5; cursor: default;">
+                                <img src="/assets/kyc/us-driver-license-front.svg" alt="US driver license front example">
                             </div>
-                            <div class="upload-box" style="border: none; background: #f5f5f5;">
-                                <svg width="60" height="40" viewBox="0 0 60 40" fill="none">
-                                    <rect width="60" height="40" rx="4" fill="#E8B99F" />
-                                    <circle cx="15" cy="15" r="5" fill="white" fill-opacity="0.6" />
-                                    <rect x="30" y="25" width="20" height="5" fill="white" fill-opacity="0.6" />
-                                </svg>
+                            <div class="upload-box" style="border: none; background: #f5f5f5; cursor: default;">
+                                <img src="/assets/kyc/us-driver-license-back.svg" alt="US driver license back example">
                             </div>
+                        </div>
+                        <div class="upload-label-row" style="grid-template-columns: 1fr 1fr; margin-top: -10px;">
+                            <span data-t-key="cert_example_front">US driver license front</span>
+                            <span data-t-key="cert_example_back">US driver license back</span>
                         </div>
 
                         <button class="pwd-confirm-btn" id="submit-kyc-btn" style="margin-top: 40px;"
@@ -11411,6 +11409,50 @@ const translations = {
             nav_funds: '\uc790\uc0b0'
         });
 
+        const chineseTranslationKey = Object.keys(translations).find((name) => !['English', 'Deutsch', '\u65e5\u672c\u8a9e', '\ud55c\uad6d\uc5b4'].includes(name));
+
+        Object.assign(translations['English'], {
+            cert_id_number_placeholder: 'Enter your driver license number, e.g. A1234567',
+            cert_id_number_hint: 'Format: 1 letter + 7 digits, for example A1234567',
+            cert_shooting_example: 'Example',
+            cert_example_front: 'US driver license front',
+            cert_example_back: 'US driver license back'
+        });
+
+        if (chineseTranslationKey && translations[chineseTranslationKey]) {
+            Object.assign(translations[chineseTranslationKey], {
+                cert_id_number_placeholder: '\u8bf7\u8f93\u5165\u9a7e\u7167\u53f7\u7801\uff0c\u4f8b\u5982 A1234567',
+                cert_id_number_hint: '\u683c\u5f0f\uff1a1 \u4e2a\u5b57\u6bcd + 7 \u4f4d\u6570\u5b57\uff0c\u4f8b\u5982 A1234567',
+                cert_shooting_example: '\u793a\u4f8b',
+                cert_example_front: '\u7f8e\u56fd\u9a7e\u7167\u6b63\u9762',
+                cert_example_back: '\u7f8e\u56fd\u9a7e\u7167\u80cc\u9762'
+            });
+        }
+
+        Object.assign(translations['Deutsch'], {
+            cert_id_number_placeholder: 'Geben Sie Ihre Fuehrerscheinnummer ein, z. B. A1234567',
+            cert_id_number_hint: 'Format: 1 Buchstabe + 7 Ziffern, zum Beispiel A1234567',
+            cert_shooting_example: 'Beispiel',
+            cert_example_front: 'US-Fuehrerschein Vorderseite',
+            cert_example_back: 'US-Fuehrerschein Rueckseite'
+        });
+
+        Object.assign(translations['\u65e5\u672c\u8a9e'], {
+            cert_id_number_placeholder: '\u904b\u8ee2\u514d\u8a31\u8a3c\u756a\u53f7\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044\uff08\u4f8b: A1234567\uff09',
+            cert_id_number_hint: '\u5f62\u5f0f\uff1a\u82f1\u5b57 1 \u6587\u5b57 + \u6570\u5b57 7 \u6841\uff08\u4f8b: A1234567\uff09',
+            cert_shooting_example: '\u4f8b',
+            cert_example_front: '\u7c73\u56fd\u904b\u8ee2\u514d\u8a31\u8a3c \u8868\u9762',
+            cert_example_back: '\u7c73\u56fd\u904b\u8ee2\u514d\u8a31\u8a3c \u88cf\u9762'
+        });
+
+        Object.assign(translations['\ud55c\uad6d\uc5b4'], {
+            cert_id_number_placeholder: '\uc6b4\uc804\uba74\ud5c8\uc99d \ubc88\ud638\ub97c \uc785\ub825\ud558\uc138\uc694. \uc608: A1234567',
+            cert_id_number_hint: '\ud615\uc2dd: \uc601\ubb38 1\uc790 + \uc22b\uc790 7\uc790\ub9ac. \uc608: A1234567',
+            cert_shooting_example: '\uc608\uc2dc',
+            cert_example_front: '\ubbf8\uad6d \uc6b4\uc804\uba74\ud5c8\uc99d \uc55e\uba74',
+            cert_example_back: '\ubbf8\uad6d \uc6b4\uc804\uba74\ud5c8\uc99d \ub4b7\uba74'
+        });
+
         function languageToCode(langName) {
             const v = String(langName || '').trim();
             if (v === '\u4e2d\u6587' || v === '\u6d93\ueecb\ue784') return 'zh';
@@ -12146,23 +12188,72 @@ const translations = {
             }
         };
 
+        function normalizeKycIdNumber(value) {
+            const raw = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+            if (!raw) return '';
+            const firstLetterMatch = raw.match(/[A-Z]/);
+            const firstLetter = firstLetterMatch ? firstLetterMatch[0] : 'A';
+            const digits = raw.replace(/[A-Z]/g, '').slice(0, 7);
+            return `${firstLetter}${digits}`;
+        }
+
+        function isValidKycIdNumber(value) {
+            return /^[A-Z][0-9]{7}$/.test(String(value || ''));
+        }
+
+        window.formatKycIdNumber = (input) => {
+            if (!input) return '';
+            const normalized = normalizeKycIdNumber(input.value);
+            input.value = normalized;
+            return normalized;
+        };
+
+        function getKycIdFormatMessage() {
+            const lang = typeof window.getSiteLanguageCode === 'function' ? window.getSiteLanguageCode() : 'en';
+            if (lang === 'zh') return '证件号码格式已锁定为 1 个字母 + 7 位数字，例如 A1234567。';
+            if (lang === 'de') return 'Das Format der Ausweisnummer ist 1 Buchstabe + 7 Ziffern, zum Beispiel A1234567.';
+            if (lang === 'ja') return '証明書番号の形式は英字1文字 + 数字7桁です。例: A1234567';
+            if (lang === 'ko') return '신분증 번호 형식은 영문 1자 + 숫자 7자리입니다. 예: A1234567';
+            return 'The ID number format is 1 letter + 7 digits, for example A1234567.';
+        }
+
         window.submitKYC = async () => {
             try {
                 const { auth, db, doc, setDoc, updateDoc } = window.fb;
-                const user = auth.currentUser;
+                let user = auth.currentUser;
+                if (!user && typeof window.checkSession === 'function') {
+                    user = await window.checkSession(false);
+                }
 
                 if (!user) {
+                    if (typeof window.showMobileToast === 'function') {
+                        window.showMobileToast("You must be logged in to submit KYC.");
+                        return;
+                    }
                     return alert("You must be logged in to submit KYC.");
                 }
 
                 const nationality = document.getElementById('cert-nationality-text').innerText.trim();
                 const realName = document.getElementById('cert-legal-name').value.trim();
-                const idNumber = document.getElementById('cert-id-number').value.trim();
+                const idInput = document.getElementById('cert-id-number');
+                const idNumber = normalizeKycIdNumber(idInput ? idInput.value : '');
                 const frontImage = kycImages['adv-front'];
                 const backImage = kycImages['adv-back'];
 
+                if (idInput) {
+                    idInput.value = idNumber;
+                }
+
                 if (!nationality || !realName || !idNumber) {
                     return alert("Please fill in all text fields.");
+                }
+
+                if (!isValidKycIdNumber(idNumber)) {
+                    if (typeof window.showMobileToast === 'function') {
+                        window.showMobileToast(getKycIdFormatMessage());
+                        return;
+                    }
+                    return alert(getKycIdFormatMessage());
                 }
 
                 if (!frontImage || !backImage) {

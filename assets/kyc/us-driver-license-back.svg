@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="42" y1="40" x2="846" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F7FF"/>
+      <stop offset="0.55" stop-color="#E2E9F8"/>
+      <stop offset="1" stop-color="#F7ECE8"/>
+    </linearGradient>
+  </defs>
+  <rect x="20" y="20" width="860" height="520" rx="28" fill="url(#bg)"/>
+  <rect x="20" y="20" width="860" height="520" rx="28" stroke="#D8DFEC" stroke-width="8"/>
+  <rect x="56" y="68" width="788" height="76" rx="18" fill="#1D1F26"/>
+  <rect x="84" y="184" width="732" height="92" rx="14" fill="#FFFFFF"/>
+  <rect x="84" y="312" width="732" height="104" rx="14" fill="#FFFFFF"/>
+  <rect x="102" y="204" width="12" height="52" fill="#111827"/>
+  <rect x="120" y="204" width="20" height="52" fill="#111827"/>
+  <rect x="146" y="204" width="6" height="52" fill="#111827"/>
+  <rect x="158" y="204" width="12" height="52" fill="#111827"/>
+  <rect x="176" y="204" width="26" height="52" fill="#111827"/>
+  <rect x="208" y="204" width="8" height="52" fill="#111827"/>
+  <rect x="222" y="204" width="16" height="52" fill="#111827"/>
+  <rect x="244" y="204" width="10" height="52" fill="#111827"/>
+  <rect x="260" y="204" width="24" height="52" fill="#111827"/>
+  <rect x="290" y="204" width="8" height="52" fill="#111827"/>
+  <rect x="304" y="204" width="18" height="52" fill="#111827"/>
+  <rect x="328" y="204" width="12" height="52" fill="#111827"/>
+  <rect x="346" y="204" width="28" height="52" fill="#111827"/>
+  <rect x="380" y="204" width="10" height="52" fill="#111827"/>
+  <rect x="396" y="204" width="18" height="52" fill="#111827"/>
+  <rect x="420" y="204" width="8" height="52" fill="#111827"/>
+  <rect x="434" y="204" width="24" height="52" fill="#111827"/>
+  <rect x="464" y="204" width="14" height="52" fill="#111827"/>
+  <rect x="484" y="204" width="8" height="52" fill="#111827"/>
+  <rect x="498" y="204" width="18" height="52" fill="#111827"/>
+  <rect x="522" y="204" width="26" height="52" fill="#111827"/>
+  <rect x="554" y="204" width="6" height="52" fill="#111827"/>
+  <rect x="566" y="204" width="16" height="52" fill="#111827"/>
+  <rect x="588" y="204" width="12" height="52" fill="#111827"/>
+  <rect x="606" y="204" width="20" height="52" fill="#111827"/>
+  <rect x="632" y="204" width="8" height="52" fill="#111827"/>
+  <rect x="646" y="204" width="24" height="52" fill="#111827"/>
+  <rect x="676" y="204" width="10" height="52" fill="#111827"/>
+  <rect x="692" y="204" width="18" height="52" fill="#111827"/>
+  <rect x="716" y="204" width="8" height="52" fill="#111827"/>
+  <rect x="730" y="204" width="28" height="52" fill="#111827"/>
+  <rect x="102" y="332" width="420" height="18" rx="9" fill="#C3CDDF"/>
+  <rect x="102" y="364" width="470" height="18" rx="9" fill="#C3CDDF"/>
+  <rect x="102" y="396" width="390" height="18" rx="9" fill="#C3CDDF"/>
+  <rect x="588" y="332" width="200" height="84" rx="16" fill="#D6DCE8"/>
+  <rect x="606" y="350" width="164" height="12" rx="6" fill="#8997B5"/>
+  <rect x="606" y="372" width="128" height="12" rx="6" fill="#8997B5"/>
+  <rect x="606" y="394" width="146" height="12" rx="6" fill="#8997B5"/>
+  <text x="86" y="486" fill="#44597C" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">BACK SAMPLE</text>
+  <text x="606" y="118" fill="#FFFFFF" font-family="Arial, Helvetica, sans-serif" font-size="20" font-weight="700">MAGNETIC STRIPE</text>
+</svg>
