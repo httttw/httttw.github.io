@@ -9998,14 +9998,9 @@
                                 </div>
                                 <div
                                     style="font-size:13px; color:#999; display:flex; justify-content:space-between; margin-bottom:12px;">
-                                    <span>Contract Value</span>
+                                    <span>Order Amount</span>
                                     <span id="contract-futures-amount" style="color: #fff; font-weight:500;">0
                                         USDT</span>
-                                </div>
-                                <div
-                                    style="font-size:13px; color:#999; display:flex; justify-content:space-between; margin-bottom:12px;">
-                                    <span>Margin</span>
-                                    <span id="contract-margin" style="color: #fff; font-weight:500;">0 USDT</span>
                                 </div>
                                 <div
                                     style="font-size:13px; color:#999; display:flex; justify-content:space-between; margin-bottom:20px;">
@@ -13524,9 +13519,8 @@ const translations = {
 
         function getContractMaxLots() {
             const available = getAvailableUsdtBalance();
-            const leverage = Number(window.currentLeverage) || 1;
             const contractUnit = getContractUnitValue();
-            return Math.max(0, Math.floor((available * leverage) / contractUnit));
+            return contractUnit > 0 ? Math.max(0, Math.floor(available / contractUnit)) : 0;
         }
 
         const deliveryTradeRules = {
@@ -13629,17 +13623,16 @@ const translations = {
             let lots = Number.isFinite(lotsRaw) ? Math.max(0, Math.floor(lotsRaw)) : 0;
             lots = Math.min(lots, maxLots);
 
-            const futuresAmount = lots * contractUnit;
-            const margin = futuresAmount / currentLeverage;
-            const handlingFee = futuresAmount * getTradeFeeRate();
+            const orderAmount = lots * contractUnit;
+            const handlingFee = orderAmount * getTradeFeeRate();
 
             totalInput.value = lots > 0 ? String(lots) : '';
             if (unitEl) unitEl.innerText = `${contractUnit} USDT/Lot`;
             if (lotSizeEl) lotSizeEl.innerText = `${lots} Lot`;
             if (availableEl) availableEl.innerText = `${available.toFixed(2)} USDT`;
             if (maxLotsEl) maxLotsEl.innerText = `${maxLots} Lot`;
-            futuresAmountEl.innerText = (futuresAmount % 1 === 0 ? futuresAmount.toFixed(0) : futuresAmount.toFixed(2)) + ' USDT';
-            marginEl.innerText = (margin % 1 === 0 ? margin.toFixed(0) : margin.toFixed(2)) + ' USDT';
+            futuresAmountEl.innerText = (orderAmount % 1 === 0 ? orderAmount.toFixed(0) : orderAmount.toFixed(2)) + ' USDT';
+            if (marginEl) marginEl.innerText = '--';
             feeEl.innerText = handlingFee.toFixed(2) + ' USDT';
 
             if (syncSlider) {
@@ -14744,7 +14737,7 @@ const translations = {
                 },
                 { label: 'Amount', value: `${formatOrderDetailNumber(amount, 2)} USDT` },
                 { label: 'Closable Amount', value: `${formatOrderDetailNumber(closableAmount, 2)} USDT` },
-                { label: 'Margin', value: `${formatOrderDetailNumber(margin, 2)} USDT` },
+                { label: 'Used Amount', value: `${formatOrderDetailNumber(margin, 2)} USDT` },
                 { label: 'Yield', value: `${formatOrderDetailSigned(amountYieldPct, 2, '%')}` },
                 { label: 'Gross P/L (Before Fee)', value: `${formatOrderDetailSigned(rawPnlValue, 2)} USDT` },
                 { label: 'Handling Fee', value: `${formatOrderDetailNumber(fee, 4)} USDT` },
@@ -15006,7 +14999,7 @@ const translations = {
                         </div>
 
                         <div style="display:flex; justify-content:space-between; gap:8px; font-size:12px; color:#999; margin-bottom:8px;">
-                            <span>Margin: <b style="color:#fff; font-weight:600;">${(parseFloat(trade.margin) || (parseFloat(trade.amount || 0) / parseFloat(trade.leverage || 1))).toFixed(2)} USDT</b></span>
+                            <span>Used: <b style="color:#fff; font-weight:600;">${(parseFloat(trade.margin) || parseFloat(trade.amount || 0)).toFixed(2)} USDT</b></span>
                             <span>Entry: <b style="color:#fff; font-weight:600;">${parseFloat(trade.price || 0).toFixed(2)}</b></span>
                         </div>
 
@@ -17581,7 +17574,7 @@ No transfer fees for account transfer / exchange</div>
                 <div><span>Side</span><b>${payload.direction}</b></div>
                 <div><span>Lots</span><b>${payload.lots}</b></div>
                 <div><span>Contract Unit</span><b>${payload.contractUnit} USDT/Lot</b></div>
-                <div><span>Contract Value</span><b>${Number(payload.notional).toFixed(2)} USDT</b></div>
+                <div><span>Order Amount</span><b>${Number(payload.notional).toFixed(2)} USDT</b></div>
                 <div><span>Entry</span><b>${Number(payload.entryPrice).toFixed(2)}</b></div>
                 <div><span>TP / SL</span><b>${tpValue} / ${slValue}</b></div>
                 <div><span>Order ID</span><b class="trade-open-order-id">${payload.tradeId}</b></div>
@@ -17620,7 +17613,7 @@ No transfer fees for account transfer / exchange</div>
             const notional = lots * contractUnit;
             const takeProfit = tpRaw ? parseFloat(tpRaw) : null;
             const stopLoss = slRaw ? parseFloat(slRaw) : null;
-            const margin = notional / leverage;
+            const margin = notional;
             const openFee = 0;
 
             if (!lotsInput || isNaN(lots) || lots <= 0) {
