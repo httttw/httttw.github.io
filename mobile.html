@@ -95,6 +95,7 @@
             'kyc-submitted',
             'country-selector',
             'profile',
+            'profile-edit',
             'language',
             'crypto',
             'support',
@@ -300,6 +301,8 @@
                         window.currentKycStatus = kycStatus;
                         window.kycGateActive = !isKycCompleted(kycStatus);
                         window.toggleKycGateBanner(window.kycGateActive && sessionStorage.getItem('mobile_session_active') === 'true');
+                        window.currentMobileProfileUid = user.uid;
+                        window.currentMobileProfileData = userData;
                         const displayName = userData.name || userData.email?.split('@')[0] || 'User';
                         const displayId = resolveDisplayUserId(userData, user.uid);
 
@@ -1349,6 +1352,32 @@
         .user-name-box p {
             font-size: 12px;
             color: rgba(255, 255, 255, 0.6);
+        }
+
+        .profile-edit-trigger {
+            margin-left: auto;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 50%;
+            background: #eee;
+            color: #6a35ff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 3;
+            touch-action: manipulation;
+            pointer-events: auto;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .user-header-section>div:last-of-type {
+            display: none !important;
         }
 
         .profile-assets-card {
@@ -5676,12 +5705,14 @@
         }
 
         /* --- SAFE INTERNAL FORMS SCOPED THEME --- */
+        #profile-edit-screen .pwd-label,
         #modify-login-password-screen .pwd-label,
         #modify-fund-password-screen .pwd-label,
         #manual-reset-screen .pwd-label {
             color: rgba(255, 255, 255, 0.7);
         }
 
+        #profile-edit-screen .pwd-input-wrapper,
         #modify-login-password-screen .pwd-input-wrapper,
         #modify-fund-password-screen .pwd-input-wrapper,
         #manual-reset-screen .pwd-input-wrapper {
@@ -5690,12 +5721,14 @@
             border-radius: 4px;
         }
 
+        #profile-edit-screen .pwd-input,
         #modify-login-password-screen .pwd-input,
         #modify-fund-password-screen .pwd-input,
         #manual-reset-screen .pwd-input {
             color: #ffffff;
         }
 
+        #profile-edit-screen .pwd-input::placeholder,
         #modify-login-password-screen .pwd-input::placeholder,
         #modify-fund-password-screen .pwd-input::placeholder,
         #manual-reset-screen .pwd-input::placeholder {
@@ -5708,6 +5741,7 @@
             color: rgba(255, 255, 255, 0.4);
         }
 
+        #profile-edit-screen .pwd-hint,
         #modify-login-password-screen .pwd-hint,
         #modify-fund-password-screen .pwd-hint,
         #manual-reset-screen .pwd-hint {
@@ -6452,6 +6486,8 @@
                             <h2 id="profile-username">User</h2>
                             <p>ID: <span id="profile-id">---</span></p>
                         </div>
+                        <button type="button" id="profile-edit-trigger" class="profile-edit-trigger" onclick="openProfileEditor()"
+                            aria-label="Edit profile">&#9998;</button>
                         <div
                             style="margin-left:auto; background:#eee; padding:5px; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:#6a35ff;">
                             ✎</div>
@@ -6647,6 +6683,36 @@
                                 style="color:#FF4757; text-align:center; flex-grow:0; font-weight:700;"
                                 data-t-key="prof_logout">Logout</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile-edit-screen" class="screen hidden"
+                style="height: 100%; display: flex; flex-direction: column; background: #1a0b2e;">
+                <div class="profile-top-bar"
+                    style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); justify-content: flex-start; gap: 20px;">
+                    <span onclick="goBack()" style="cursor:pointer; color: #fff;">&lt;</span>
+                    <span style="font-size: 18px; font-weight: 500; color: #ffffff;">Edit profile</span>
+                </div>
+                <div class="scroll-area">
+                    <div class="pwd-content">
+                        <div class="pwd-group">
+                            <label class="pwd-label" for="profile-edit-name">Nickname</label>
+                            <div class="pwd-input-wrapper">
+                                <input type="text" id="profile-edit-name" class="pwd-input" maxlength="24"
+                                    placeholder="Please enter your nickname">
+                            </div>
+                            <div class="pwd-hint">Shown on your profile page</div>
+                        </div>
+                        <div class="pwd-group">
+                            <label class="pwd-label" for="profile-edit-id">Account ID</label>
+                            <div class="pwd-input-wrapper">
+                                <input type="text" id="profile-edit-id" class="pwd-input" readonly>
+                            </div>
+                            <div class="pwd-hint">Account ID cannot be changed</div>
+                        </div>
+                        <button id="profile-edit-save-btn" class="pwd-confirm-btn"
+                            onclick="saveProfileChanges()">Save</button>
                     </div>
                 </div>
             </div>
@@ -11661,6 +11727,7 @@ const translations = {
         window.currentTradeFooterTab = 'positions';
         window.currentContractHistoryView = 'history';
         let navigationStack = [];
+        let profileEditSubmitting = false;
         let tradeEntrySource = '';
         let currentTradeTab = 'spot';
         window.withdrawHistoryAll = [];
@@ -11958,6 +12025,108 @@ const translations = {
             if (matched) return matched[1];
             return buildDeterministicUserId(uid);
         }
+
+        function hydrateProfileEditor() {
+            const userData = window.currentMobileProfileData || {};
+            const uid = window.currentMobileProfileUid || auth.currentUser?.uid || '';
+            const nameInput = document.getElementById('profile-edit-name');
+            const idInput = document.getElementById('profile-edit-id');
+            if (nameInput) {
+                nameInput.value = String(userData.name || userData.email?.split('@')[0] || '').trim();
+            }
+            if (idInput) {
+                idInput.value = resolveDisplayUserId(userData, uid);
+            }
+        }
+
+        function openProfileEditor() {
+            hydrateProfileEditor();
+            if (typeof showScreen === 'function') {
+                showScreen('profile-edit');
+            }
+        }
+        window.openProfileEditor = openProfileEditor;
+        document.addEventListener('click', (event) => {
+            const trigger = event.target && event.target.closest ? event.target.closest('#profile-edit-trigger') : null;
+            if (!trigger) return;
+            event.preventDefault();
+            event.stopPropagation();
+            openProfileEditor();
+        });
+
+        async function saveProfileChanges() {
+            if (profileEditSubmitting) return;
+            const nameInput = document.getElementById('profile-edit-name');
+            const saveBtn = document.getElementById('profile-edit-save-btn');
+            const nextName = String(nameInput?.value || '').trim();
+
+            if (!nextName) {
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Please enter a nickname.');
+                }
+                if (nameInput) nameInput.focus();
+                return;
+            }
+
+            if (nextName.length > 24) {
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Nickname must be 24 characters or fewer.');
+                }
+                if (nameInput) nameInput.focus();
+                return;
+            }
+
+            let user = auth.currentUser;
+            if (!user) {
+                user = await checkSession(false);
+            }
+            if (!user) {
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Please log in first.');
+                }
+                return;
+            }
+
+            profileEditSubmitting = true;
+            const originalBtnText = saveBtn ? saveBtn.textContent : '';
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = 'Saving...';
+            }
+
+            try {
+                await updateDoc(doc(db, 'users', user.uid), {
+                    name: nextName
+                });
+
+                const currentData = window.currentMobileProfileData || {};
+                window.currentMobileProfileUid = user.uid;
+                window.currentMobileProfileData = {
+                    ...currentData,
+                    name: nextName
+                };
+
+                const nameEl = document.getElementById('profile-username');
+                if (nameEl) nameEl.innerText = nextName;
+
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast('Profile updated successfully.');
+                }
+                goBack();
+            } catch (error) {
+                console.error('Profile update failed:', error);
+                if (typeof window.showMobileToast === 'function') {
+                    window.showMobileToast(error.message || 'Failed to update profile. Please try again.');
+                }
+            } finally {
+                profileEditSubmitting = false;
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = originalBtnText || 'Save';
+                }
+            }
+        }
+        window.saveProfileChanges = saveProfileChanges;
 
         function isLoginCredentialError(error) {
             const code = String(error && error.code || '').toLowerCase();
@@ -13627,6 +13796,7 @@ const translations = {
             toggleScreen('funds-screen', target === 'funds');
             if (target === 'funds') console.log("Rendering: FundsComponent");
             toggleScreen('profile-screen', target === 'profile');
+            toggleScreen('profile-edit-screen', target === 'profile-edit');
             toggleScreen('deposit-screen', target === 'deposit');
             toggleScreen('withdraw-screen', target === 'withdraw');
             toggleScreen('history-screen', target === 'history');
@@ -13702,6 +13872,7 @@ const translations = {
                 'payment-method', 'all-payment-methods', 'paypal-config',
                 'bank-card-config', 'coin-collection-config', 'consume-record',
                 'certification-center', 'advanced-certification', 'kyc-submitted', 'country-selector',
+                'profile-edit',
                 'language', 'crypto', 'supportChatScreen', 'fais',
                 'helpCenterScreen', 'questionDetailsScreen', 'aboutUsScreen',
                 'privacyPolicyScreen', 'termsOfServiceScreen', 'withdraw', 'announcement-details', 'kline'
@@ -13740,7 +13911,10 @@ const translations = {
                 if (countrySearch) countrySearch.value = '';
                 renderCountryList();
             }
-            if (target !== 'funds' && target !== 'profile' && target !== 'deposit' && target !== 'history' && target !== 'order-detail' && target !== 'flash-history' && target !== 'trade') {
+            if (target === 'profile-edit') {
+                hydrateProfileEditor();
+            }
+            if (target !== 'funds' && target !== 'profile' && target !== 'profile-edit' && target !== 'deposit' && target !== 'history' && target !== 'order-detail' && target !== 'flash-history' && target !== 'trade') {
                 renderList(currentActiveTab, target === 'homeScreen' ? 'home-list-box' : 'market-list-box');
             }
         }
