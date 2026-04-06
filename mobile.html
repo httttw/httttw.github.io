@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260406b';
+            const mobileBuildId = '20260406c';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -4128,12 +4128,13 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: calc(100% - max(var(--ec-bottom-nav-height, 84px), var(--ec-keyboard-offset, 0px)));
-            background: #fff;
-            color: #333;
+            height: 100%;
+            background: #111218;
+            color: #fff;
             z-index: 1001;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         .chat-header {
@@ -4141,8 +4142,9 @@
             justify-content: space-between;
             align-items: center;
             padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             min-height: calc(56px + env(safe-area-inset-top, 0px));
+            background: #111218;
         }
 
         .chat-header-left {
@@ -4154,7 +4156,7 @@
         .chat-back {
             font-size: 20px;
             cursor: pointer;
-            color: #333;
+            color: rgba(255, 255, 255, 0.86);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -4186,13 +4188,13 @@
         .chat-header-title {
             font-weight: 700;
             font-size: 15px;
-            color: #1a0b2e;
+            color: #8d58ff;
         }
 
         .chat-close {
             font-size: 20px;
             cursor: pointer;
-            color: #333;
+            color: rgba(255, 255, 255, 0.86);
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -4210,24 +4212,26 @@
             flex-direction: column;
             gap: 16px;
             min-height: 0;
+            background: #111218;
         }
 
         .chat-notice {
             text-align: center;
             font-size: 13px;
-            color: #888;
+            color: rgba(255, 255, 255, 0.58);
             line-height: 1.5;
             padding: 0 20px;
             margin-top: 10px;
         }
 
         .chat-input-area {
-            padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
-            border-top: 1px solid #f0f0f0;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             gap: 12px;
             background: #fff;
+            flex-shrink: 0;
         }
 
         .chat-field-container {
@@ -4256,6 +4260,10 @@
             color: #333;
         }
 
+        .chat-input::placeholder {
+            color: #8f8f8f;
+        }
+
         .chat-send-btn {
             width: 32px;
             height: 32px;
@@ -4267,6 +4275,19 @@
             justify-content: center;
             cursor: pointer;
             font-size: 14px;
+        }
+
+        .support-chat-footer {
+            background: rgba(18, 6, 28, 0.96);
+            border-top: 1px solid rgba(124, 58, 237, 0.22);
+        }
+
+        .support-chat-footer .support-footer-item {
+            color: rgba(255, 255, 255, 0.74);
+        }
+
+        .support-chat-footer .support-footer-item.active {
+            color: #ffffff;
         }
 
         /* Chat Bubbles */
@@ -7736,6 +7757,17 @@
                         onkeypress="if(event.key==='Enter') sendChatMessage()">
                 </div>
                 <div class="chat-send-btn" onclick="sendChatMessage()">$</div>
+            </div>
+            <div class="support-footer support-chat-footer">
+                <div class="support-footer-item" onclick="showScreen('supportScreen')">
+                    <span class="support-footer-icon">鈱?/span>
+                    <span>Home</span>
+                </div>
+                <div class="support-footer-item active" onclick="showScreen('supportChatScreen')">
+                    <span id="support-chat-footer-badge" class="nav-badge"></span>
+                    <span class="support-footer-icon">鉁?/span>
+                    <span>Messages</span>
+                </div>
             </div>
         </div>
 
@@ -13715,7 +13747,7 @@ const translations = {
             const authVisible = !authScreen.classList.contains('hidden');
             const appVisible = !appScreen.classList.contains('hidden');
             const current = normalizeScreenTarget(currentScreen);
-            const shouldUseSupportFooterOnly = current === 'supportScreen';
+            const shouldUseSupportFooterOnly = current === 'supportScreen' || current === 'supportChatScreen';
             appScreen.classList.toggle('bottom-nav-hidden', shouldUseSupportFooterOnly);
             document.body.classList.toggle('support-footer-only', shouldUseSupportFooterOnly);
             if (appVisible && !authVisible && !shouldUseSupportFooterOnly) {
@@ -17892,6 +17924,7 @@ No transfer fees for account transfer / exchange</div>
                 const dot = document.getElementById('headset-dot');
                 const navBadge = document.getElementById('support-nav-badge');
                 const footerBadge = document.getElementById('support-footer-badge');
+                const chatFooterBadge = document.getElementById('support-chat-footer-badge');
 
                 if (unreadCount > 0) {
                     if (dot) dot.style.display = 'block';
@@ -17903,10 +17936,15 @@ No transfer fees for account transfer / exchange</div>
                         footerBadge.style.display = 'block';
                         footerBadge.textContent = unreadCount;
                     }
+                    if (chatFooterBadge) {
+                        chatFooterBadge.style.display = 'block';
+                        chatFooterBadge.textContent = unreadCount;
+                    }
                 } else {
                     if (dot) dot.style.display = 'none';
                     if (navBadge) navBadge.style.display = 'none';
                     if (footerBadge) footerBadge.style.display = 'none';
+                    if (chatFooterBadge) chatFooterBadge.style.display = 'none';
                 }
             });
         }
