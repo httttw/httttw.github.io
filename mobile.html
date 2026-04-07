@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260406c';
+            const mobileBuildId = '20260407a';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -265,8 +265,10 @@
                 const userRef = doc(db, 'users', user.uid);
                 onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        // ONLY SHOW APP SCREEN IF PROFILE EXISTS AND EXPLICITLY LOGGED IN ON MOBILE
-                        if (sessionStorage.getItem('mobile_session_active') === 'true') {
+                        const isMobileSessionActive = sessionStorage.getItem('mobile_session_active') === 'true';
+                        const isSignupFlow = window.__mobileSignupInProgress === true;
+                        // Signup creates the auth session before profile sync finishes, so keep that flow active.
+                        if (isMobileSessionActive || isSignupFlow) {
                             if (appScreen) appScreen.classList.remove('hidden');
                             if (authScreen) authScreen.classList.add('hidden');
                             document.body.classList.add('app-open');
@@ -300,7 +302,7 @@
                         const kycStatus = userData.kyc_status || 'Not Verified';
                         window.currentKycStatus = kycStatus;
                         window.kycGateActive = !isKycCompleted(kycStatus);
-                        window.toggleKycGateBanner(window.kycGateActive && sessionStorage.getItem('mobile_session_active') === 'true');
+                        window.toggleKycGateBanner(window.kycGateActive && (sessionStorage.getItem('mobile_session_active') === 'true' || window.__mobileSignupInProgress === true));
                         window.currentMobileProfileUid = user.uid;
                         window.currentMobileProfileData = userData;
                         const displayName = userData.name || userData.email?.split('@')[0] || 'User';
@@ -12377,6 +12379,12 @@ const translations = {
 
             window.__mobileSignupSubmitting = true;
             window.__mobileSignupInProgress = true;
+            sessionStorage.setItem('mobile_session_active', 'true');
+            if (typeof window.markMobileSessionGrantNow === 'function') {
+                window.markMobileSessionGrantNow();
+            } else {
+                localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
+            }
             if (signupBtn) {
                 signupBtn.disabled = true;
                 signupBtn.innerText = 'Creating...';
@@ -12430,6 +12438,7 @@ const translations = {
                 }
             } catch (error) {
                 console.error("Signup/Sync error:", error);
+                sessionStorage.removeItem('mobile_session_active');
                 if (error.code === 'auth/email-already-in-use') {
                     msg.innerHTML = '<span class="error-text">This account is already registered. Please login directly.</span>';
                 } else if (error.code === 'auth/network-request-failed') {
