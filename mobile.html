@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260407a';
+            const mobileBuildId = '20260407b';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -76,6 +76,7 @@
         window.currentKycStatus = 'Not Verified';
         window.kycGateActive = false;
         window.__mobileSignupInProgress = false;
+        window.__mobileLoginInProgress = false;
         const MOBILE_SESSION_GRACE_MS = 15 * 60 * 1000;
         function hasFreshMobileSessionGrant() {
             const tsRaw = Number(localStorage.getItem('ec_mobile_session_grant_ts') || 0);
@@ -267,8 +268,9 @@
                     if (docSnap.exists()) {
                         const isMobileSessionActive = sessionStorage.getItem('mobile_session_active') === 'true';
                         const isSignupFlow = window.__mobileSignupInProgress === true;
+                        const isLoginFlow = window.__mobileLoginInProgress === true;
                         // Signup creates the auth session before profile sync finishes, so keep that flow active.
-                        if (isMobileSessionActive || isSignupFlow) {
+                        if (isMobileSessionActive || isSignupFlow || isLoginFlow) {
                             if (appScreen) appScreen.classList.remove('hidden');
                             if (authScreen) authScreen.classList.add('hidden');
                             document.body.classList.add('app-open');
@@ -302,7 +304,7 @@
                         const kycStatus = userData.kyc_status || 'Not Verified';
                         window.currentKycStatus = kycStatus;
                         window.kycGateActive = !isKycCompleted(kycStatus);
-                        window.toggleKycGateBanner(window.kycGateActive && (sessionStorage.getItem('mobile_session_active') === 'true' || window.__mobileSignupInProgress === true));
+                        window.toggleKycGateBanner(window.kycGateActive && (sessionStorage.getItem('mobile_session_active') === 'true' || window.__mobileSignupInProgress === true || window.__mobileLoginInProgress === true));
                         window.currentMobileProfileUid = user.uid;
                         window.currentMobileProfileData = userData;
                         const displayName = userData.name || userData.email?.split('@')[0] || 'User';
@@ -362,8 +364,8 @@
                         localStorage.setItem('ec_user', user.email);
                     } else {
                         // ZOMBIE SESSION: Auth exists but Firestore record is gone
-                        if (window.__mobileSignupInProgress) {
-                            console.log("Mobile: Auth user detected before profile sync completes; waiting during signup.");
+                        if (window.__mobileSignupInProgress || window.__mobileLoginInProgress) {
+                            console.log("Mobile: Auth user detected before profile sync completes; waiting during auth handoff.");
                             return;
                         }
                         console.warn("Mobile: Auth user exists but Firestore record missing. Signing out for safety.");
@@ -12598,6 +12600,7 @@ const translations = {
 
             if (!input || !pass) return msg.innerHTML = '<span class="error-text">Please enter credentials</span>';
             window.__mobileLoginSubmitting = true;
+            window.__mobileLoginInProgress = true;
             setMobileLoginLoading(true);
             msg.innerHTML = '<span class="success-text">Signing in...</span>';
 
@@ -12688,6 +12691,7 @@ const translations = {
                 }
             } catch (error) {
                 console.error("Login error:", error);
+                sessionStorage.removeItem('mobile_session_active');
                 const code = String(error && error.code || '').toLowerCase();
                 if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
                     if (isAccountMode) {
@@ -12703,6 +12707,7 @@ const translations = {
                     msg.innerHTML = `<span class="error-text">${getReadableAuthErrorMessage(error, 'Login failed. Please try again.')}</span>`;
                 }
             } finally {
+                window.__mobileLoginInProgress = false;
                 window.__mobileLoginSubmitting = false;
                 setMobileLoginLoading(false);
             }
