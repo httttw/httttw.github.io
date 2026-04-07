@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260407e';
+            const mobileBuildId = '20260407f';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -17990,7 +17990,7 @@ No transfer fees for account transfer / exchange</div>
     </script>
 
     <script type="module">
-        import { db, auth, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, setDoc, getDoc, checkSession, updateDoc, increment, onAuthStateChanged } from './firebase-config.js';
+        import { db, auth, collection, addDoc, onSnapshot, query, where, orderBy, serverTimestamp, doc, setDoc, getDoc, checkSession, updateDoc, increment, onAuthStateChanged } from './firebase-config.js';
 
         let chatUnsubscribe = null;
         let unreadUnsubscribe = null;
@@ -18056,6 +18056,10 @@ No transfer fees for account transfer / exchange</div>
         async function initChat() {
             const user = await checkSession(false);
             if (!user) return;
+            const chatScreen = document.getElementById('supportChatScreen');
+            if (!chatScreen || chatScreen.classList.contains('hidden')) {
+                return;
+            }
 
             const uid = user.uid;
             const name = user.displayName || user.email || user.phoneNumber || 'User';
@@ -18090,10 +18094,15 @@ No transfer fees for account transfer / exchange</div>
             chatUnsubscribe = onSnapshot(q, (snapshot) => {
                 const container = document.getElementById('chat-main-area');
                 if (!container) return;
+                const activeChatScreen = document.getElementById('supportChatScreen');
+                if (!activeChatScreen || activeChatScreen.classList.contains('hidden')) return;
                 container.innerHTML = '';
                 let messageCount = 0;
+                const messageDocs = Array.isArray(snapshot.docs) && snapshot.docs.length
+                    ? snapshot.docs.slice(-40)
+                    : [];
 
-                snapshot.forEach((doc) => {
+                const renderDoc = (doc) => {
                     const data = doc.data();
                     const row = document.createElement('div');
                     const isAdmin = data.sender === 'admin';
@@ -18103,13 +18112,19 @@ No transfer fees for account transfer / exchange</div>
                         row.innerHTML = `<div class="chat-bubble-text admin-msg">${data.text}</div>`;
                     } else if (data.type === 'image') {
                         const imageSrc = data.image_url || data.text;
-                        row.innerHTML = `<div class="chat-bubble-img"><img src="${imageSrc}"></div>`;
+                        row.innerHTML = `<div class="chat-bubble-img"><img loading="lazy" decoding="async" src="${imageSrc}"></div>`;
                     } else {
                         row.innerHTML = `<div class="chat-bubble-text">${data.text}</div>`;
                     }
                     container.appendChild(row);
                     messageCount += 1;
-                });
+                };
+
+                if (messageDocs.length) {
+                    messageDocs.forEach(renderDoc);
+                } else {
+                    snapshot.forEach(renderDoc);
+                }
                 if (messageCount === 0) {
                     renderChatNotice(container, CHAT_EMPTY_NOTICE);
                     return;
@@ -18625,35 +18640,21 @@ No transfer fees for account transfer / exchange</div>
             if (!user) return;
             if (depositHistoryUnsubscribe) depositHistoryUnsubscribe();
 
-            console.log("Mobile: Listening for all deposits to filter in JS for user:", user.uid);
-
-            // Using a broader query and filtering in JS to ensure it's not a query/indexing issue
-            const q = collection(db, 'deposits');
+            const q = query(collection(db, 'deposits'), where('user_uid', '==', user.uid));
 
             depositHistoryUnsubscribe = onSnapshot(q, (snapshot) => {
                 const container = document.getElementById('hist-deposit-content');
                 if (!container) return;
 
-                console.log(`Mobile: Received deposits snapshot (${snapshot.size} docs total)`);
-
                 const userDeposits = [];
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
-                    if (d.user_uid === user.uid) {
-                        userDeposits.push({ id: docSnap.id, ...d });
-                    }
+                    userDeposits.push({ id: docSnap.id, ...d });
                 });
-
-                console.log(`Mobile: Found ${userDeposits.length} deposits for current user`);
-
-                if (userDeposits.length === 0 && snapshot.size > 0) {
-                    const firstDoc = snapshot.docs[0].data();
-                    console.log(`Mobile: DEBUG - No match. Current UID: ${user.uid}, Sample Doc UID: ${firstDoc.user_uid}, Doc ID: ${snapshot.docs[0].id}`);
-                }
 
                 let html = '<div class="history-label">Cryptocurrency</div>';
                 if (userDeposits.length === 0) {
-                    html += `<div class="no-data-msg">No data found in ${snapshot.size} records.</div>`;
+                    html += '<div class="no-data-msg">No data</div>';
                 } else {
                     userDeposits.sort((a, b) => {
                         const tA = a.timestamp ? a.timestamp.seconds : 0;
@@ -18784,18 +18785,16 @@ No transfer fees for account transfer / exchange</div>
             if (!user) return;
             if (tradeHistoryUnsubscribe) tradeHistoryUnsubscribe();
 
-            const q = collection(db, 'trades');
+            const q = query(collection(db, 'trades'), where('user_uid', '==', user.uid));
             tradeHistoryUnsubscribe = onSnapshot(q, (snapshot) => {
                 window.activeOpenTrades = [];
                 window.tradeHistoryAll = [];
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
-                    if (d.user_uid === user.uid) {
-                        if (d.status === 'Open' || d.status === 'Pending') {
-                            window.activeOpenTrades.push({ id: docSnap.id, ...d });
-                        } else {
-                            window.tradeHistoryAll.push({ id: docSnap.id, ...d });
-                        }
+                    if (d.status === 'Open' || d.status === 'Pending') {
+                        window.activeOpenTrades.push({ id: docSnap.id, ...d });
+                    } else {
+                        window.tradeHistoryAll.push({ id: docSnap.id, ...d });
                     }
                 });
 
@@ -18953,14 +18952,12 @@ No transfer fees for account transfer / exchange</div>
             if (!user) return;
             if (withdrawHistoryUnsubscribe) withdrawHistoryUnsubscribe();
 
-            const q = collection(db, 'withdrawals');
+            const q = query(collection(db, 'withdrawals'), where('user_uid', '==', user.uid));
             withdrawHistoryUnsubscribe = onSnapshot(q, (snapshot) => {
                 window.withdrawHistoryAll = [];
                 snapshot.forEach(docSnap => {
                     const d = docSnap.data();
-                    if (d.user_uid === user.uid) {
-                        window.withdrawHistoryAll.push({ id: docSnap.id, ...d });
-                    }
+                    window.withdrawHistoryAll.push({ id: docSnap.id, ...d });
                 });
 
                 // Sort by timestamp descending
@@ -18984,14 +18981,12 @@ No transfer fees for account transfer / exchange</div>
             if (!user) return;
             if (exchangeHistoryUnsubscribe) exchangeHistoryUnsubscribe();
 
-            const q = collection(db, 'exchange_orders');
+            const q = query(collection(db, 'exchange_orders'), where('user_uid', '==', user.uid));
             exchangeHistoryUnsubscribe = onSnapshot(q, (snapshot) => {
                 window.exchangeHistoryAll = [];
                 snapshot.forEach((docSnap) => {
                     const d = docSnap.data();
-                    if (d.user_uid === user.uid) {
-                        window.exchangeHistoryAll.push({ id: docSnap.id, ...d });
-                    }
+                    window.exchangeHistoryAll.push({ id: docSnap.id, ...d });
                 });
 
                 window.exchangeHistoryAll.sort((a, b) => {
@@ -19050,13 +19045,8 @@ No transfer fees for account transfer / exchange</div>
                 }
                 console.log("Mobile: User authenticated, initializing listeners...", user.uid);
                 initUnreadListener();
-                initChat();
                 initDepositSync();
-                initDepositHistoryListener(user);
-                initWithdrawHistoryListener(user);
-                initExchangeHistoryListener(user);
                 initUserBalanceListener(user);
-                initTradeHistoryListener(user);
             } else {
                 console.log("Mobile: User not authenticated, cleaning up listeners.");
                 cleanupMobileDataListeners();
@@ -19070,8 +19060,21 @@ No transfer fees for account transfer / exchange</div>
             }
             if (target === 'supportChatScreen') {
                 initChat();
+            } else if (chatUnsubscribe) {
+                chatUnsubscribe();
+                chatUnsubscribe = null;
+            }
+            const activeUser = auth.currentUser;
+            if (activeUser && target === 'history') {
+                initDepositHistoryListener(activeUser);
+                initWithdrawHistoryListener(activeUser);
+                initTradeHistoryListener(activeUser);
+            }
+            if (activeUser && target === 'flash-history') {
+                initExchangeHistoryListener(activeUser);
             }
             if (target === 'trade') {
+                if (activeUser) initTradeHistoryListener(activeUser);
                 switchTradeFooterTab(window.currentTradeFooterTab || 'positions');
             }
         };
