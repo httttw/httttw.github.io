@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260407b';
+            const mobileBuildId = '20260407c';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -86,6 +86,11 @@
             localStorage.setItem('ec_mobile_session_grant_ts', String(Date.now()));
         }
         window.markMobileSessionGrantNow = markMobileSessionGrantNow;
+        window.hasActiveMobileAppSession = function () {
+            return sessionStorage.getItem('mobile_session_active') === 'true'
+                || window.__mobileSignupInProgress === true
+                || window.__mobileLoginInProgress === true;
+        };
         if (sessionStorage.getItem('mobile_session_active') === 'true' && !hasFreshMobileSessionGrant()) {
             // Prevent stale sessions from auto-entering app after long idle or browser restore.
             sessionStorage.removeItem('mobile_session_active');
@@ -266,11 +271,8 @@
                 const userRef = doc(db, 'users', user.uid);
                 onSnapshot(userRef, (docSnap) => {
                     if (docSnap.exists()) {
-                        const isMobileSessionActive = sessionStorage.getItem('mobile_session_active') === 'true';
-                        const isSignupFlow = window.__mobileSignupInProgress === true;
-                        const isLoginFlow = window.__mobileLoginInProgress === true;
-                        // Signup creates the auth session before profile sync finishes, so keep that flow active.
-                        if (isMobileSessionActive || isSignupFlow || isLoginFlow) {
+                        // Signup/login creates the auth session before profile sync finishes, so keep those flows active.
+                        if (window.hasActiveMobileAppSession()) {
                             if (appScreen) appScreen.classList.remove('hidden');
                             if (authScreen) authScreen.classList.add('hidden');
                             document.body.classList.add('app-open');
@@ -304,7 +306,7 @@
                         const kycStatus = userData.kyc_status || 'Not Verified';
                         window.currentKycStatus = kycStatus;
                         window.kycGateActive = !isKycCompleted(kycStatus);
-                        window.toggleKycGateBanner(window.kycGateActive && (sessionStorage.getItem('mobile_session_active') === 'true' || window.__mobileSignupInProgress === true || window.__mobileLoginInProgress === true));
+                        window.toggleKycGateBanner(window.kycGateActive && window.hasActiveMobileAppSession());
                         window.currentMobileProfileUid = user.uid;
                         window.currentMobileProfileData = userData;
                         const displayName = userData.name || userData.email?.split('@')[0] || 'User';
@@ -18917,9 +18919,47 @@ No transfer fees for account transfer / exchange</div>
             });
         }
 
+        function cleanupMobileDataListeners() {
+            window.currentAssetBalances = { USDT: 0 };
+            if (unreadUnsubscribe) {
+                unreadUnsubscribe();
+                unreadUnsubscribe = null;
+            }
+            if (chatUnsubscribe) {
+                chatUnsubscribe();
+                chatUnsubscribe = null;
+            }
+            if (depositHistoryUnsubscribe) {
+                depositHistoryUnsubscribe();
+                depositHistoryUnsubscribe = null;
+            }
+            if (withdrawHistoryUnsubscribe) {
+                withdrawHistoryUnsubscribe();
+                withdrawHistoryUnsubscribe = null;
+            }
+            if (exchangeHistoryUnsubscribe) {
+                exchangeHistoryUnsubscribe();
+                exchangeHistoryUnsubscribe = null;
+            }
+            if (userBalanceUnsubscribe) {
+                userBalanceUnsubscribe();
+                userBalanceUnsubscribe = null;
+            }
+            if (tradeHistoryUnsubscribe) {
+                tradeHistoryUnsubscribe();
+                tradeHistoryUnsubscribe = null;
+            }
+            if (typeof updateExchangeUI === 'function') updateExchangeUI();
+        }
+
         // Initialize all listeners when the auth state changes
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                if (typeof window.hasActiveMobileAppSession === 'function' && !window.hasActiveMobileAppSession()) {
+                    console.log("Mobile: Auth user present, but no explicit mobile session; listener startup deferred.");
+                    cleanupMobileDataListeners();
+                    return;
+                }
                 console.log("Mobile: User authenticated, initializing listeners...", user.uid);
                 initUnreadListener();
                 initChat();
@@ -18931,15 +18971,7 @@ No transfer fees for account transfer / exchange</div>
                 initTradeHistoryListener(user);
             } else {
                 console.log("Mobile: User not authenticated, cleaning up listeners.");
-                window.currentAssetBalances = { USDT: 0 };
-                if (unreadUnsubscribe) unreadUnsubscribe();
-                if (chatUnsubscribe) chatUnsubscribe();
-                if (depositHistoryUnsubscribe) depositHistoryUnsubscribe();
-                if (withdrawHistoryUnsubscribe) withdrawHistoryUnsubscribe();
-                if (exchangeHistoryUnsubscribe) exchangeHistoryUnsubscribe();
-                if (userBalanceUnsubscribe) userBalanceUnsubscribe();
-                if (tradeHistoryUnsubscribe) tradeHistoryUnsubscribe();
-                if (typeof updateExchangeUI === 'function') updateExchangeUI();
+                cleanupMobileDataListeners();
             }
         });
 
