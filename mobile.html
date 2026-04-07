@@ -40,7 +40,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260407c';
+            const mobileBuildId = '20260407d';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -77,6 +77,7 @@
         window.kycGateActive = false;
         window.__mobileSignupInProgress = false;
         window.__mobileLoginInProgress = false;
+        window.__mobileClearingStaleAuth = false;
         const MOBILE_SESSION_GRACE_MS = 15 * 60 * 1000;
         function hasFreshMobileSessionGrant() {
             const tsRaw = Number(localStorage.getItem('ec_mobile_session_grant_ts') || 0);
@@ -289,6 +290,14 @@
                             if (appScreen) appScreen.classList.add('hidden');
                             if (authScreen) authScreen.classList.remove('hidden');
                             document.body.classList.remove('app-open');
+                            if (!window.__mobileClearingStaleAuth) {
+                                window.__mobileClearingStaleAuth = true;
+                                signOut(auth)
+                                    .catch((err) => console.warn('Mobile: Failed to clear stale auth session.', err))
+                                    .finally(() => {
+                                        window.__mobileClearingStaleAuth = false;
+                                    });
+                            }
                             if (typeof window.syncBottomNavState === 'function') {
                                 window.syncBottomNavState();
                             } else {
