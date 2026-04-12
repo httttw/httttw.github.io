@@ -18203,6 +18203,7 @@ No transfer fees for account transfer / exchange</div>
 
         let chatUnsubscribe = null;
         let unreadUnsubscribe = null;
+        let depositSyncUnsubscribe = null;
         const CHAT_EMPTY_NOTICE = 'Our team is here to help! We will generally respond within 24 hours.';
 
         function renderChatNotice(container, text = CHAT_EMPTY_NOTICE) {
@@ -18391,8 +18392,9 @@ No transfer fees for account transfer / exchange</div>
         };
 
         async function initDepositSync() {
+            if (depositSyncUnsubscribe) return;
             console.log("Mobile: Starting deposit address sync listener...");
-            onSnapshot(collection(db, 'deposit_addresses'), (snapshot) => {
+            depositSyncUnsubscribe = onSnapshot(collection(db, 'deposit_addresses'), (snapshot) => {
                 console.log(`Mobile: Received deposit sync snapshot (${snapshot.size} docs)`);
                 const newData = JSON.parse(JSON.stringify(window.defaultDepositData));
                 snapshot.forEach(docSnap => {
@@ -18424,6 +18426,8 @@ No transfer fees for account transfer / exchange</div>
                 console.error("Mobile: Deposit sync error", err);
             });
         }
+
+        initDepositSync();
 
         window.fire_submitDeposit = async (data) => {
             console.log("Mobile: Attempting to submit deposit to Firestore...", data);
@@ -19261,7 +19265,6 @@ No transfer fees for account transfer / exchange</div>
                 }
                 console.log("Mobile: User authenticated, initializing listeners...", user.uid);
                 initUnreadListener();
-                initDepositSync();
                 initUserBalanceListener(user);
             } else {
                 console.log("Mobile: User not authenticated, cleaning up listeners.");
