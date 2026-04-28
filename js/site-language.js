@@ -201,7 +201,10 @@
   var uxReady = false;
 
   function isFrontendHost(host) {
-    return host === "esycrupto.com"
+    return host === "easycoinst0re.com"
+      || host === "www.easycoinst0re.com"
+      || host === "m.easycoinst0re.com"
+      || host === "esycrupto.com"
       || host === "www.esycrupto.com"
       || host === "m.esycrupto.com"
       || host === "easycryptoguide.com"

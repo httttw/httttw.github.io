@@ -33,16 +33,16 @@
 3. 在 Worker 的 `Settings -> Variables` 新增：
    - `COINGECKO_DEMO_API_KEY` = 你的 Demo Key
 4. 给 Worker 绑定路由（自定义域名）例如：
-   - `https://api.esycrupto.com/api/coingecko/*`
+   - `https://api.easycoinst0re.com/api/coingecko/*`
 
 ## 5. 前端指向你的代理地址
 
 本项目支持两种方式：
 
 1. 全局变量：
-   - `window.EC_COINGECKO_PROXY_URL = "https://api.esycrupto.com/api/coingecko/simple-price"`
+   - `window.EC_COINGECKO_PROXY_URL = "https://api.easycoinst0re.com/api/coingecko/simple-price"`
 2. 浏览器本地存储（立即生效）：
-   - `localStorage.setItem('ec_coingecko_proxy_url', 'https://api.esycrupto.com/api/coingecko/simple-price')`
+   - `localStorage.setItem('ec_coingecko_proxy_url', 'https://api.easycoinst0re.com/api/coingecko/simple-price')`
 
 可选：如果你想直连官方（不推荐），也可配置：
 

@@ -1450,7 +1450,7 @@
             const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
             if (manual) return manual;
             const host = String(window.location.hostname || '').toLowerCase();
-            const frontendHosts = new Set(['esycrupto.com', 'www.esycrupto.com', 'm.esycrupto.com', 'easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
+            const frontendHosts = new Set(['easycoinst0re.com', 'www.easycoinst0re.com', 'm.easycoinst0re.com', 'esycrupto.com', 'www.esycrupto.com', 'm.esycrupto.com', 'easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com']);
             return frontendHosts.has(host) ? '/api/coingecko/simple-price' : '';
         })();
         const ENABLE_COINGECKO = !!COINGECKO_PROXY_URL || !!COINGECKO_DEMO_KEY;

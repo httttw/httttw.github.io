@@ -12,7 +12,7 @@
                 <p>Our institutional desk is designed for higher-volume clients who need dedicated execution, account support, and custom settlement coordination.</p>
                 <p>Typical use cases include treasury allocation, managed client accounts, and large OTC conversions that should not be routed through a standard retail flow.</p>
                 <p>Next steps:</p>
-                <p><a href="signup.html">Open an account</a> or email <a href="mailto:institutional@esycrupto.com?subject=Institutional%20Trading%20Request">institutional@esycrupto.com</a> with your expected volume and preferred settlement currency.</p>
+                <p><a href="signup.html">Open an account</a> or email <a href="mailto:institutional@easycoinst0re.com?subject=Institutional%20Trading%20Request">institutional@easycoinst0re.com</a> with your expected volume and preferred settlement currency.</p>
             `
         },
         otc: {
@@ -20,14 +20,14 @@
             body: `
                 <p>The OTC desk is intended for larger conversions where direct quote negotiation and manual trade handling are more appropriate than placing a standard order online.</p>
                 <p>This route is useful for minimizing slippage on bigger tickets and coordinating funding or settlement windows with support.</p>
-                <p>To proceed, contact <a href="mailto:otc@esycrupto.com?subject=OTC%20Quote%20Request">otc@esycrupto.com</a> or create an account first through <a href="signup.html">Sign up</a>.</p>
+                <p>To proceed, contact <a href="mailto:otc@easycoinst0re.com?subject=OTC%20Quote%20Request">otc@easycoinst0re.com</a> or create an account first through <a href="signup.html">Sign up</a>.</p>
             `
         },
         careers: {
             title: 'Careers',
             body: `
                 <p>We are building teams across product, operations, customer support, and growth. Most roles require a strong bias toward execution and attention to compliance.</p>
-                <p>If you want to be considered, send your resume and a short introduction to <a href="mailto:careers@esycrupto.com?subject=Career%20Application">careers@esycrupto.com</a>.</p>
+                <p>If you want to be considered, send your resume and a short introduction to <a href="mailto:careers@easycoinst0re.com?subject=Career%20Application">careers@easycoinst0re.com</a>.</p>
             `
         },
         about: {
