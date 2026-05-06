@@ -32,7 +32,11 @@
         { base: 'AXS', symbol: 'AXS/USDT', name: 'Axie Infinity', accent: 'blue', icon: 'A' }
     ];
 
-    const HOME_MARKET_ASSETS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LINK']
+    const HOME_MARKET_ASSETS = [
+        'BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LINK',
+        'DOT', 'AVAX', 'LTC', 'BCH', 'TRX', 'XLM', 'SUI', 'ICP',
+        'MANA', 'ETC', 'SAND', 'CHZ', 'USDC', 'AXS'
+    ]
         .map(findAsset)
         .filter(Boolean);
 
@@ -49,18 +53,26 @@
         { base: 'LINK', qty: 860, cost: 12.4 },
         { base: 'DOT', qty: 1200, cost: 6.18 },
         { base: 'AVAX', qty: 410, cost: 28.6 },
+        { base: 'LTC', qty: 320, cost: 88.4 },
+        { base: 'BCH', qty: 120, cost: 361.8 },
+        { base: 'TRX', qty: 64000, cost: 0.118 },
+        { base: 'XLM', qty: 28500, cost: 0.122 },
         { base: 'SUI', qty: 7300, cost: 1.24 },
-        { base: 'MANA', qty: 16500, cost: 0.38 }
+        { base: 'ICP', qty: 520, cost: 9.4 },
+        { base: 'MANA', qty: 16500, cost: 0.38 },
+        { base: 'ETC', qty: 410, cost: 24.7 },
+        { base: 'SAND', qty: 14800, cost: 0.44 },
+        { base: 'CHZ', qty: 54000, cost: 0.076 },
+        { base: 'USDC', qty: 12500, cost: 1.0 },
+        { base: 'AXS', qty: 950, cost: 7.85 }
     ].map(function (item) {
         const asset = findAsset(item.base);
         return asset ? { ...asset, qty: item.qty, cost: item.cost } : null;
     }).filter(Boolean);
 
-    const QUICK_CONVERTER_CRYPTO_OPTIONS = ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LINK']
-        .map(function (base) {
-            const asset = findAsset(base);
-            return asset ? { code: asset.base, name: asset.name, icon: asset.icon } : null;
-        })
+    const QUICK_CONVERTER_CRYPTO_OPTIONS = SUPPORTED_ASSETS.map(function (asset) {
+        return { code: asset.base, name: asset.name, icon: asset.icon };
+    })
         .filter(Boolean);
 
     const SUPPORTED_BASES = new Set(SUPPORTED_ASSETS.map(function (item) { return item.base; }));

@@ -12,13 +12,19 @@ const {
 } = require('../js/infoway-site-data.js');
 
 test('exposes only verified Infoway-covered assets for home, rate, and tracker pages', () => {
-    assert.equal(HOME_MARKET_ASSETS.length, 8);
-    assert.deepEqual(HOME_MARKET_ASSETS.map((item) => item.base), ['BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LINK']);
+    assert.equal(HOME_MARKET_ASSETS.length, 22);
+    assert.deepEqual(HOME_MARKET_ASSETS.map((item) => item.base), [
+        'BTC', 'ETH', 'BNB', 'XRP', 'SOL', 'ADA', 'DOGE', 'LINK',
+        'DOT', 'AVAX', 'LTC', 'BCH', 'TRX', 'XLM', 'SUI', 'ICP',
+        'MANA', 'ETC', 'SAND', 'CHZ', 'USDC', 'AXS'
+    ]);
 
     assert.ok(RATE_ASSETS.length >= 20);
     assert.ok(RATE_ASSETS.every((item) => isSupportedBase(item.base)));
 
+    assert.equal(TRACKER_HOLDINGS.length, RATE_ASSETS.length);
     assert.ok(TRACKER_HOLDINGS.every((item) => isSupportedBase(item.base)));
+    assert.equal(QUICK_CONVERTER_CRYPTO_OPTIONS.length, RATE_ASSETS.length);
     assert.ok(QUICK_CONVERTER_CRYPTO_OPTIONS.every((item) => isSupportedBase(item.code)));
 });
 
