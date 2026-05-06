@@ -16420,9 +16420,20 @@ No transfer fees for account transfer / exchange</div>
         }
     </script>
 
-    <!-- TWELVE DATA API INTEGRATION -->
+    <script src="./js/infoway-market-data.js"></script>
+    <!-- INFOWAY API INTEGRATION -->
     <script>
-        const twelveDataApiKey = "f5a558c730a64406839742e38b78af5e";
+        const INFOWAY_API_KEY = "217ed0f158d74b57b4d374b2373269a4-infoway";
+        const INFOWAY_HTTP_BASE = 'https://data.infoway.io';
+        const infoway = window.ECInfowayMarketData;
+        const INFOWAY_WS_URL = `wss://data.infoway.io/ws?business=crypto&apikey=${encodeURIComponent(INFOWAY_API_KEY)}`;
+        const APP_FRONTEND_HOSTS = new Set(['easycoinst0re.com', 'www.easycoinst0re.com', 'm.easycoinst0re.com', 'esycrupto.com', 'www.esycrupto.com', 'm.esycrupto.com', 'easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com', '127.0.0.1', 'localhost']);
+        const INFOWAY_PROXY_BASE = (() => {
+            const manual = String(window.EC_INFOWAY_PROXY_BASE || localStorage.getItem('ec_infoway_proxy_base') || '').trim();
+            if (manual) return manual;
+            const host = String(window.location.hostname || '').toLowerCase();
+            return APP_FRONTEND_HOSTS.has(host) ? '/api/infoway' : '';
+        })();
         const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
         const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
         const COINGECKO_PROXY_URL = String(
@@ -16471,9 +16482,10 @@ No transfer fees for account transfer / exchange</div>
             OKB: 'okb'
         };
         const topCryptoCoins = ["BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "DOT", "LTC", "BCH", "LINK", "AVAX", "MATIC", "UNI", "ATOM", "ETC", "HBAR", "IP", "WBT", "XMR", "ALGO", "NEO", "IOTA", "XTZ", "AXS", "SAND", "MANA", "USDC", "CHZ", "HYPE", "SUI", "TON", "TRX", "XLM", "USDE", "ICP", "DAI", "VET", "YFI", "OKB"];
-        const symbolsForWS = topCryptoCoins.map(c => c + "/USD").join(",");
+        const INFOWAY_CODES = Array.from(new Set(topCryptoCoins.map((coin) => infoway.toMarketCode(coin)).filter(Boolean)));
         let mobileCoinGeckoProxyUnavailable = false;
         let mobileMarketDataInitialized = false;
+        let infowayProxyUnavailable = false;
 
         function isAuthOverlayActive() {
             const authScreen = document.getElementById('auth-screen');
@@ -16491,6 +16503,14 @@ No transfer fees for account transfer / exchange</div>
             return COINGECKO_SYMBOL_TO_ID[base] || '';
         }
 
+        function shouldUseCoinGeckoForMobile(symbol) {
+            const base = String(symbol || '').trim().toUpperCase();
+            if (!base) return false;
+            if (!infoway.toMarketCode(base)) return true;
+            const current = window.localData[base] || {};
+            return !(isFinite(Number(current.price)) && Number(current.price) > 0);
+        }
+
         async function fetchMobileCoinGeckoSimplePrice(idsCsv) {
             const params = new URLSearchParams({
                 ids: idsCsv,
@@ -16503,14 +16523,16 @@ No transfer fees for account transfer / exchange</div>
             if (COINGECKO_PROXY_URL && !mobileCoinGeckoProxyUnavailable) {
                 const glue = COINGECKO_PROXY_URL.includes('?') ? '&' : '?';
                 const proxyUrl = `${COINGECKO_PROXY_URL}${glue}${params.toString()}`;
-                const res = await fetch(proxyUrl, { headers: { 'accept': 'application/json' } });
-                if (!res.ok) {
-                    if (res.status === 404 || res.status === 502 || res.status === 530) {
+                try {
+                    const res = await fetch(proxyUrl, { headers: { 'accept': 'application/json' } });
+                    if (!res.ok) {
                         mobileCoinGeckoProxyUnavailable = true;
+                        throw new Error(`HTTP ${res.status} from proxy`);
                     }
-                    throw new Error(`HTTP ${res.status} from proxy`);
+                    return await res.json();
+                } catch (err) {
+                    mobileCoinGeckoProxyUnavailable = true;
                 }
-                return await res.json();
             }
 
             const res = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, {
@@ -16526,7 +16548,11 @@ No transfer fees for account transfer / exchange</div>
             if (!ENABLE_COINGECKO) return 0;
             if (document.visibilityState === 'hidden') return 0;
             if (isAuthOverlayActive()) return 0;
-            const tracked = Array.from(new Set(topCryptoCoins.map((sym) => String(sym || '').toUpperCase())));
+            const tracked = Array.from(new Set(
+                topCryptoCoins
+                    .map((sym) => String(sym || '').toUpperCase())
+                    .filter((sym) => shouldUseCoinGeckoForMobile(sym))
+            ));
             const idToSymbol = {};
             tracked.forEach((sym) => {
                 const id = getMobileCoinGeckoId(sym);
@@ -16689,7 +16715,7 @@ No transfer fees for account transfer / exchange</div>
             if (ENABLE_COINGECKO) {
                 fetchCoinGeckoQuotesMobile().catch(() => { });
             }
-            initTwelveData();
+            initInfowayMarketData();
             updateContractCalculations();
             updateDeliveryRequirementsUI();
             updateDeliveryFeeEstimate();
@@ -16912,7 +16938,7 @@ No transfer fees for account transfer / exchange</div>
             });
         }
 
-        function initTwelveData() {
+        function initInfowayMarketData() {
             if (mobileMarketDataInitialized) return;
             mobileMarketDataInitialized = true;
             let useMock = false;
@@ -16964,57 +16990,97 @@ No transfer fees for account transfer / exchange</div>
                 });
             }
 
-            function fetchQuotes() {
+            async function fetchQuotes() {
                 if (!shouldRefreshMarketData()) return;
                 if (useMock) {
                     applyMockData();
                     return;
                 }
-                fetch(`https://api.twelvedata.com/quote?symbol=${symbolsForWS}&apikey=${twelveDataApiKey}`)
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === 'error' || data.code === 403 || data.code === 429) {
-                            throw new Error('API Rate Limit or Block');
-                        }
-                        for (let symKey in data) {
-                            if (data[symKey] && data[symKey].symbol) {
-                                const sym = data[symKey].symbol.replace('/USD', '');
-                                const price = parseFloat(data[symKey].close || data[symKey].price);
-                                const change = parseFloat(data[symKey].percent_change);
-                                const high = parseFloat(data[symKey].high || 0);
-                                const low = parseFloat(data[symKey].low || 0);
-                                const open = parseFloat(data[symKey].open || data[symKey].previous_close || 0);
-                                const volume = parseFloat(data[symKey].rolling_24h_volume || data[symKey].volume || 0);
-                                const prev = window.localData[sym] || {};
+                try {
+                    if (INFOWAY_PROXY_BASE && infowayProxyUnavailable) {
+                        throw new Error('Infoway proxy unavailable');
+                    }
+                    const tradeUrl = INFOWAY_PROXY_BASE
+                        ? `${INFOWAY_PROXY_BASE}/batch-trade?codes=${encodeURIComponent(INFOWAY_CODES.join(','))}&apikey=${encodeURIComponent(INFOWAY_API_KEY)}`
+                        : `${INFOWAY_HTTP_BASE}/crypto/batch_trade/${INFOWAY_CODES.join(',')}`;
+                    const klineUrl = INFOWAY_PROXY_BASE
+                        ? `${INFOWAY_PROXY_BASE}/batch-kline?apikey=${encodeURIComponent(INFOWAY_API_KEY)}`
+                        : `${INFOWAY_HTTP_BASE}/crypto/v2/batch_kline`;
+                    const [tradeResponse, klineResponse] = await Promise.all([
+                        fetch(tradeUrl, INFOWAY_PROXY_BASE ? undefined : {
+                            headers: infoway.buildAuthHeaders(INFOWAY_API_KEY)
+                        }),
+                        fetch(klineUrl, {
+                            method: 'POST',
+                            headers: INFOWAY_PROXY_BASE ? {
+                                'content-type': 'application/json'
+                            } : {
+                                ...infoway.buildAuthHeaders(INFOWAY_API_KEY),
+                                'content-type': 'application/json'
+                            },
+                            body: JSON.stringify(infoway.buildKlineRequest(INFOWAY_CODES, 8, 1))
+                        })
+                    ]);
 
-                                window.localData[sym] = {
-                                    price: price,
-                                    close: price,
-                                    open: isFinite(open) && open > 0 ? open : (prev.open || price),
-                                    high: isFinite(high) && high > 0 ? high : (prev.high || price),
-                                    low: isFinite(low) && low > 0 ? low : (prev.low || price),
-                                    volume: isFinite(volume) && volume > 0 ? volume : (prev.volume || 0),
-                                    change: isFinite(change) ? change : (prev.change || 0)
-                                };
-                                updatePriceUI(sym, price);
-                                updateChangeUI(sym, window.localData[sym].change);
-                                updateVolumeUI(sym, window.localData[sym].volume);
-                                if (sym === (window.currentTradingCoin || 'BTC')) animateOrderbook(price);
-                            }
-                        }
-                        failureCount = 0;
-                    })
-                    .catch(e => {
-                        failureCount++;
-                        if (failureCount >= 3) useMock = true;
-                        applyMockData(); // Use mock immediately on fail so no zero stays
+                    const tradePayload = await tradeResponse.json();
+                    const klinePayload = await klineResponse.json();
+
+                    if (!tradeResponse.ok || tradePayload.ret !== 200) {
+                        if (INFOWAY_PROXY_BASE) infowayProxyUnavailable = true;
+                        throw new Error(tradePayload.msg || `Trade HTTP ${tradeResponse.status}`);
+                    }
+                    if (!klineResponse.ok || klinePayload.ret !== 200) {
+                        if (INFOWAY_PROXY_BASE) infowayProxyUnavailable = true;
+                        throw new Error(klinePayload.msg || `Kline HTTP ${klineResponse.status}`);
+                    }
+
+                    const tradeByBase = new Map(
+                        infoway.parseTradeResponse(tradePayload).map((item) => [item.base, item])
+                    );
+                    const klineByBase = infoway.mapKlineResponse(klinePayload);
+
+                    topCryptoCoins.forEach((sym) => {
+                        const trade = tradeByBase.get(sym);
+                        const daily = (klineByBase[sym] || [])[0];
+                        const prev = window.localData[sym] || {};
+                        const price = trade ? trade.price : (daily ? daily.close : prev.price || 0);
+
+                        if (!isFinite(price) || price <= 0) return;
+
+                        window.localData[sym] = {
+                            price: price,
+                            close: price,
+                            open: daily && isFinite(daily.open) && daily.open > 0 ? daily.open : (prev.open || price),
+                            high: daily && isFinite(daily.high) && daily.high > 0 ? daily.high : Math.max(prev.high || price, price),
+                            low: daily && isFinite(daily.low) && daily.low > 0 ? daily.low : Math.min(prev.low || price, price),
+                            volume: daily && isFinite(daily.volume) && daily.volume > 0 ? daily.volume : (trade ? trade.turnover || prev.volume || 0 : (prev.volume || 0)),
+                            change: daily && isFinite(daily.changePercent) ? daily.changePercent : (prev.change || 0)
+                        };
+
+                        updatePriceUI(sym, price);
+                        updateChangeUI(sym, window.localData[sym].change);
+                        updateVolumeUI(sym, window.localData[sym].volume);
+                        if (sym === (window.currentTradingCoin || 'BTC')) animateOrderbook(price);
                     });
+
+                    failureCount = 0;
+                } catch (e) {
+                    console.warn('Infoway market fetch error:', e.message || e);
+                    const cgUpdated = await fetchCoinGeckoQuotesMobile().catch(() => 0);
+                    if (cgUpdated > 0) {
+                        failureCount = 0;
+                        return;
+                    }
+                    failureCount++;
+                    if (failureCount >= 3) useMock = true;
+                    applyMockData();
+                }
             }
 
             fetchQuotes();
 
             if (ENABLE_COINGECKO) {
-                // CoinGecko refresh to supplement small-cap symbols unsupported by TwelveData.
+                // CoinGecko refresh to supplement symbols outside the Infoway crypto feed.
                 scheduleMarketRefresh(() => {
                     fetchCoinGeckoQuotesMobile().catch(() => { });
                 }, 30000, 90000);
@@ -17031,27 +17097,32 @@ No transfer fees for account transfer / exchange</div>
             }, 15000, 45000);
 
             let socket;
+            let heartbeatTimer;
             function connectWS() {
                 if (useMock) return;
-                socket = new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${twelveDataApiKey}`);
+                socket = new WebSocket(INFOWAY_WS_URL);
                 socket.onopen = () => {
-                    socket.send(JSON.stringify({
-                        "action": "subscribe",
-                        "params": { "symbols": symbolsForWS }
-                    }));
+                    socket.send(JSON.stringify(infoway.buildTradeSubscribeMessage(INFOWAY_CODES)));
+                    heartbeatTimer = setInterval(() => {
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            socket.send(JSON.stringify(infoway.buildHeartbeatMessage()));
+                        }
+                    }, 30000);
                 };
                 socket.onmessage = (event) => {
                     const data = JSON.parse(event.data);
-                    if (data.status === 'error') {
+                    if (data.code >= 400 || data.msg === 'error' || data.status === 'error') {
                         useMock = true;
                         socket.close();
                         applyMockData();
                         return;
                     }
-                    if (data.event === 'price' && data.symbol) {
+                    if (data.code === 10002 && data.data) {
                         if (!shouldRefreshMarketData() || !isHighActivityMarketScreen()) return;
-                        const sym = data.symbol.replace('/USD', '');
-                        const pVal = parseFloat(data.price);
+                        const trade = infoway.parseTradeItem(data.data);
+                        if (!trade || !trade.base) return;
+                        const sym = trade.base;
+                        const pVal = trade.price;
                         const prev = window.localData[sym] || {};
                         window.localData[sym] = {
                             price: pVal,
@@ -17068,6 +17139,7 @@ No transfer fees for account transfer / exchange</div>
                     }
                 };
                 socket.onclose = () => {
+                    if (heartbeatTimer) clearInterval(heartbeatTimer);
                     if (!useMock) setTimeout(connectWS, 5000); // Reconnect
                 };
                 socket.onerror = () => { if (socket) socket.close(); }
