@@ -1109,7 +1109,6 @@
 
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        const CONTRACT_API_KEY = 'f5a558c730a64406839742e38b78af5e';
         const intervalMap = {
             '1m': '1',
             '5m': '5',
@@ -1132,9 +1131,8 @@
             return base.includes('/') ? base : `${base}/USDT`;
         }
 
-        function getApiSymbol(pair) {
-            const base = cleanPairSymbol(pair).split('/')[0];
-            return `${base}/USD`;
+        function getBinanceSymbol(pair) {
+            return cleanPairSymbol(pair).replace('/', '');
         }
 
         function getTradingViewSymbol(pair) {
@@ -1194,11 +1192,15 @@
 
         function updateStatsFromQuote(data) {
             if (!data) return;
-            const last = Number(data.close ?? data.price ?? currentLastPrice);
-            const pct = Number(data.percent_change ?? data.percent_change_24h ?? 0);
-            const high = Number(data.high);
-            const low = Number(data.low);
-            const volume = Number(data.volume ?? data.day_volume ?? data.rolling_24h_volume ?? 0);
+            const last = Number(
+                data.lastPrice ?? data.c ?? data.close ?? data.price ?? currentLastPrice
+            );
+            const pct = Number(
+                data.priceChangePercent ?? data.P ?? data.percent_change ?? data.percent_change_24h ?? 0
+            );
+            const high = Number(data.highPrice ?? data.h ?? data.high);
+            const low = Number(data.lowPrice ?? data.l ?? data.low);
+            const volume = Number(data.quoteVolume ?? data.q ?? data.volume ?? data.day_volume ?? data.rolling_24h_volume ?? 0);
 
             if (Number.isFinite(last) && last > 0) currentLastPrice = last;
 
@@ -1279,11 +1281,11 @@
         }
 
         async function fetchPerpetualQuote() {
-            const apiSymbol = getApiSymbol(currentPair);
+            const apiSymbol = getBinanceSymbol(currentPair);
             try {
-                const res = await fetch(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(apiSymbol)}&apikey=${CONTRACT_API_KEY}`);
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${encodeURIComponent(apiSymbol)}`);
                 const data = await res.json();
-                if (!data || data.status === 'error') {
+                if (!res.ok || !data || data.code) {
                     throw new Error((data && data.message) || 'Quote unavailable');
                 }
                 updateStatsFromQuote(data);
@@ -1301,24 +1303,30 @@
                     priceWs = null;
                 }
             } catch (_) { }
-            priceWs = new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${CONTRACT_API_KEY}`);
-            priceWs.onopen = () => {
-                priceWs.send(JSON.stringify({
-                    action: 'subscribe',
-                    params: { symbols: getApiSymbol(currentPair) }
-                }));
-            };
+            priceWs = new WebSocket(`wss://stream.binance.com:9443/ws/${getBinanceSymbol(currentPair).toLowerCase()}@ticker`);
+            priceWs.onopen = () => { };
             priceWs.onmessage = (event) => {
                 try {
                     const payload = JSON.parse(event.data || '{}');
-                    const wsPrice = Number(payload.price);
+                    const wsPrice = Number(payload.c ?? payload.lastPrice ?? payload.price);
                     if (!Number.isFinite(wsPrice) || wsPrice <= 0) return;
                     currentLastPrice = wsPrice;
                     const lastEl = document.getElementById('perp-last-price');
                     if (lastEl) lastEl.textContent = formatPrice(wsPrice);
+                    const changeEl = document.getElementById('perp-change-pct');
+                    const pct = Number(payload.P ?? payload.priceChangePercent ?? 0);
+                    if (changeEl) {
+                        changeEl.textContent = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+                        setSignedClass(changeEl, pct);
+                    }
+                    setSignedClass(lastEl, pct);
                     window.desktopPerpQuote = Object.assign({}, window.desktopPerpQuote || {}, {
                         pair: currentPair,
                         last: wsPrice,
+                        pct,
+                        high: Number(payload.h ?? window.desktopPerpQuote?.high ?? 0),
+                        low: Number(payload.l ?? window.desktopPerpQuote?.low ?? 0),
+                        volume: Number(payload.q ?? window.desktopPerpQuote?.volume ?? 0),
                         updatedAt: Date.now()
                     });
                     renderOrderBook(wsPrice);

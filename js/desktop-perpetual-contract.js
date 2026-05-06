@@ -18,7 +18,6 @@ import {
 
 const PLATFORM_TIMEZONE = 'America/New_York';
 const PLATFORM_TIMEZONE_LABEL = 'ET';
-const TWELVE_DATA_API_KEY = 'f5a558c730a64406839742e38b78af5e';
 const LEVERAGE = 30;
 const CONTRACT_UNIT = 100;
 const TRADE_FEE_RATE = 0.005;
@@ -228,6 +227,43 @@ function getCurrentPairText() {
 function getCurrentCoinSymbol() {
     return getCurrentPairText().split('/')[0] || 'BTC';
 }
+
+const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
+const COINGECKO_SYMBOL_TO_ID = {
+    BTC: 'bitcoin',
+    ETH: 'ethereum',
+    HBAR: 'hedera-hashgraph',
+    XMR: 'monero',
+    ALGO: 'algorand',
+    ADA: 'cardano',
+    DOT: 'polkadot',
+    NEO: 'neo',
+    IOTA: 'iota',
+    XTZ: 'tezos',
+    ETC: 'ethereum-classic',
+    XRP: 'ripple',
+    AXS: 'axie-infinity',
+    SAND: 'the-sandbox',
+    LTC: 'litecoin',
+    MANA: 'decentraland',
+    USDC: 'usd-coin',
+    SOL: 'solana',
+    LINK: 'chainlink',
+    CHZ: 'chiliz',
+    AVAX: 'avalanche-2',
+    BCH: 'bitcoin-cash',
+    BNB: 'binancecoin',
+    DOGE: 'dogecoin',
+    HYPE: 'hyperliquid',
+    SUI: 'sui',
+    TON: 'toncoin',
+    TRX: 'tron',
+    XLM: 'stellar',
+    ICP: 'internet-computer',
+    VET: 'vechain',
+    YFI: 'yearn-finance',
+    WBT: 'whitebit'
+};
 
 function getCurrentQuotePrice() {
     const quotedPair = window.desktopPerpQuote && window.desktopPerpQuote.pair
@@ -1113,16 +1149,29 @@ async function refreshExternalTradeQuotes() {
             .filter((coin) => !!coin && coin !== currentCoin)
     ));
     if (!coins.length) return;
-
-    await Promise.allSettled(coins.map(async (coin) => {
-        const apiSymbol = `${coin}/USD`;
-        const response = await fetch(`https://api.twelvedata.com/quote?symbol=${encodeURIComponent(apiSymbol)}&apikey=${TWELVE_DATA_API_KEY}`);
-        const data = await response.json();
-        const price = toNumber(data && (data.close ?? data.price), 0);
-        if (price > 0) {
-            state.externalQuoteCache[coin] = { price, updatedAt: Date.now() };
-        }
-    }));
+    const ids = Array.from(new Set(
+        coins.map((coin) => COINGECKO_SYMBOL_TO_ID[String(coin || '').toUpperCase()]).filter(Boolean)
+    ));
+    if (ids.length) {
+        const params = new URLSearchParams({
+            ids: ids.join(','),
+            vs_currencies: 'usd'
+        });
+        try {
+            const response = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, {
+                headers: { accept: 'application/json' }
+            });
+            const payload = await response.json();
+            coins.forEach((coin) => {
+                const id = COINGECKO_SYMBOL_TO_ID[String(coin || '').toUpperCase()];
+                const entry = id ? payload[id] : null;
+                const price = toNumber(entry && entry.usd, 0);
+                if (price > 0) {
+                    state.externalQuoteCache[coin] = { price, updatedAt: Date.now() };
+                }
+            });
+        } catch (_) { }
+    }
 
     if (state.activeTab === 'positions') renderDesktopOpenPositions();
     syncDesktopModalTrade();

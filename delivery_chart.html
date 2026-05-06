@@ -1069,7 +1069,6 @@
     </script>
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script>
-        const API_KEY = 'f5a558c730a64406839742e38b78af5e';
         let currentSymbol = 'BTC/USDT';
         let currentInterval = '15min'; // Local timeframe tracking
         let ws = null;
@@ -1087,17 +1086,18 @@
             'XLM/USDT', 'ICP/USDT', 'VET/USDT', 'YFI/USDT'
         ];
 
-        // Twelve Data normalization: Use /USD for API but show /USDT in UI
         function getApiSymbol(pair) {
             if (!pair) return pair;
-            return pair.replace('/USDT', '/USD');
+            return String(pair).replace('/', '').toUpperCase();
         }
 
         function getDisplaySymbol(apiSymbol) {
             if (!apiSymbol) return apiSymbol;
-            // Map USD back to USDT for all coins, but keep BTC/USD if that's how it's received
-            // This ensures safeSymbol matching works (coin-BTC-USDT)
-            return apiSymbol.includes('/USD') ? apiSymbol.replace('/USD', '/USDT') : apiSymbol;
+            const normalized = String(apiSymbol).toUpperCase();
+            if (normalized.endsWith('USDT')) {
+                return `${normalized.slice(0, -4)}/USDT`;
+            }
+            return apiSymbol;
         }
 
         const updateHeader = (data) => {
@@ -1107,9 +1107,10 @@
             const priceEl = document.getElementById('header-price');
             const changeEl = document.getElementById('header-change');
 
-            if (priceEl && data.price) {
+            const livePrice = parseFloat(data.lastPrice ?? data.c ?? data.price ?? data.close);
+            if (priceEl && livePrice > 0) {
                 const prevPrice = parseFloat(priceEl.textContent);
-                const currentPrice = parseFloat(data.price);
+                const currentPrice = livePrice;
                 priceEl.textContent = currentPrice.toFixed(currentPrice < 1 ? 4 : 2);
                 priceEl.className = `text-lg font-bold ${currentPrice >= prevPrice ? 'text-up' : 'text-down'}`;
 
@@ -1223,7 +1224,7 @@
 
         const parseVolume = (data) => {
             if (!data) return 0;
-            const raw = data.rolling_24h_volume || data.day_volume || data.volume || 0;
+            const raw = data.quoteVolume || data.q || data.rolling_24h_volume || data.day_volume || data.volume || 0;
             const val = parseFloat(raw);
             return isFinite(val) ? val : 0;
         };
@@ -1242,15 +1243,15 @@
                 const priceCell = row.querySelector('.price-cell');
                 const changeCell = row.querySelector('.change-cell');
                 const volumeCell = row.querySelector('.volume-cell');
-                const priceVal = data.price || data.close;
+                const priceVal = data.lastPrice || data.c || data.price || data.close;
 
                 if (priceCell && priceVal) {
                     const price = parseFloat(priceVal);
                     if (price > 0) priceCell.textContent = price.toFixed(price < 1 ? 4 : 2);
                 }
 
-                if (changeCell && data.percent_change !== undefined) {
-                    const change = parseFloat(data.percent_change);
+                if (changeCell && (data.priceChangePercent !== undefined || data.P !== undefined || data.percent_change !== undefined)) {
+                    const change = parseFloat(data.priceChangePercent ?? data.P ?? data.percent_change);
                     changeCell.textContent = change.toFixed(2) + '%';
                     changeCell.className = `text-right change-cell ${change >= 0 ? 'text-up' : 'text-down'}`;
                 }
@@ -1265,22 +1266,22 @@
         async function fetchAllQuotes() {
             const apiSymbols = coinPairs.map(p => getApiSymbol(p));
             try {
-                const res = await fetch(`https://api.twelvedata.com/quote?symbol=${apiSymbols.join(',')}&apikey=${API_KEY}`);
+                const symbolsParam = encodeURIComponent(JSON.stringify(apiSymbols));
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${symbolsParam}`);
                 const data = await res.json();
 
-                if (data.status === 'error') return;
+                if (!res.ok || !Array.isArray(data)) return;
 
-                for (const key in data) {
-                    if (data[key] && data[key].symbol) {
-                        updateCoinRow(data[key]);
+                data.forEach((entry) => {
+                    if (entry && entry.symbol) {
+                        updateCoinRow(entry);
 
-                        // Ensure current symbol updates if WebSocket is slow
                         const apiSym = getApiSymbol(currentSymbol);
-                        if (data[key].symbol === currentSymbol || data[key].symbol === apiSym) {
-                            updateHeader(data[key]);
+                        if (entry.symbol === currentSymbol || entry.symbol === apiSym) {
+                            updateHeader(entry);
                         }
                     }
-                }
+                });
             } catch (err) {
                 console.error('Error fetching bulk quotes:', err);
             }
@@ -1290,20 +1291,21 @@
         async function fetchQuote(symbol) {
             const apiSymbol = getApiSymbol(symbol);
             try {
-                const res = await fetch(`https://api.twelvedata.com/quote?symbol=${apiSymbol}&apikey=${API_KEY}`);
+                const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${encodeURIComponent(apiSymbol)}`);
                 const data = await res.json();
-                if (data.status === 'error') return;
+                if (!res.ok || data.code) return;
 
-                document.getElementById('header-low').textContent = parseFloat(data.low || 0).toFixed(2);
-                document.getElementById('header-high').textContent = parseFloat(data.high || 0).toFixed(2);
+                document.getElementById('header-low').textContent = parseFloat(data.lowPrice || data.low || 0).toFixed(2);
+                document.getElementById('header-high').textContent = parseFloat(data.highPrice || data.high || 0).toFixed(2);
                 const volume = parseVolume(data);
-                const close = parseFloat(data.close || data.price || 0);
-                const turnover = close > 0 && volume > 0 ? close * volume : 0;
-                document.getElementById('header-total').textContent = turnover > 0 ? formatCompactNumber(turnover) : '0.00';
-                document.getElementById('header-amount').textContent = volume > 0 ? formatCompactNumber(volume) : '0.00';
+                const close = parseFloat(data.lastPrice || data.c || data.close || data.price || 0);
+                document.getElementById('header-total').textContent = volume > 0 ? formatCompactNumber(volume) : '0.00';
+                document.getElementById('header-amount').textContent = close > 0 && parseFloat(data.volume || data.v || 0) > 0
+                    ? formatCompactNumber(parseFloat(data.volume || data.v || 0))
+                    : '0.00';
 
-                const change = parseFloat(data.percent_change || 0);
-                const price = parseFloat(data.price || data.close || 0);
+                const change = parseFloat(data.priceChangePercent ?? data.P ?? data.percent_change || 0);
+                const price = close;
 
                 const priceEl = document.getElementById('header-price');
                 const changeEl = document.getElementById('header-change');
@@ -1341,29 +1343,20 @@
         function initWebSocket() {
             if (ws) ws.close();
 
-            console.log('Connecting to Twelve Data WebSocket...');
-            ws = new WebSocket(`wss://ws.twelvedata.com/v1/quotes/price?apikey=${API_KEY}`);
+            console.log('Connecting to Binance WebSocket...');
+            const streams = coinPairs.map(pair => `${getApiSymbol(pair).toLowerCase()}@ticker`).join('/');
+            ws = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}`);
 
             ws.onopen = () => {
-                console.log('Twelve Data WebSocket Connected');
-                const apiSymbols = coinPairs.map(p => getApiSymbol(p));
-                ws.send(JSON.stringify({
-                    action: 'subscribe',
-                    params: { symbols: apiSymbols.join(',') }
-                }));
+                console.log('Binance WebSocket Connected');
             };
 
             ws.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-
-                // Keep-alive or heartbeats
-                if (data.event === 'heartbeat') {
-                    ws.send(JSON.stringify({ action: 'heartbeat' }));
-                    return;
-                }
-
-                if (data.event === 'price') {
+                const payload = JSON.parse(event.data);
+                const data = payload && payload.data ? payload.data : payload;
+                if (data && data.s) {
                     lastPriceUpdate = Date.now();
+                    data.symbol = data.s;
                     updateHeader(data);
                     updateCoinRow(data);
                 }
@@ -1380,7 +1373,7 @@
         }
 
         // Fallback: poll quotes manually to make sure all coins are updated!
-        // This acts as a robust fail-safe if the TwelveData websockets drop or ignore symbols.
+        // This acts as a robust fail-safe if the live streams stall or miss symbols.
         setInterval(() => {
             fetchAllQuotes();
             if (Date.now() - lastPriceUpdate > 10000) {
