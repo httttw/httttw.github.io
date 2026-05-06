@@ -31,6 +31,7 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
+    <script src="./js/infoway-site-data.js?v=20260506g"></script>
     <script>
         if (window.location.protocol === 'file:') {
             document.addEventListener('DOMContentLoaded', () => {
@@ -11015,9 +11016,41 @@
     </div>
 
     <script>
-        const coinListHot = ["BTC", "ETH", "ETC", "HBAR", "IP", "WBT", "XMR", "ALGO", "ADA", "DOT", "NEO", "IOTA", "XTZ", "XRP", "AXS", "SAND", "LTC", "MANA", "USDC", "SOL", "LINK", "CHZ", "AVAX", "BCH", "BNB", "DOGE", "HYPE", "SUI", "TON", "TRX", "XLM", "USDE", "ICP", "DAI", "VET", "YFI"];
-        const coinListGainers = ["ICP", "TON", "XMR", "MANA", "USDC", "HYPE", "USDE", "DAI", "YFI", "NEO", "TRX", "XTZ", "AXS", "CHZ", "SAND", "BNB", "LTC", "HBAR", "XLM", "VET", "ADA", "ETC", "AVAX", "BTC", "SUI", "WBT", "IOTA", "ALGO", "DOT", "DOGE", "XRP", "LINK", "IP", "SOL", "ETH", "BCH"];
-        const coinListLosers = ["BCH", "IP", "SOL", "ETH", "LINK", "DOT", "XRP", "DOGE", "ALGO", "IOTA", "SUI", "AVAX", "WBT", "ADA", "BTC", "XLM", "HBAR", "ETC", "VET", "LTC", "BNB", "CHZ", "SAND", "XTZ", "AXS", "TRX", "YFI", "NEO", "USDC", "DAI"];
+        const infowaySiteData = window.ECInfowaySiteData || {};
+        const fallbackMobileAssetBases = ["BTC", "ETH", "BNB", "XRP", "SOL", "ADA", "DOGE", "LINK", "DOT", "AVAX", "LTC", "BCH", "TRX", "XLM", "SUI", "ICP", "MANA", "ETC", "SAND", "CHZ", "USDC", "AXS"];
+        const mobileSupportedAssetBases = (
+            Array.isArray(infowaySiteData.HOME_MARKET_ASSETS) && infowaySiteData.HOME_MARKET_ASSETS.length
+                ? infowaySiteData.HOME_MARKET_ASSETS.map(asset => String(asset && asset.base || '').toUpperCase()).filter(Boolean)
+                : fallbackMobileAssetBases
+        );
+
+        function prioritizeMobileAssets(preferred, universe) {
+            const preferredSet = new Set();
+            const ordered = [];
+            preferred.forEach((symbol) => {
+                const normalized = String(symbol || '').toUpperCase();
+                if (!normalized || preferredSet.has(normalized) || !universe.includes(normalized)) return;
+                preferredSet.add(normalized);
+                ordered.push(normalized);
+            });
+            universe.forEach((symbol) => {
+                if (!preferredSet.has(symbol)) {
+                    preferredSet.add(symbol);
+                    ordered.push(symbol);
+                }
+            });
+            return ordered;
+        }
+
+        const coinListHot = mobileSupportedAssetBases.slice();
+        const coinListGainers = prioritizeMobileAssets(
+            ["ICP", "MANA", "USDC", "TRX", "AXS", "CHZ", "SAND", "BNB", "LTC", "XLM", "ADA", "ETC", "AVAX", "BTC", "SUI", "DOT", "DOGE", "XRP", "LINK", "SOL", "ETH", "BCH"],
+            mobileSupportedAssetBases
+        );
+        const coinListLosers = prioritizeMobileAssets(
+            ["BCH", "SOL", "ETH", "LINK", "DOT", "XRP", "DOGE", "SUI", "AVAX", "ADA", "BTC", "XLM", "ETC", "LTC", "BNB", "CHZ", "SAND", "AXS", "TRX", "USDC"],
+            mobileSupportedAssetBases
+        );
 
         const coins = {
             hot: coinListHot.map(sym => ({ p: sym, i: sym.charAt(0) })),
@@ -13240,21 +13273,43 @@ const translations = {
             inactiveCoins.forEach(c => buildRow(c, false));
         }
 
+        const exchangeCoinPalette = {
+            USDT: '#26a17b',
+            BTC: '#f7931a',
+            ETH: '#627eea',
+            BNB: '#f3ba2f',
+            XRP: '#23292f',
+            SOL: '#14f195',
+            ADA: '#0033ad',
+            DOGE: '#c2a633',
+            LINK: '#2a5ada',
+            DOT: '#e6007a',
+            AVAX: '#e84142',
+            LTC: '#345d9d',
+            BCH: '#8dc351',
+            TRX: '#ef0027',
+            XLM: '#000000',
+            SUI: '#6fbcf0',
+            ICP: '#333333',
+            MANA: '#ff2d55',
+            ETC: '#32b958',
+            SAND: '#00adef',
+            CHZ: '#cd0124',
+            USDC: '#2775ca',
+            AXS: '#0055d4'
+        };
         const exchangeCoins = [
-            { s: 'USDT', i: 'T', c: '#26a17b' }, { s: 'AVAX', i: 'A', c: '#e84142' }, { s: 'BCH', i: 'B', c: '#8dc351' },
-            { s: 'DOGE', i: 'D', c: '#c2a633' }, { s: 'SUI', i: 'S', c: '#6fbcf0' }, { s: 'OKB', i: 'O', c: '#000000' },
-            { s: 'DOT', i: 'D', c: '#e6007a' }, { s: 'LINK', i: 'L', c: '#2a5ada' }, { s: 'WBT', i: 'W', c: '#333' },
-            { s: 'DAI', i: 'D', c: '#f5ac37' }, { s: 'BTC', i: 'B', c: '#f7931a' }, { s: 'SOL', i: 'S', c: '#14f195' },
-            { s: 'TON', i: 'T', c: '#0088cc' }, { s: 'ETC', i: 'E', c: '#32b958' }, { s: 'BNB', i: 'B', c: '#f3ba2f' },
-            { s: 'ICP', i: 'I', c: '#333' }, { s: 'ETH', i: 'E', c: '#627eea' }, { s: 'NEO', i: 'N', c: '#00e599' },
-            { s: 'LTC', i: 'L', c: '#345d9d' }, { s: 'HBAR', i: 'H', c: '#333' }, { s: 'XMR', i: 'M', c: '#ff6600' },
-            { s: 'AXS', i: 'A', c: '#0055d4' }, { s: 'ADA', i: 'A', c: '#0033ad' }, { s: 'IOTA', i: 'I', c: '#333' },
-            { s: 'VET', i: 'V', c: '#15bdff' }, { s: 'IP', i: 'I', c: '#333' }, { s: 'USDE', i: 'U', c: '#333' },
-            { s: 'USDC', i: 'U', c: '#2775ca' }, { s: 'SAND', i: 'S', c: '#00adef' }, { s: 'MANA', i: 'M', c: '#ff2d55' },
-            { s: 'CHZ', i: 'C', c: '#cd0124' }, { s: 'XRP', i: 'X', c: '#23292f' }, { s: 'HYPE', i: 'H', c: '#333' },
-            { s: 'XLM', i: 'X', c: '#000000' }, { s: 'TRX', i: 'T', c: '#ef0027' }, { s: 'YFI', i: 'Y', c: '#006ae3' },
-            { s: 'ALGO', i: 'A', c: '#000000' }, { s: 'XTZ', i: 'X', c: '#2c7df7' }
-        ];
+            { s: 'USDT', i: 'T', c: exchangeCoinPalette.USDT }
+        ].concat(
+            mobileSupportedAssetBases.map((symbol) => {
+                const asset = typeof infowaySiteData.findAsset === 'function' ? infowaySiteData.findAsset(symbol) : null;
+                return {
+                    s: symbol,
+                    i: asset && asset.icon ? asset.icon : symbol.charAt(0),
+                    c: exchangeCoinPalette[symbol] || '#7c3aed'
+                };
+            })
+        );
 
         const EXCHANGE_UI_TEXT = {
             en: {
@@ -15989,7 +16044,7 @@ const translations = {
             if (dd) dd.style.display = 'none';
         }
 
-        const pairList = ["BTC/USDT", "ETH/USDT", "HBAR/USDT", "IP/USDT", "WBT/USDT", "XMR/USDT", "ALGO/USDT", "ADA/USDT", "DOT/USDT", "NEO/USDT", "IOTA/USDT", "XTZ/USDT", "ETC/USDT", "XRP/USDT", "AXS/USDT", "SAND/USDT", "LTC/USDT", "MANA/USDT", "USDC/USDT", "SOL/USDT", "LINK/USDT", "CHZ/USDT", "AVAX/USDT", "BCH/USDT", "BNB/USDT", "DOGE/USDT", "HYPE/USDT", "SUI/USDT", "TON/USDT", "TRX/USDT", "XLM/USDT", "USDE/USDT", "ICP/USDT", "DAI/USDT", "VET/USDT", "YFI/USDT"];
+        const pairList = mobileSupportedAssetBases.map((symbol) => `${symbol}/USDT`);
 
         function openPairPanel() {
             const overlay = document.getElementById('panel-overlay');
@@ -16482,7 +16537,7 @@ No transfer fees for account transfer / exchange</div>
             YFI: 'yearn-finance',
             OKB: 'okb'
         };
-        const topCryptoCoins = ["BTC", "ETH", "BNB", "SOL", "XRP", "ADA", "DOGE", "DOT", "LTC", "BCH", "LINK", "AVAX", "MATIC", "UNI", "ATOM", "ETC", "HBAR", "IP", "WBT", "XMR", "ALGO", "NEO", "IOTA", "XTZ", "AXS", "SAND", "MANA", "USDC", "CHZ", "HYPE", "SUI", "TON", "TRX", "XLM", "USDE", "ICP", "DAI", "VET", "YFI", "OKB"];
+        const topCryptoCoins = mobileSupportedAssetBases.slice();
         const INFOWAY_CODES = Array.from(new Set(topCryptoCoins.map((coin) => infoway.toMarketCode(coin)).filter(Boolean)));
         let mobileCoinGeckoProxyUnavailable = false;
         let mobileMarketDataInitialized = false;
