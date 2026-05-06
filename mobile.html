@@ -13187,6 +13187,9 @@ const translations = {
             updateLanguageSelectionUI(savedLang);
 
             renderList('hot', 'home-list-box');
+            if (typeof window.refreshMobileMarketDataNow === 'function') {
+                window.refreshMobileMarketDataNow();
+            }
             const forceKycOnce = localStorage.getItem('ec_force_kyc_once') === '1';
             if (forceKycOnce) {
                 localStorage.removeItem('ec_force_kyc_once');
@@ -17046,6 +17049,78 @@ No transfer fees for account transfer / exchange</div>
                 });
             }
 
+            async function requestInfowayMarketPayloads() {
+                if (INFOWAY_PROXY_BASE && infowayProxyUnavailable) {
+                    throw new Error('Infoway proxy unavailable');
+                }
+                const tradeUrl = INFOWAY_PROXY_BASE
+                    ? `${INFOWAY_PROXY_BASE}/batch-trade?codes=${encodeURIComponent(INFOWAY_CODES.join(','))}`
+                    : `${INFOWAY_HTTP_BASE}/crypto/batch_trade/${INFOWAY_CODES.join(',')}`;
+                const klineUrl = INFOWAY_PROXY_BASE
+                    ? `${INFOWAY_PROXY_BASE}/batch-kline`
+                    : `${INFOWAY_HTTP_BASE}/crypto/v2/batch_kline`;
+                const [tradeResponse, klineResponse] = await Promise.all([
+                    fetch(tradeUrl, INFOWAY_PROXY_BASE ? undefined : {
+                        headers: infoway.buildAuthHeaders(INFOWAY_API_KEY)
+                    }),
+                    fetch(klineUrl, {
+                        method: 'POST',
+                        headers: INFOWAY_PROXY_BASE ? {
+                            'content-type': 'application/json'
+                        } : {
+                            ...infoway.buildAuthHeaders(INFOWAY_API_KEY),
+                            'content-type': 'application/json'
+                        },
+                        body: JSON.stringify(infoway.buildKlineRequest(INFOWAY_CODES, 8, 1))
+                    })
+                ]);
+
+                const tradePayload = await tradeResponse.json();
+                const klinePayload = await klineResponse.json();
+
+                if (!tradeResponse.ok || tradePayload.ret !== 200) {
+                    if (INFOWAY_PROXY_BASE) infowayProxyUnavailable = true;
+                    throw new Error(tradePayload.msg || `Trade HTTP ${tradeResponse.status}`);
+                }
+                if (!klineResponse.ok || klinePayload.ret !== 200) {
+                    if (INFOWAY_PROXY_BASE) infowayProxyUnavailable = true;
+                    throw new Error(klinePayload.msg || `Kline HTTP ${klineResponse.status}`);
+                }
+
+                return { tradePayload, klinePayload };
+            }
+
+            function applyInfowayMarketPayloads(tradePayload, klinePayload) {
+                const tradeByBase = new Map(
+                    infoway.parseTradeResponse(tradePayload).map((item) => [item.base, item])
+                );
+                const klineByBase = infoway.mapKlineResponse(klinePayload);
+
+                topCryptoCoins.forEach((sym) => {
+                    const trade = tradeByBase.get(sym);
+                    const daily = (klineByBase[sym] || [])[0];
+                    const prev = window.localData[sym] || {};
+                    const price = trade ? trade.price : (daily ? daily.close : prev.price || 0);
+
+                    if (!isFinite(price) || price <= 0) return;
+
+                    window.localData[sym] = {
+                        price: price,
+                        close: price,
+                        open: daily && isFinite(daily.open) && daily.open > 0 ? daily.open : (prev.open || price),
+                        high: daily && isFinite(daily.high) && daily.high > 0 ? daily.high : Math.max(prev.high || price, price),
+                        low: daily && isFinite(daily.low) && daily.low > 0 ? daily.low : Math.min(prev.low || price, price),
+                        volume: daily && isFinite(daily.volume) && daily.volume > 0 ? daily.volume : (trade ? trade.turnover || prev.volume || 0 : (prev.volume || 0)),
+                        change: daily && isFinite(daily.changePercent) ? daily.changePercent : (prev.change || 0)
+                    };
+
+                    updatePriceUI(sym, price);
+                    updateChangeUI(sym, window.localData[sym].change);
+                    updateVolumeUI(sym, window.localData[sym].volume);
+                    if (sym === (window.currentTradingCoin || 'BTC')) animateOrderbook(price);
+                });
+            }
+
             async function fetchQuotes() {
                 if (!shouldRefreshMarketData()) return;
                 if (useMock) {
@@ -17053,72 +17128,8 @@ No transfer fees for account transfer / exchange</div>
                     return;
                 }
                 try {
-                    if (INFOWAY_PROXY_BASE && infowayProxyUnavailable) {
-                        throw new Error('Infoway proxy unavailable');
-                    }
-                    const tradeUrl = INFOWAY_PROXY_BASE
-                        ? `${INFOWAY_PROXY_BASE}/batch-trade?codes=${encodeURIComponent(INFOWAY_CODES.join(','))}`
-                        : `${INFOWAY_HTTP_BASE}/crypto/batch_trade/${INFOWAY_CODES.join(',')}`;
-                    const klineUrl = INFOWAY_PROXY_BASE
-                        ? `${INFOWAY_PROXY_BASE}/batch-kline`
-                        : `${INFOWAY_HTTP_BASE}/crypto/v2/batch_kline`;
-                    const [tradeResponse, klineResponse] = await Promise.all([
-                        fetch(tradeUrl, INFOWAY_PROXY_BASE ? undefined : {
-                            headers: infoway.buildAuthHeaders(INFOWAY_API_KEY)
-                        }),
-                        fetch(klineUrl, {
-                            method: 'POST',
-                            headers: INFOWAY_PROXY_BASE ? {
-                                'content-type': 'application/json'
-                            } : {
-                                ...infoway.buildAuthHeaders(INFOWAY_API_KEY),
-                                'content-type': 'application/json'
-                            },
-                            body: JSON.stringify(infoway.buildKlineRequest(INFOWAY_CODES, 8, 1))
-                        })
-                    ]);
-
-                    const tradePayload = await tradeResponse.json();
-                    const klinePayload = await klineResponse.json();
-
-                    if (!tradeResponse.ok || tradePayload.ret !== 200) {
-                        if (INFOWAY_PROXY_BASE) infowayProxyUnavailable = true;
-                        throw new Error(tradePayload.msg || `Trade HTTP ${tradeResponse.status}`);
-                    }
-                    if (!klineResponse.ok || klinePayload.ret !== 200) {
-                        if (INFOWAY_PROXY_BASE) infowayProxyUnavailable = true;
-                        throw new Error(klinePayload.msg || `Kline HTTP ${klineResponse.status}`);
-                    }
-
-                    const tradeByBase = new Map(
-                        infoway.parseTradeResponse(tradePayload).map((item) => [item.base, item])
-                    );
-                    const klineByBase = infoway.mapKlineResponse(klinePayload);
-
-                    topCryptoCoins.forEach((sym) => {
-                        const trade = tradeByBase.get(sym);
-                        const daily = (klineByBase[sym] || [])[0];
-                        const prev = window.localData[sym] || {};
-                        const price = trade ? trade.price : (daily ? daily.close : prev.price || 0);
-
-                        if (!isFinite(price) || price <= 0) return;
-
-                        window.localData[sym] = {
-                            price: price,
-                            close: price,
-                            open: daily && isFinite(daily.open) && daily.open > 0 ? daily.open : (prev.open || price),
-                            high: daily && isFinite(daily.high) && daily.high > 0 ? daily.high : Math.max(prev.high || price, price),
-                            low: daily && isFinite(daily.low) && daily.low > 0 ? daily.low : Math.min(prev.low || price, price),
-                            volume: daily && isFinite(daily.volume) && daily.volume > 0 ? daily.volume : (trade ? trade.turnover || prev.volume || 0 : (prev.volume || 0)),
-                            change: daily && isFinite(daily.changePercent) ? daily.changePercent : (prev.change || 0)
-                        };
-
-                        updatePriceUI(sym, price);
-                        updateChangeUI(sym, window.localData[sym].change);
-                        updateVolumeUI(sym, window.localData[sym].volume);
-                        if (sym === (window.currentTradingCoin || 'BTC')) animateOrderbook(price);
-                    });
-
+                    const { tradePayload, klinePayload } = await requestInfowayMarketPayloads();
+                    applyInfowayMarketPayloads(tradePayload, klinePayload);
                     failureCount = 0;
                 } catch (e) {
                     console.warn('Infoway market fetch error:', e.message || e);
@@ -17132,6 +17143,20 @@ No transfer fees for account transfer / exchange</div>
                     applyMockData();
                 }
             }
+
+            window.refreshMobileMarketDataNow = async function () {
+                if (!shouldRefreshMarketData()) return 0;
+                try {
+                    useMock = false;
+                    const { tradePayload, klinePayload } = await requestInfowayMarketPayloads();
+                    applyInfowayMarketPayloads(tradePayload, klinePayload);
+                    failureCount = 0;
+                    return 1;
+                } catch (e) {
+                    console.warn('Immediate mobile market refresh failed:', e && e.message ? e.message : e);
+                    return 0;
+                }
+            };
 
             fetchQuotes();
 
