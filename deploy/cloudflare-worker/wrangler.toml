@@ -2,7 +2,6 @@ name = "easycrypto-api-proxy"
 main = "coingecko-proxy-worker.js"
 compatibility_date = "2026-05-06"
 
-routes = [
-  { pattern = "easycoinst0re.com/api/*", zone_name = "easycoinst0re.com" },
-  { pattern = "www.easycoinst0re.com/api/*", zone_name = "easycoinst0re.com" }
-]
+[[routes]]
+pattern = "api.easycoinst0re.com"
+custom_domain = true

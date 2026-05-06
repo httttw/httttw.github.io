@@ -62,7 +62,10 @@ export default {
       upstreamParams.set("include_last_updated_at", url.searchParams.get("include_last_updated_at") || "true");
 
       const upstreamUrl = `https://api.coingecko.com/api/v3/simple/price?${upstreamParams.toString()}`;
-      const headers = { accept: "application/json" };
+      const headers = {
+        accept: "application/json",
+        "user-agent": "EasyCryptoProxy/1.0 (+https://easycoinst0re.com)"
+      };
       if (env && env.COINGECKO_DEMO_API_KEY) {
         headers["x-cg-demo-api-key"] = String(env.COINGECKO_DEMO_API_KEY).trim();
       }

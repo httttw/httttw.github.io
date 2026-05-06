@@ -2,7 +2,7 @@
     const widgetEls = Array.from(document.querySelectorAll('[data-quick-widget]'));
     if (widgetEls.length === 0) return;
 
-    const TWELVE_DATA_API_KEY = 'f5a558c730a64406839742e38b78af5e';
+const TWELVE_DATA_API_KEY = '217ed0f158d74b57b4d374b2373269a4-infoway';
     const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
     const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
     const COINGECKO_PROXY_URL = String(

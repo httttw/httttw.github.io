@@ -16428,18 +16428,19 @@ No transfer fees for account transfer / exchange</div>
         const infoway = window.ECInfowayMarketData;
         const INFOWAY_WS_URL = `wss://data.infoway.io/ws?business=crypto&apikey=${encodeURIComponent(INFOWAY_API_KEY)}`;
         const APP_FRONTEND_HOSTS = new Set(['easycoinst0re.com', 'www.easycoinst0re.com', 'm.easycoinst0re.com', 'esycrupto.com', 'www.esycrupto.com', 'm.esycrupto.com', 'easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com', '127.0.0.1', 'localhost']);
+        const API_PROXY_ORIGIN = 'https://api.easycoinst0re.com';
         const INFOWAY_PROXY_BASE = (() => {
             const manual = String(window.EC_INFOWAY_PROXY_BASE || localStorage.getItem('ec_infoway_proxy_base') || '').trim();
             if (manual) return manual;
             const host = String(window.location.hostname || '').toLowerCase();
-            return APP_FRONTEND_HOSTS.has(host) ? '/api/infoway' : '';
+            return APP_FRONTEND_HOSTS.has(host) ? `${API_PROXY_ORIGIN}/api/infoway` : '';
         })();
         const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
         const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
         const COINGECKO_PROXY_URL = String(
             window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
         ).trim();
-        const ENABLE_COINGECKO = !!COINGECKO_PROXY_URL || !!COINGECKO_DEMO_KEY;
+        const ENABLE_COINGECKO = true;
         const COINGECKO_SYMBOL_TO_ID = {
             BTC: 'bitcoin',
             ETH: 'ethereum',
@@ -17001,10 +17002,10 @@ No transfer fees for account transfer / exchange</div>
                         throw new Error('Infoway proxy unavailable');
                     }
                     const tradeUrl = INFOWAY_PROXY_BASE
-                        ? `${INFOWAY_PROXY_BASE}/batch-trade?codes=${encodeURIComponent(INFOWAY_CODES.join(','))}&apikey=${encodeURIComponent(INFOWAY_API_KEY)}`
+                        ? `${INFOWAY_PROXY_BASE}/batch-trade?codes=${encodeURIComponent(INFOWAY_CODES.join(','))}`
                         : `${INFOWAY_HTTP_BASE}/crypto/batch_trade/${INFOWAY_CODES.join(',')}`;
                     const klineUrl = INFOWAY_PROXY_BASE
-                        ? `${INFOWAY_PROXY_BASE}/batch-kline?apikey=${encodeURIComponent(INFOWAY_API_KEY)}`
+                        ? `${INFOWAY_PROXY_BASE}/batch-kline`
                         : `${INFOWAY_HTTP_BASE}/crypto/v2/batch_kline`;
                     const [tradeResponse, klineResponse] = await Promise.all([
                         fetch(tradeUrl, INFOWAY_PROXY_BASE ? undefined : {
