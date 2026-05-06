@@ -16438,7 +16438,7 @@ No transfer fees for account transfer / exchange</div>
         const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
         const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
         const COINGECKO_PROXY_URL = String(
-            window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
+            window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || `${API_PROXY_ORIGIN}/api/coingecko/simple-price`
         ).trim();
         const ENABLE_COINGECKO = true;
         const COINGECKO_SYMBOL_TO_ID = {

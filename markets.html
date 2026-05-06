@@ -1461,7 +1461,7 @@
         const COINGECKO_PROXY_URL = (() => {
             const manual = String(window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || '').trim();
             if (manual) return manual;
-            return '';
+            return `${API_PROXY_ORIGIN}/api/coingecko/simple-price`;
         })();
         const ENABLE_COINGECKO = true;
         const COINGECKO_SYMBOL_TO_ID = {

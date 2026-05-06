@@ -76,7 +76,7 @@
                     <article class="tracker-worth-panel">
                         <h2 class="tracker-worth-title">Net Worth</h2>
                         <p class="tracker-worth-note">
-                            This is currently showing demo data - please make a trade to start tracking your own data
+                            Live portfolio analytics for Infoway-supported assets with automatic market refresh.
                         </p>
                         <div class="tracker-networth-wrap">
                             <svg id="tracker-networth-chart" viewBox="0 0 920 390" preserveAspectRatio="none"
@@ -163,7 +163,7 @@
                         <div>
                             <h2 class="tracker-section-title" data-tracker-i18n="holdingsTitle">Portfolio Holdings</h2>
                             <div class="tracker-subnote" data-tracker-i18n="subnote">
-                                Live market pricing from CoinGecko compatible API source.
+                                Live market pricing from Infoway-supported assets only.
                             </div>
                         </div>
                         <div class="tracker-controls">
@@ -261,7 +261,10 @@
     </div>
 
     <script src="/js/site-language.js"></script>
-    <script src="/js/tracker-page.js?v=20260310b"></script>
+    <script src="/js/site-api-config.js?v=20260506a"></script>
+    <script src="/js/infoway-market-data.js?v=20260506f"></script>
+    <script src="/js/infoway-site-data.js?v=20260506f"></script>
+    <script src="/js/tracker-page.js?v=20260506f"></script>
 </body>
 
 </html>

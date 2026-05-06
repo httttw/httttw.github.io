@@ -1,31 +1,19 @@
-﻿(function () {
-    const HOLDINGS = [
-        { symbol: 'BTC', id: 'bitcoin', name: 'Bitcoin', qty: 0.86, cost: 62350 },
-        { symbol: 'ETH', id: 'ethereum', name: 'Ethereum', qty: 7.4, cost: 2140 },
-        { symbol: 'SOL', id: 'solana', name: 'Solana', qty: 155, cost: 138 },
-        { symbol: 'XRP', id: 'ripple', name: 'XRP', qty: 12800, cost: 0.57 },
-        { symbol: 'BNB', id: 'binancecoin', name: 'BNB', qty: 19, cost: 486 },
-        { symbol: 'ADA', id: 'cardano', name: 'Cardano', qty: 9800, cost: 0.41 },
-        { symbol: 'DOGE', id: 'dogecoin', name: 'Dogecoin', qty: 102000, cost: 0.083 },
-        { symbol: 'LINK', id: 'chainlink', name: 'Chainlink', qty: 860, cost: 12.4 },
-        { symbol: 'DOT', id: 'polkadot', name: 'Polkadot', qty: 1200, cost: 6.18 },
-        { symbol: 'AVAX', id: 'avalanche-2', name: 'Avalanche', qty: 410, cost: 28.6 },
-        { symbol: 'TON', id: 'the-open-network', name: 'Toncoin', qty: 1900, cost: 2.9 },
-        { symbol: 'SUI', id: 'sui', name: 'Sui', qty: 7300, cost: 1.24 },
-        { symbol: 'ALGO', id: 'algorand', name: 'Algorand', qty: 19800, cost: 0.17 },
-        { symbol: 'NEO', id: 'neo', name: 'NEO', qty: 490, cost: 10.4 },
-        { symbol: 'IOTA', id: 'iota', name: 'IOTA', qty: 9800, cost: 0.24 },
-        { symbol: 'MANA', id: 'decentraland', name: 'Decentraland', qty: 16500, cost: 0.38 }
-    ];
+(function () {
+    const siteData = window.ECInfowaySiteData || null;
+    const marketData = window.ECInfowayMarketData || null;
+    const siteApiConfig = window.ECSiteApiConfig || null;
+    if (!siteData || !marketData) return;
 
+    const HOLDINGS = siteData.TRACKER_HOLDINGS.slice();
     const POLL_MS = 10000;
-    const META_REFRESH_MS = 180000;
-    const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
-    const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
-    const COINGECKO_PROXY_URL = String(
-        window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
-    ).trim();
-
+    const API_ORIGIN = siteApiConfig && typeof siteApiConfig.getApiOrigin === 'function'
+        ? siteApiConfig.getApiOrigin(window)
+        : 'https://api.easycoinst0re.com';
+    const INFOWAY_TRADE_URL = `${API_ORIGIN}/api/infoway/batch-trade`;
+    const INFOWAY_KLINE_URL = `${API_ORIGIN}/api/infoway/batch-kline`;
+    const marketCodes = HOLDINGS.map(function (item) {
+        return siteData.toMarketCode(item.base);
+    }).join(',');
     const DONUT_COLORS = ['#6c39ec', '#3f87ff', '#f59b1f', '#1cb16a', '#de4f88', '#16a5b8'];
 
     const COPY = {
@@ -125,11 +113,9 @@
         search: '',
         sort: dom.sortSelect.value || 'value',
         rows: [],
-        marketMeta: {},
         history: [],
         isLoading: false,
         errorText: '',
-        lastMetaAt: 0,
         lastUpdatedAt: 0
     };
 
@@ -153,7 +139,9 @@
     }
 
     function interpolate(template, values) {
-        return String(template || '').replace(/\{(\w+)\}/g, (_, token) => (values[token] == null ? '' : String(values[token])));
+        return String(template || '').replace(/\{(\w+)\}/g, function (_, token) {
+            return values[token] == null ? '' : String(values[token]);
+        });
     }
 
     function toNumber(value, fallback) {
@@ -199,12 +187,20 @@
 
     function formatQty(value) {
         const num = toNumber(value, 0);
-        return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: num < 1 ? 5 : 4 }).format(num);
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: num < 1 ? 5 : 4
+        }).format(num);
     }
 
     function formatClock(ts) {
         if (!(ts > 0)) return '--:--:--';
-        return new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(new Date(ts));
+        return new Intl.DateTimeFormat('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).format(new Date(ts));
     }
 
     function applyTone(el, value) {
@@ -214,88 +210,62 @@
         else if (value < 0) el.classList.add('tracker-negative');
     }
 
-    function chunkArray(items, size) {
-        const out = [];
-        for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-        return out;
-    }
-
-    async function fetchWithTimeout(url, options) {
+    function fetchWithTimeout(url, options) {
         const controller = new AbortController();
-        const timer = window.setTimeout(() => controller.abort(), 12000);
-        try {
-            return await fetch(url, { ...(options || {}), signal: controller.signal });
-        } finally {
+        const timer = window.setTimeout(function () {
+            controller.abort();
+        }, 12000);
+        return fetch(url, {
+            ...(options || {}),
+            signal: controller.signal
+        }).finally(function () {
             window.clearTimeout(timer);
-        }
+        });
     }
 
-    async function fetchSimpleChunk(idsChunk) {
-        const params = new URLSearchParams({
-            ids: idsChunk.join(','),
-            vs_currencies: 'usd',
-            include_24hr_change: 'true',
-            include_last_updated_at: 'true'
+    async function fetchQuotes() {
+        const tradeResponse = await fetchWithTimeout(`${INFOWAY_TRADE_URL}?codes=${encodeURIComponent(marketCodes)}`, {
+            headers: { accept: 'application/json' }
         });
+        if (!tradeResponse.ok) throw new Error(`Infoway trade HTTP ${tradeResponse.status}`);
+        const tradePayload = await tradeResponse.json();
+        const tradeRows = marketData.parseTradeResponse(tradePayload);
 
-        if (COINGECKO_PROXY_URL) {
-            const glue = COINGECKO_PROXY_URL.indexOf('?') >= 0 ? '&' : '?';
-            const proxyRes = await fetchWithTimeout(COINGECKO_PROXY_URL + glue + params.toString(), { headers: { accept: 'application/json' } });
-            if (proxyRes.ok) return await proxyRes.json();
-        }
-
-        const headers = { accept: 'application/json' };
-        if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
-        const directRes = await fetchWithTimeout(COINGECKO_BASE_URL + '/simple/price?' + params.toString(), { headers: headers });
-        if (!directRes.ok) throw new Error('simple-price HTTP ' + directRes.status);
-        return await directRes.json();
-    }
-    async function fetchMarketMeta() {
-        const params = new URLSearchParams({
-            vs_currency: 'usd',
-            ids: HOLDINGS.map((item) => item.id).join(','),
-            order: 'market_cap_desc',
-            per_page: '250',
-            page: '1',
-            sparkline: 'false',
-            price_change_percentage: '24h',
-            locale: 'en'
+        const klineResponse = await fetchWithTimeout(INFOWAY_KLINE_URL, {
+            method: 'POST',
+            headers: {
+                accept: 'application/json',
+                'content-type': 'application/json'
+            },
+            body: JSON.stringify(marketData.buildKlineRequest(marketCodes, 8, 7))
         });
-        const headers = { accept: 'application/json' };
-        if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
-        const response = await fetchWithTimeout(COINGECKO_BASE_URL + '/coins/markets?' + params.toString(), { headers: headers });
-        if (!response.ok) throw new Error('coins/markets HTTP ' + response.status);
-        const payload = await response.json();
-        const meta = {};
-        (payload || []).forEach((item) => {
-            if (!item || !item.id) return;
-            meta[item.id] = { image: item.image || '', name: item.name || '' };
-        });
-        state.marketMeta = meta;
-        state.lastMetaAt = Date.now();
+        if (!klineResponse.ok) throw new Error(`Infoway kline HTTP ${klineResponse.status}`);
+        const klinePayload = await klineResponse.json();
+        const dailyMap = marketData.mapKlineResponse(klinePayload);
+        return siteData.deriveUsdQuoteMap(tradeRows, dailyMap);
     }
 
-    function calcDayPnl(positionValue, dayChange) {
-        if (!Number.isFinite(dayChange)) return 0;
-        const denominator = 1 + (dayChange / 100);
+    function calcChangePnl(positionValue, changePercent) {
+        if (!Number.isFinite(changePercent)) return 0;
+        const denominator = 1 + (changePercent / 100);
         if (!(denominator > 0)) return 0;
         return positionValue - (positionValue / denominator);
     }
 
-    function buildRows(simpleMap) {
-        const rows = HOLDINGS.map((holding) => {
-            const simple = simpleMap[holding.id] || {};
-            const meta = state.marketMeta[holding.id] || {};
-            const marketPrice = toNumber(simple.usd, 0);
+    function buildRows(quoteMap) {
+        const rows = HOLDINGS.map(function (holding) {
+            const quote = quoteMap[holding.base];
+            const marketPrice = toNumber(quote && quote.price, 0);
             if (!(marketPrice > 0)) return null;
-            const dayChange = toNumber(simple.usd_24h_change, NaN);
             const positionValue = holding.qty * marketPrice;
             const invested = holding.qty * holding.cost;
             const pnl = positionValue - invested;
+            const dayChange = toNumber(quote && quote.changePercent, NaN);
+            const weekChange = toNumber(quote && quote.weekChange, 0);
             return {
-                symbol: holding.symbol,
-                name: meta.name || holding.name,
-                image: meta.image || '',
+                symbol: holding.base,
+                name: holding.name,
+                image: '',
                 qty: holding.qty,
                 cost: holding.cost,
                 marketPrice: marketPrice,
@@ -304,13 +274,15 @@
                 pnl: pnl,
                 pnlRate: invested > 0 ? (pnl / invested) * 100 : 0,
                 dayChange: dayChange,
-                dayPnl: calcDayPnl(positionValue, dayChange),
+                weekChange: weekChange,
+                dayPnl: calcChangePnl(positionValue, dayChange),
+                weekPnl: calcChangePnl(positionValue, weekChange),
                 allocation: 0
             };
         }).filter(Boolean);
 
-        const total = rows.reduce((sum, row) => sum + row.positionValue, 0);
-        rows.forEach((row) => {
+        const total = rows.reduce(function (sum, row) { return sum + row.positionValue; }, 0);
+        rows.forEach(function (row) {
             row.allocation = total > 0 ? (row.positionValue / total) * 100 : 0;
         });
         return rows;
@@ -319,20 +291,21 @@
     function filteredRows() {
         const query = state.search.trim().toLowerCase();
         if (!query) return state.rows.slice();
-        return state.rows.filter((row) => row.symbol.toLowerCase().includes(query) || row.name.toLowerCase().includes(query));
+        return state.rows.filter(function (row) {
+            return row.symbol.toLowerCase().includes(query) || row.name.toLowerCase().includes(query);
+        });
     }
 
     function sortedRows(rows) {
         const sorted = rows.slice();
-        if (state.sort === 'name') sorted.sort((a, b) => String(a.name).localeCompare(String(b.name)));
-        else if (state.sort === 'pnl') sorted.sort((a, b) => b.pnl - a.pnl);
-        else if (state.sort === 'change') sorted.sort((a, b) => (toNumber(b.dayChange, -Infinity) - toNumber(a.dayChange, -Infinity)));
-        else sorted.sort((a, b) => b.positionValue - a.positionValue);
+        if (state.sort === 'name') sorted.sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+        else if (state.sort === 'pnl') sorted.sort(function (a, b) { return b.pnl - a.pnl; });
+        else if (state.sort === 'change') sorted.sort(function (a, b) { return toNumber(b.dayChange, -Infinity) - toNumber(a.dayChange, -Infinity); });
+        else sorted.sort(function (a, b) { return b.positionValue - a.positionValue; });
         return sorted;
     }
 
     function iconMarkup(row, className) {
-        if (row.image) return '<span class="' + className + '"><img src="' + escapeHtml(row.image) + '" alt="' + escapeHtml(row.symbol) + '"></span>';
         const text = row.symbol.length > 4 ? row.symbol.slice(0, 2) : row.symbol.slice(0, 3);
         return '<span class="' + className + '">' + escapeHtml(text) + '</span>';
     }
@@ -350,7 +323,7 @@
             rows.push(Math.max(500, trend + wave + micro));
         }
         const scale = totalValue > 0 ? totalValue / rows[rows.length - 1] : 1;
-        state.history = rows.map((value) => Math.max(500, value * scale));
+        state.history = rows.map(function (value) { return Math.max(500, value * scale); });
     }
 
     function updateHistory(totalValue) {
@@ -391,11 +364,13 @@
             return margin.top + ((max - v) / range) * plotH;
         }
 
-        const points = series.map((value, index) => {
+        const points = series.map(function (value, index) {
             return { x: pxX(index), y: pxY(value), value: value };
         });
 
-        const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2)).join(' ');
+        const linePath = points.map(function (p, i) {
+            return (i === 0 ? 'M' : 'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2);
+        }).join(' ');
         const areaPath = linePath + ' L ' + points[points.length - 1].x.toFixed(2) + ' ' + (margin.top + plotH).toFixed(2)
             + ' L ' + points[0].x.toFixed(2) + ' ' + (margin.top + plotH).toFixed(2) + ' Z';
 
@@ -442,7 +417,7 @@
             return;
         }
 
-        const top = rows.slice().sort((a, b) => b.allocation - a.allocation).slice(0, 6);
+        const top = rows.slice().sort(function (a, b) { return b.allocation - a.allocation; }).slice(0, 6);
         let angle = 0;
         const stops = [];
         const legend = [];
@@ -466,15 +441,16 @@
         dom.donutLegend.innerHTML = legend.join('');
         if (dom.marketDepth) dom.marketDepth.innerHTML = rows.length + '<br>' + escapeHtml(t('coins'));
     }
+
     function renderStats(rows) {
-        const totalValue = rows.reduce((sum, row) => sum + row.positionValue, 0);
-        const invested = rows.reduce((sum, row) => sum + row.invested, 0);
+        const totalValue = rows.reduce(function (sum, row) { return sum + row.positionValue; }, 0);
+        const invested = rows.reduce(function (sum, row) { return sum + row.invested; }, 0);
         const unrealized = totalValue - invested;
         const totalReturnRate = invested > 0 ? (unrealized / invested) * 100 : 0;
-        const dayPnl = rows.reduce((sum, row) => sum + row.dayPnl, 0);
-        const weeklyPnl = dayPnl * 7;
-        const winners = rows.filter((row) => Number.isFinite(row.dayChange) && row.dayChange > 0).length;
-        const losers = rows.filter((row) => Number.isFinite(row.dayChange) && row.dayChange < 0).length;
+        const dayPnl = rows.reduce(function (sum, row) { return sum + row.dayPnl; }, 0);
+        const weeklyPnl = rows.reduce(function (sum, row) { return sum + row.weekPnl; }, 0);
+        const winners = rows.filter(function (row) { return Number.isFinite(row.dayChange) && row.dayChange > 0; }).length;
+        const losers = rows.filter(function (row) { return Number.isFinite(row.dayChange) && row.dayChange < 0; }).length;
 
         if (dom.totalValue) dom.totalValue.textContent = formatMoney(totalValue);
         if (dom.investedValue) dom.investedValue.textContent = formatMoney(invested);
@@ -499,10 +475,6 @@
         applyTone(dom.weeklyChange, weeklyPnl);
         applyTone(dom.dayChange, dayPnl);
 
-        if (dom.marketDepth && dom.marketDepth.nodeType === 1 && dom.marketDepth.tagName !== 'SPAN') {
-            dom.marketDepth.textContent = interpolate(t('assetsCount'), { count: rows.length }) + ' | ' + interpolate(t('splitLabel'), { wins: winners, losses: losers });
-        }
-
         updateHistory(totalValue);
         renderNetWorthChart();
     }
@@ -512,7 +484,7 @@
             dom.allocationList.innerHTML = '<div class="tracker-allocation-item">--</div>';
             return;
         }
-        dom.allocationList.innerHTML = rows.slice().sort((a, b) => b.positionValue - a.positionValue).slice(0, 6).map((row) => {
+        dom.allocationList.innerHTML = rows.slice().sort(function (a, b) { return b.positionValue - a.positionValue; }).slice(0, 6).map(function (row) {
             return '<div class="tracker-allocation-item">'
                 + '<div class="tracker-allocation-head"><span>' + escapeHtml(row.name) + ' (' + escapeHtml(row.symbol) + ')</span><span>' + formatPercentUnsigned(row.allocation) + '</span></div>'
                 + '<div class="tracker-allocation-meta"><span>' + formatQty(row.qty) + ' ' + escapeHtml(row.symbol) + '</span><span>' + formatMoney(row.positionValue, true) + '</span></div>'
@@ -522,14 +494,15 @@
     }
 
     function renderMovers(rows) {
-        const ranked = rows.filter((row) => Number.isFinite(row.dayChange)).sort((a, b) => b.dayChange - a.dayChange);
-        const merged = ranked.slice(0, 3).map((row) => ({ row: row, side: 'up' })).concat(ranked.slice().reverse().slice(0, 3).map((row) => ({ row: row, side: 'down' })));
+        const ranked = rows.filter(function (row) { return Number.isFinite(row.dayChange); }).sort(function (a, b) { return b.dayChange - a.dayChange; });
+        const merged = ranked.slice(0, 3).map(function (row) { return { row: row, side: 'up' }; })
+            .concat(ranked.slice().reverse().slice(0, 3).map(function (row) { return { row: row, side: 'down' }; }));
         if (!merged.length) {
             dom.moversList.innerHTML = '<div class="tracker-mover-item">--</div>';
             return;
         }
 
-        dom.moversList.innerHTML = merged.map((item) => {
+        dom.moversList.innerHTML = merged.map(function (item) {
             const row = item.row;
             const isUp = item.side === 'up';
             return '<div class="tracker-mover-item">'
@@ -540,7 +513,7 @@
     }
 
     function renderTable(rows) {
-        dom.tableBody.innerHTML = rows.map((row) => {
+        dom.tableBody.innerHTML = rows.map(function (row) {
             const dayTone = row.dayChange >= 0 ? 'tracker-positive' : 'tracker-negative';
             const pnlTone = row.pnl >= 0 ? 'tracker-positive' : 'tracker-negative';
             return '<tr>'
@@ -592,24 +565,8 @@
         render();
 
         try {
-            const ids = HOLDINGS.map((item) => item.id);
-            const chunks = chunkArray(ids, 45);
-            const simpleMap = {};
-            for (let i = 0; i < chunks.length; i += 1) {
-                const payload = await fetchSimpleChunk(chunks[i]);
-                Object.keys(payload || {}).forEach((id) => {
-                    simpleMap[id] = payload[id];
-                });
-            }
-
-            if (Date.now() - state.lastMetaAt > META_REFRESH_MS) {
-                fetchMarketMeta().then(() => {
-                    state.rows = buildRows(simpleMap);
-                    render();
-                }).catch(() => { });
-            }
-
-            const rows = buildRows(simpleMap);
+            const quoteMap = await fetchQuotes();
+            const rows = buildRows(quoteMap);
             if (!rows.length) throw new Error('No tracker rows generated');
             state.rows = rows;
             state.errorText = '';
@@ -625,24 +582,24 @@
     }
 
     function initEvents() {
-        dom.searchInput.addEventListener('input', (event) => {
+        dom.searchInput.addEventListener('input', function (event) {
             state.search = String(event.target.value || '');
             render();
         });
-        dom.sortSelect.addEventListener('change', (event) => {
+        dom.sortSelect.addEventListener('change', function (event) {
             state.sort = String(event.target.value || 'value');
             render();
         });
-        dom.refreshBtn.addEventListener('click', () => {
+        dom.refreshBtn.addEventListener('click', function () {
             refreshRows(true);
         });
-        document.addEventListener('visibilitychange', () => {
+        document.addEventListener('visibilitychange', function () {
             if (!document.hidden) refreshRows(false);
         });
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', function () {
             renderNetWorthChart();
         });
-        window.addEventListener('storage', (event) => {
+        window.addEventListener('storage', function (event) {
             if (event.key === 'ec_site_lang' || event.key === 'ec_language') applyI18n();
         });
     }
@@ -650,5 +607,7 @@
     applyI18n();
     initEvents();
     refreshRows(true);
-    window.setInterval(() => refreshRows(false), POLL_MS);
+    window.setInterval(function () {
+        refreshRows(false);
+    }, POLL_MS);
 })();

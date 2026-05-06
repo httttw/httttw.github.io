@@ -2,59 +2,42 @@
     const widgetEls = Array.from(document.querySelectorAll('[data-quick-widget]'));
     if (widgetEls.length === 0) return;
 
-const TWELVE_DATA_API_KEY = '217ed0f158d74b57b4d374b2373269a4-infoway';
-    const COINGECKO_BASE_URL = 'https://api.coingecko.com/api/v3';
-    const COINGECKO_DEMO_KEY = String(window.EC_COINGECKO_DEMO_KEY || localStorage.getItem('ec_coingecko_demo_key') || '').trim();
-    const COINGECKO_PROXY_URL = String(
-        window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || ''
-    ).trim();
+    const siteData = window.ECInfowaySiteData || null;
+    const marketData = window.ECInfowayMarketData || null;
+    const siteApiConfig = window.ECSiteApiConfig || null;
+    if (!siteData || !marketData) return;
+    const API_ORIGIN = siteApiConfig && typeof siteApiConfig.getApiOrigin === 'function'
+        ? siteApiConfig.getApiOrigin(window)
+        : 'https://api.easycoinst0re.com';
+    const INFOWAY_TRADE_URL = `${API_ORIGIN}/api/infoway/batch-trade`;
 
     const FIAT_OPTIONS = [
-        { code: 'AUD', name: 'Australian dollar', icon: 'https://flagcdn.com/w80/au.png' },
-        { code: 'USD', name: 'US dollar', icon: 'https://flagcdn.com/w80/us.png' },
-        { code: 'EUR', name: 'Euro', icon: 'https://flagcdn.com/w80/eu.png' }
+        { code: 'USD', name: 'US dollar', icon: 'https://flagcdn.com/w80/us.png' }
     ];
 
-    const CRYPTO_ICON_CMC_IDS = {
-        BTC: 1,
-        ETH: 1027,
-        USDT: 825
-    };
-
-    const CRYPTO_OPTIONS = [
-        { code: 'BTC', name: 'Bitcoin', icon: getPrimaryCryptoIcon('BTC') },
-        { code: 'ETH', name: 'Ethereum', icon: getPrimaryCryptoIcon('ETH') },
-        { code: 'USDT', name: 'Tether', icon: getPrimaryCryptoIcon('USDT') },
-        { code: 'WBT', name: 'WhiteBIT Coin', icon: getPrimaryCryptoIcon('WBT') }
-    ];
-
-    const COINGECKO_SYMBOL_TO_ID = {
-        BTC: 'bitcoin',
-        ETH: 'ethereum',
-        USDT: 'tether',
-        WBT: 'whitebit'
-    };
+    const CRYPTO_OPTIONS = siteData.QUICK_CONVERTER_CRYPTO_OPTIONS.map(function (item) {
+        return {
+            code: item.code,
+            name: item.name,
+            icon: makeCryptoSvgFallback(item.code)
+        };
+    });
 
     const FIAT_SET = new Set(FIAT_OPTIONS.map((item) => item.code));
     const CRYPTO_SET = new Set(CRYPTO_OPTIONS.map((item) => item.code));
     const quoteState = {
         fiatUsd: {
-            AUD: 0.64,
-            USD: 1,
-            EUR: 1.09
+            USD: 1
         },
-        cryptoUsd: {
-            BTC: 67000,
-            ETH: 2000,
-            USDT: 1,
-            WBT: 54
-        },
+        cryptoUsd: Object.fromEntries(CRYPTO_OPTIONS.map((item) => [item.code, 0])),
         loaded: false
     };
 
-    let coingeckoProxyUnavailable = false;
     let refreshTimer = null;
     let activeMenu = null;
+    const tradeCodes = CRYPTO_OPTIONS.map(function (item) {
+        return siteData.toMarketCode(item.code);
+    }).join(',');
 
     const dropdownEl = document.createElement('div');
     dropdownEl.className = 'quick-currency-dropdown';
@@ -80,16 +63,7 @@ const TWELVE_DATA_API_KEY = '217ed0f158d74b57b4d374b2373269a4-infoway';
 
     function getCryptoIconCandidates(code) {
         const normalized = String(code || '').trim().toUpperCase();
-        const lower = normalized.toLowerCase();
-        const urls = [];
-
-        if (CRYPTO_ICON_CMC_IDS[normalized]) {
-            urls.push(`https://s2.coinmarketcap.com/static/img/coins/64x64/${CRYPTO_ICON_CMC_IDS[normalized]}.png`);
-        }
-
-        urls.push(`https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@master/32/color/${lower}.png`);
-        urls.push(makeCryptoSvgFallback(normalized));
-        return urls;
+        return [makeCryptoSvgFallback(normalized)];
     }
 
     function getPrimaryCryptoIcon(code) {
@@ -261,11 +235,11 @@ const TWELVE_DATA_API_KEY = '217ed0f158d74b57b4d374b2373269a4-infoway';
             ? convertAmount(1, widget.state.toCode, widget.state.fromCode)
             : convertAmount(1, widget.state.fromCode, widget.state.toCode);
         const unitLabel = widget.state.mode === 'buy'
-            ? `1 ${widget.state.toCode} ~ ${formatMoneyAmount(unitAmount, widget.state.fromCode)}`
-            : `1 ${widget.state.fromCode} ~ ${formatMoneyAmount(unitAmount, widget.state.toCode)}`;
+                ? `1 ${widget.state.toCode} ~ ${formatMoneyAmount(unitAmount, widget.state.fromCode)}`
+                : `1 ${widget.state.fromCode} ~ ${formatMoneyAmount(unitAmount, widget.state.toCode)}`;
         const actionHint = widget.state.mode === 'buy'
-            ? 'Use the dropdown to choose currencies.'
-            : 'You are now selling crypto into fiat.';
+            ? 'Infoway-supported coins only.'
+            : 'You are now selling crypto into USD.';
         setWidgetMeta(widget, `${unitLabel}. ${actionHint}`);
     }
 
@@ -436,7 +410,7 @@ const TWELVE_DATA_API_KEY = '217ed0f158d74b57b4d374b2373269a4-infoway';
             el: widgetEl,
             state: {
                 mode: 'buy',
-                fromCode: 'AUD',
+                fromCode: 'USD',
                 toCode: 'BTC',
                 lastEdited: 'from'
             },
@@ -496,66 +470,33 @@ const TWELVE_DATA_API_KEY = '217ed0f158d74b57b4d374b2373269a4-infoway';
         return widget;
     }
 
-    async function fetchTwelveDataRates() {
-        const symbols = ['AUD/USD', 'EUR/USD', 'BTC/USD', 'ETH/USD', 'WBT/USDT'];
-        const url = `https://api.twelvedata.com/quote?symbol=${symbols.map(encodeURIComponent).join(',')}&apikey=${TWELVE_DATA_API_KEY}`;
-        const response = await fetch(url);
-        const payload = await response.json();
-        const results = symbols.length === 1 && !payload[symbols[0]] ? { [symbols[0]]: payload } : payload;
+    function fetchWithTimeout(url, options) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(function () {
+            controller.abort();
+        }, 15000);
 
-        if (results['AUD/USD'] && !results['AUD/USD'].status) {
-            quoteState.fiatUsd.AUD = Number(results['AUD/USD'].close || quoteState.fiatUsd.AUD);
-        }
-        if (results['EUR/USD'] && !results['EUR/USD'].status) {
-            quoteState.fiatUsd.EUR = Number(results['EUR/USD'].close || quoteState.fiatUsd.EUR);
-        }
-        if (results['BTC/USD'] && !results['BTC/USD'].status) {
-            quoteState.cryptoUsd.BTC = Number(results['BTC/USD'].close || quoteState.cryptoUsd.BTC);
-        }
-        if (results['ETH/USD'] && !results['ETH/USD'].status) {
-            quoteState.cryptoUsd.ETH = Number(results['ETH/USD'].close || quoteState.cryptoUsd.ETH);
-        }
-        if (results['WBT/USDT'] && !results['WBT/USDT'].status) {
-            quoteState.cryptoUsd.WBT = Number(results['WBT/USDT'].close || quoteState.cryptoUsd.WBT);
-        }
-    }
-
-    async function fetchCoinGeckoSimplePrice(idsCsv) {
-        const params = new URLSearchParams({
-            ids: idsCsv,
-            vs_currencies: 'usd',
-            include_24hr_change: 'true',
-            include_24hr_vol: 'true',
-            include_last_updated_at: 'true'
+        return fetch(url, {
+            ...(options || {}),
+            signal: controller.signal
+        }).finally(function () {
+            window.clearTimeout(timer);
         });
-
-        if (COINGECKO_PROXY_URL && !coingeckoProxyUnavailable) {
-            const glue = COINGECKO_PROXY_URL.includes('?') ? '&' : '?';
-            const proxyUrl = `${COINGECKO_PROXY_URL}${glue}${params.toString()}`;
-            const proxyResponse = await fetch(proxyUrl, { headers: { accept: 'application/json' } });
-            if (proxyResponse.ok) return await proxyResponse.json();
-            if (proxyResponse.status === 404 || proxyResponse.status === 502 || proxyResponse.status === 530) {
-                coingeckoProxyUnavailable = true;
-            }
-        }
-
-        const headers = { accept: 'application/json' };
-        if (COINGECKO_DEMO_KEY) headers['x-cg-demo-api-key'] = COINGECKO_DEMO_KEY;
-        const directResponse = await fetch(`${COINGECKO_BASE_URL}/simple/price?${params.toString()}`, { headers });
-        if (!directResponse.ok) {
-            throw new Error(`CoinGecko HTTP ${directResponse.status}`);
-        }
-        return await directResponse.json();
     }
 
-    async function fetchCoinGeckoRates() {
-        const ids = Object.values(COINGECKO_SYMBOL_TO_ID);
-        const payload = await fetchCoinGeckoSimplePrice(ids.join(','));
-        Object.keys(COINGECKO_SYMBOL_TO_ID).forEach((code) => {
-            const id = COINGECKO_SYMBOL_TO_ID[code];
-            const entry = payload[id];
-            if (!entry || !Number.isFinite(Number(entry.usd))) return;
-            quoteState.cryptoUsd[code] = Number(entry.usd);
+    async function fetchInfowayRates() {
+        const response = await fetchWithTimeout(`${INFOWAY_TRADE_URL}?codes=${encodeURIComponent(tradeCodes)}`, {
+            headers: { accept: 'application/json' }
+        });
+        if (!response.ok) {
+            throw new Error(`Infoway trade HTTP ${response.status}`);
+        }
+        const payload = await response.json();
+        const rows = marketData.parseTradeResponse(payload);
+        rows.forEach(function (row) {
+            if (CRYPTO_SET.has(row.base) && Number.isFinite(Number(row.price)) && row.price > 0) {
+                quoteState.cryptoUsd[row.base] = Number(row.price);
+            }
         });
     }
 
@@ -564,15 +505,9 @@ const TWELVE_DATA_API_KEY = '217ed0f158d74b57b4d374b2373269a4-infoway';
     async function refreshRates() {
         if (document.visibilityState === 'hidden') return;
         try {
-            await fetchTwelveDataRates();
+            await fetchInfowayRates();
         } catch (err) {
-            console.warn('Quick converter TwelveData fetch failed:', err.message || err);
-        }
-
-        try {
-            await fetchCoinGeckoRates();
-        } catch (err) {
-            console.warn('Quick converter CoinGecko fetch failed:', err.message || err);
+            console.warn('Quick converter Infoway fetch failed:', err.message || err);
         }
 
         quoteState.loaded = true;

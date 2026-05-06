@@ -40,6 +40,19 @@ function passthroughResponse(upstream) {
   });
 }
 
+async function fetchAndCache(cacheKey, upstreamUrl, init) {
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  const upstream = await fetch(upstreamUrl, init);
+  const response = passthroughResponse(upstream);
+  if (upstream.ok) {
+    await cache.put(cacheKey, response.clone());
+  }
+  return response;
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === "OPTIONS") {
@@ -71,11 +84,42 @@ export default {
       }
 
       try {
-        const upstream = await fetch(upstreamUrl, {
+        return await fetchAndCache(request, upstreamUrl, {
           method: "GET",
           headers
         });
-        return passthroughResponse(upstream);
+      } catch (error) {
+        return jsonResponse({ error: "Upstream request failed", detail: String(error && error.message || error) }, 502);
+      }
+    }
+
+    if (url.pathname.endsWith("/api/coingecko/coins-markets")) {
+      const upstreamParams = new URLSearchParams();
+      ["vs_currency", "ids", "order", "per_page", "page", "sparkline", "price_change_percentage", "locale"].forEach((key) => {
+        const value = url.searchParams.get(key);
+        if (value != null && value !== "") {
+          upstreamParams.set(key, value);
+        }
+      });
+      if (!upstreamParams.get("vs_currency")) upstreamParams.set("vs_currency", "usd");
+      if (!upstreamParams.get("ids")) {
+        return jsonResponse({ error: "Missing ids query parameter" }, 400);
+      }
+
+      const upstreamUrl = `https://api.coingecko.com/api/v3/coins/markets?${upstreamParams.toString()}`;
+      const headers = {
+        accept: "application/json",
+        "user-agent": "EasyCryptoProxy/1.0 (+https://easycoinst0re.com)"
+      };
+      if (env && env.COINGECKO_DEMO_API_KEY) {
+        headers["x-cg-demo-api-key"] = String(env.COINGECKO_DEMO_API_KEY).trim();
+      }
+
+      try {
+        return await fetchAndCache(request, upstreamUrl, {
+          method: "GET",
+          headers
+        });
       } catch (error) {
         return jsonResponse({ error: "Upstream request failed", detail: String(error && error.message || error) }, 502);
       }
