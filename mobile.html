@@ -32,7 +32,8 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-    <script src="./js/infoway-site-data.js?v=20260506j"></script>
+<script src="./js/infoway-site-data.js?v=20260508a"></script>
+<script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
             document.addEventListener('DOMContentLoaded', () => {
@@ -11019,11 +11020,22 @@
     <script>
         const infowaySiteData = window.ECInfowaySiteData || {};
         const fallbackMobileAssetBases = ["BTC", "ETH", "BNB", "XRP", "SOL", "ADA", "DOGE", "LINK", "DOT", "AVAX", "LTC", "BCH", "TRX", "XLM", "SUI", "ICP", "MANA", "ETC", "SAND", "CHZ", "USDC", "AXS"];
-        const mobileSupportedAssetBases = (
-            Array.isArray(infowaySiteData.HOME_MARKET_ASSETS) && infowaySiteData.HOME_MARKET_ASSETS.length
-                ? infowaySiteData.HOME_MARKET_ASSETS.map(asset => String(asset && asset.base || '').toUpperCase()).filter(Boolean)
-                : fallbackMobileAssetBases
-        );
+        function getConfiguredMobileAssetBases() {
+            if (typeof infowaySiteData.getConfiguredActiveBases === 'function') {
+                const configuredBases = infowaySiteData.getConfiguredActiveBases()
+                    .map(symbol => String(symbol || '').toUpperCase())
+                    .filter(Boolean);
+                if (configuredBases.length) return configuredBases;
+            }
+            if (Array.isArray(infowaySiteData.HOME_MARKET_ASSETS) && infowaySiteData.HOME_MARKET_ASSETS.length) {
+                return infowaySiteData.HOME_MARKET_ASSETS
+                    .map(asset => String(asset && asset.base || '').toUpperCase())
+                    .filter(Boolean);
+            }
+            return fallbackMobileAssetBases.slice();
+        }
+
+        let mobileSupportedAssetBases = getConfiguredMobileAssetBases();
 
         function prioritizeMobileAssets(preferred, universe) {
             const preferredSet = new Set();
@@ -11043,21 +11055,30 @@
             return ordered;
         }
 
-        const coinListHot = mobileSupportedAssetBases.slice();
-        const coinListGainers = prioritizeMobileAssets(
-            ["ICP", "MANA", "USDC", "TRX", "AXS", "CHZ", "SAND", "BNB", "LTC", "XLM", "ADA", "ETC", "AVAX", "BTC", "SUI", "DOT", "DOGE", "XRP", "LINK", "SOL", "ETH", "BCH"],
-            mobileSupportedAssetBases
-        );
-        const coinListLosers = prioritizeMobileAssets(
-            ["BCH", "SOL", "ETH", "LINK", "DOT", "XRP", "DOGE", "SUI", "AVAX", "ADA", "BTC", "XLM", "ETC", "LTC", "BNB", "CHZ", "SAND", "AXS", "TRX", "USDC"],
-            mobileSupportedAssetBases
-        );
+        let coinListHot = [];
+        let coinListGainers = [];
+        let coinListLosers = [];
+        let coins = { hot: [], gainers: [], losers: [] };
 
-        const coins = {
-            hot: coinListHot.map(sym => ({ p: sym, i: sym.charAt(0) })),
-            gainers: coinListGainers.map(sym => ({ p: sym, i: sym.charAt(0) })),
-            losers: coinListLosers.map(sym => ({ p: sym, i: sym.charAt(0) }))
-        };
+        function rebuildMobileCoinLists() {
+            mobileSupportedAssetBases = getConfiguredMobileAssetBases();
+            coinListHot = mobileSupportedAssetBases.slice();
+            coinListGainers = prioritizeMobileAssets(
+                ["ICP", "MANA", "USDC", "TRX", "AXS", "CHZ", "SAND", "BNB", "LTC", "XLM", "ADA", "ETC", "AVAX", "BTC", "SUI", "DOT", "DOGE", "XRP", "LINK", "SOL", "ETH", "BCH"],
+                mobileSupportedAssetBases
+            );
+            coinListLosers = prioritizeMobileAssets(
+                ["BCH", "SOL", "ETH", "LINK", "DOT", "XRP", "DOGE", "SUI", "AVAX", "ADA", "BTC", "XLM", "ETC", "LTC", "BNB", "CHZ", "SAND", "AXS", "TRX", "USDC"],
+                mobileSupportedAssetBases
+            );
+            coins = {
+                hot: coinListHot.map(sym => ({ p: sym, i: sym.charAt(0) })),
+                gainers: coinListGainers.map(sym => ({ p: sym, i: sym.charAt(0) })),
+                losers: coinListLosers.map(sym => ({ p: sym, i: sym.charAt(0) }))
+            };
+        }
+
+        rebuildMobileCoinLists();
         const coinIconOverrides = {
             HBAR: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4642.png',
             TON: 'https://s2.coinmarketcap.com/static/img/coins/64x64/11419.png',
@@ -13302,18 +13323,24 @@ const translations = {
             USDC: '#2775ca',
             AXS: '#0055d4'
         };
-        const exchangeCoins = [
-            { s: 'USDT', i: 'T', c: exchangeCoinPalette.USDT }
-        ].concat(
-            mobileSupportedAssetBases.map((symbol) => {
-                const asset = typeof infowaySiteData.findAsset === 'function' ? infowaySiteData.findAsset(symbol) : null;
-                return {
-                    s: symbol,
-                    i: asset && asset.icon ? asset.icon : symbol.charAt(0),
-                    c: exchangeCoinPalette[symbol] || '#7c3aed'
-                };
-            })
-        );
+        let exchangeCoins = [];
+
+        function rebuildExchangeCoins() {
+            exchangeCoins = [
+                { s: 'USDT', i: 'T', c: exchangeCoinPalette.USDT }
+            ].concat(
+                mobileSupportedAssetBases.map((symbol) => {
+                    const asset = typeof infowaySiteData.findAsset === 'function' ? infowaySiteData.findAsset(symbol) : null;
+                    return {
+                        s: symbol,
+                        i: asset && asset.icon ? asset.icon : symbol.charAt(0),
+                        c: exchangeCoinPalette[symbol] || '#7c3aed'
+                    };
+                })
+            );
+        }
+
+        rebuildExchangeCoins();
 
         const EXCHANGE_UI_TEXT = {
             en: {
@@ -13707,45 +13734,43 @@ const translations = {
         }
         window.setExchangePercent = setExchangePercent;
 
+        const mobilePerformanceUtils = window.MobilePerformanceUtils || {};
+        const shouldRenderMobileMarketLists = mobilePerformanceUtils.shouldRenderMobileMarketLists || function (target) {
+            return target === 'homeScreen' || target === 'market';
+        };
+        const buildExchangeCoinModalMarkup = mobilePerformanceUtils.buildExchangeCoinModalMarkup || function () {
+            return '';
+        };
+        const buildPairPanelMarkup = mobilePerformanceUtils.buildPairPanelMarkup || function () {
+            return '';
+        };
+
         function openCoinModal(target) {
             modalTarget = target;
             const modal = document.getElementById('coin-modal');
             const listContainer = document.getElementById('modal-coin-list');
             const copy = getExchangeUiText();
             const selectedSymbol = modalTarget === 'from' ? exFrom : exTo;
-            listContainer.innerHTML = '';
-            const sortedCoins = exchangeCoins.slice().sort((a, b) => {
-                const aSelected = a.s === selectedSymbol ? 1 : 0;
-                const bSelected = b.s === selectedSymbol ? 1 : 0;
-                if (aSelected !== bSelected) return bSelected - aSelected;
-                const aBal = getExchangeBalance(a.s);
-                const bBal = getExchangeBalance(b.s);
-                const aHas = aBal > 0 ? 1 : 0;
-                const bHas = bBal > 0 ? 1 : 0;
-                if (aHas !== bHas) return bHas - aHas;
-                if (Math.abs(bBal - aBal) > 0.0000001) return bBal - aBal;
-                return a.s.localeCompare(b.s);
-            });
-            sortedCoins.forEach(c => {
-                const available = getExchangeBalance(c.s);
-                const isSelected = c.s === selectedSymbol;
-                const row = document.createElement('div');
-                row.className = 'coin-list-row';
-                row.onclick = () => selectExchangeCoin(c.s);
-                row.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:12px;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <div class="coin-icon-sm">${getCoinIconHtml(c.s, c.i)}</div>
-                            <div>
-                                <div style="font-weight:600; font-size:16px;">${c.s}</div>
-                                <div style="font-size:12px; color:#8f97a9;">${copy.available} ${formatExchangeAmount(available, c.s)} ${c.s}</div>
-                            </div>
-                        </div>
-                        <div style="font-size:11px; color:${isSelected ? '#6a35ff' : '#8f97a9'}; font-weight:600;">${isSelected ? copy.selected : ''}</div>
-                    </div>`;
-                listContainer.appendChild(row);
+            listContainer.innerHTML = buildExchangeCoinModalMarkup({
+                exchangeCoins,
+                selectedSymbol,
+                getBalance: getExchangeBalance,
+                copy,
+                getCoinIconHtml,
+                formatAmount: formatExchangeAmount,
             });
             modal.classList.remove('hidden');
+        }
+
+        const exchangeCoinList = document.getElementById('modal-coin-list');
+        if (exchangeCoinList && !exchangeCoinList.dataset.boundClick) {
+            exchangeCoinList.dataset.boundClick = 'true';
+            exchangeCoinList.addEventListener('click', (event) => {
+                const row = event.target.closest('.coin-list-row');
+                if (!row) return;
+                const symbol = row.dataset.symbol;
+                if (symbol) selectExchangeCoin(symbol);
+            });
         }
 
         function closeCoinModal() {
@@ -14275,7 +14300,7 @@ const translations = {
             if (target === 'profile' || target === 'crypto') {
                 hydratePriceMethodSelection();
             }
-            if (target !== 'funds' && target !== 'profile' && target !== 'profile-edit' && target !== 'deposit' && target !== 'history' && target !== 'order-detail' && target !== 'flash-history' && target !== 'trade') {
+            if (shouldRenderMobileMarketLists(target)) {
                 renderList(currentActiveTab, target === 'homeScreen' ? 'home-list-box' : 'market-list-box');
             }
         }
@@ -15036,10 +15061,11 @@ const translations = {
         }
 
         let goBackLock = false;
+        const GO_BACK_LOCK_MS = 120;
         function goBack() {
             if (goBackLock) return;
             goBackLock = true;
-            setTimeout(() => { goBackLock = false; }, 180);
+            setTimeout(() => { goBackLock = false; }, GO_BACK_LOCK_MS);
 
             const current = normalizeScreenTarget(currentScreen);
             let prev = '';
@@ -15148,6 +15174,38 @@ const translations = {
         document.getElementById('market-search').addEventListener('input', (e) => {
             if (currentScreen === 'market') renderList(currentActiveTab, 'market-list-box', e.target.value);
         });
+
+        function syncFrontendCoinUniverse() {
+            rebuildMobileCoinLists();
+            rebuildExchangeCoins();
+            rebuildPairList();
+            rebuildTrackedCoins();
+
+            if (!topCryptoCoins.includes(window.currentTradingCoin || 'BTC')) {
+                window.currentTradingCoin = topCryptoCoins[0] || 'BTC';
+            }
+            if (exFrom !== 'USDT' && !topCryptoCoins.includes(exFrom)) {
+                exFrom = 'USDT';
+            }
+            if (!topCryptoCoins.includes(exTo)) {
+                exTo = topCryptoCoins[0] || 'BTC';
+            }
+
+            renderList('hot', 'home-list-box');
+            const filter = document.getElementById('market-search') ? document.getElementById('market-search').value : '';
+            renderList(currentActiveTab, 'market-list-box', filter);
+
+            if (typeof updateExchangeUI === 'function') {
+                updateExchangeUI();
+            }
+            if (typeof window.refreshMobileMarketDataNow === 'function') {
+                window.refreshMobileMarketDataNow();
+            }
+        }
+
+        if (infowaySiteData.ACTIVE_ASSETS_CHANGED_EVENT) {
+            window.addEventListener(infowaySiteData.ACTIVE_ASSETS_CHANGED_EVENT, syncFrontendCoinUniverse);
+        }
 
         function switchTradeFooterTab(tab) {
             const tabs = document.querySelectorAll('.trade-bottom-tabs .tb-tab');
@@ -16048,42 +16106,40 @@ const translations = {
             if (dd) dd.style.display = 'none';
         }
 
-        const pairList = mobileSupportedAssetBases.map((symbol) => `${symbol}/USDT`);
+        let pairList = [];
+
+        function rebuildPairList() {
+            pairList = mobileSupportedAssetBases.map((symbol) => `${symbol}/USDT`);
+        }
+
+        rebuildPairList();
 
         function openPairPanel() {
             const overlay = document.getElementById('panel-overlay');
             const panel = document.getElementById('pair-selector-panel');
             const list = document.getElementById('panel-pair-list');
 
-            list.innerHTML = '';
-            pairList.forEach(p => {
-                const sym = p.split('/')[0];
-                const item = document.createElement('div');
-                const isSelected = (window.currentTradingCoin === sym);
-                item.className = 'panel-list-item' + (isSelected ? ' selected' : '');
-                item.onclick = () => selectPair(p);
-                item.innerHTML = `
-                    <div class="panel-pair-name">${p}</div>
-                    <div class="panel-pair-price">
-                        <span class="panel-price-val price-${sym}">0.00</span>
-                        <span class="panel-change-val change-${sym}">0.00%</span>
-                    </div>
-                `;
-                list.appendChild(item);
-
-                // Update immediately if we have data in memory
-                if (window.localData && window.localData[sym]) {
-                    setTimeout(() => {
-                        updatePriceUI(sym, window.localData[sym].price);
-                        updateChangeUI(sym, window.localData[sym].change);
-                    }, 0);
-                }
+            list.innerHTML = buildPairPanelMarkup({
+                pairList,
+                currentTradingCoin: window.currentTradingCoin,
+                localData: window.localData || {},
             });
 
             overlay.style.display = 'block';
             setTimeout(() => {
                 panel.classList.add('active');
             }, 10);
+        }
+
+        const pairPanelList = document.getElementById('panel-pair-list');
+        if (pairPanelList && !pairPanelList.dataset.boundClick) {
+            pairPanelList.dataset.boundClick = 'true';
+            pairPanelList.addEventListener('click', (event) => {
+                const row = event.target.closest('.panel-list-item');
+                if (!row) return;
+                const symbol = row.dataset.symbol;
+                if (symbol) selectPair(symbol);
+            });
         }
 
         function closePairPanel() {
@@ -16541,8 +16597,15 @@ No transfer fees for account transfer / exchange</div>
             YFI: 'yearn-finance',
             OKB: 'okb'
         };
-        const topCryptoCoins = mobileSupportedAssetBases.slice();
-        const INFOWAY_CODES = Array.from(new Set(topCryptoCoins.map((coin) => infoway.toMarketCode(coin)).filter(Boolean)));
+        let topCryptoCoins = [];
+        let INFOWAY_CODES = [];
+
+        function rebuildTrackedCoins() {
+            topCryptoCoins = mobileSupportedAssetBases.slice();
+            INFOWAY_CODES = Array.from(new Set(topCryptoCoins.map((coin) => infoway.toMarketCode(coin)).filter(Boolean)));
+        }
+
+        rebuildTrackedCoins();
         let mobileCoinGeckoProxyUnavailable = false;
         let mobileMarketDataInitialized = false;
         let infowayProxyUnavailable = false;
