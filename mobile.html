@@ -32,8 +32,9 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-<script src="./js/infoway-site-data.js?v=20260511b"></script>
-<script src="./js/mobile-market-data-guards.js?v=20260511b"></script>
+<script src="./js/infoway-site-data.js?v=20260511c"></script>
+<script src="./js/mobile-market-data-guards.js?v=20260511c"></script>
+<script src="./js/mobile-nav-state-utils.js?v=20260511c"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
@@ -44,7 +45,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260511b';
+        const mobileBuildId = '20260511c';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -14041,18 +14042,26 @@ const translations = {
             setTimeout(apply, 100);
         }
 
+        const mobileNavStateUtils = window.ECMobileNavStateUtils || {};
+
         function syncBottomNavState() {
             const bottomNav = document.querySelector('.bottom-nav');
             const authScreen = document.getElementById('auth-screen');
             const appScreen = document.getElementById('app-screen');
             if (!bottomNav || !authScreen || !appScreen) return;
             const authVisible = !authScreen.classList.contains('hidden');
-            const appVisible = !appScreen.classList.contains('hidden');
             const current = normalizeScreenTarget(currentScreen);
             const shouldUseSupportFooterOnly = current === 'supportScreen' || current === 'supportChatScreen';
             appScreen.classList.toggle('bottom-nav-hidden', shouldUseSupportFooterOnly);
             document.body.classList.toggle('support-footer-only', shouldUseSupportFooterOnly);
-            if (appVisible && !authVisible && !shouldUseSupportFooterOnly) {
+            const shouldShowBottomNav = typeof mobileNavStateUtils.shouldShowMobileBottomNav === 'function'
+                ? mobileNavStateUtils.shouldShowMobileBottomNav({
+                    currentScreen: current,
+                    appOpen: document.body.classList.contains('app-open'),
+                    authVisible,
+                })
+                : (!authVisible && !shouldUseSupportFooterOnly);
+            if (shouldShowBottomNav) {
                 ensureBottomNavVisible(true);
             } else {
                 bottomNav.classList.add('hidden');
@@ -14262,17 +14271,12 @@ const translations = {
             ];
             const isRootLevel = rootLevelScreens.includes(target);
 
-            // Header and Bottom Nav visibility
+            // Header visibility
             const header = document.querySelector('.header-bar');
-            const bottomNav = document.querySelector('.bottom-nav');
 
             const shouldHideHeaderNav = isRootLevel || target === 'support' || target === 'profile' || target === 'trade' || target === 'supportScreen' || target === 'kline';
 
             if (header) header.classList.toggle('hidden', shouldHideHeaderNav);
-            if (bottomNav) bottomNav.classList.remove('hidden');
-            ensureBottomNavVisible(true);
-            syncBottomNavState();
-            syncSupportFabState();
 
             const appScreen = document.getElementById('app-screen');
             const isInsideApp = !!(targetEl && appScreen && appScreen.contains(targetEl));
@@ -14283,6 +14287,11 @@ const translations = {
                     appScreen.classList.add('hidden');
                 }
             }
+
+            const bottomNav = document.querySelector('.bottom-nav');
+            if (bottomNav) bottomNav.classList.remove('hidden');
+            syncBottomNavState();
+            syncSupportFabState();
 
             updateTradeNavState(target);
 
@@ -16536,7 +16545,7 @@ No transfer fees for account transfer / exchange</div>
         }
     </script>
 
-    <script src="./js/infoway-market-data.js?v=20260511b"></script>
+<script src="./js/infoway-market-data.js?v=20260511c"></script>
     <!-- INFOWAY API INTEGRATION -->
     <script>
         const INFOWAY_API_KEY = "217ed0f158d74b57b4d374b2373269a4-infoway";
@@ -19563,7 +19572,7 @@ No transfer fees for account transfer / exchange</div>
     </div>
     <script src="./js/mobile-deposit-utils.js?v=20260510a"></script>
     <script src="./js/mobile-deposit-fixes.js?v=20260510a"></script>
-    <script src="/js/site-language.js?v=20260511b"></script>
+    <script src="/js/site-language.js?v=20260511c"></script>
 </body>
 
 </html>
