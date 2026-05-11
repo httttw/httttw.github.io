@@ -4,16 +4,12 @@
     const siteApiConfig = window.ECSiteApiConfig || null;
     if (!siteData || !marketData) return;
 
-    const HOLDINGS = siteData.TRACKER_HOLDINGS.slice();
     const POLL_MS = 10000;
     const API_ORIGIN = siteApiConfig && typeof siteApiConfig.getApiOrigin === 'function'
         ? siteApiConfig.getApiOrigin(window)
         : 'https://api.easycoinst0re.com';
     const INFOWAY_TRADE_URL = `${API_ORIGIN}/api/infoway/batch-trade`;
     const INFOWAY_KLINE_URL = `${API_ORIGIN}/api/infoway/batch-kline`;
-    const marketCodes = HOLDINGS.map(function (item) {
-        return siteData.toMarketCode(item.base);
-    }).join(',');
     const DONUT_COLORS = ['#6c39ec', '#3f87ff', '#f59b1f', '#1cb16a', '#de4f88', '#16a5b8'];
 
     const COPY = {
@@ -118,6 +114,19 @@
         errorText: '',
         lastUpdatedAt: 0
     };
+
+    function getHoldings() {
+        if (typeof siteData.getActiveTrackerHoldings === 'function') {
+            return siteData.getActiveTrackerHoldings().slice();
+        }
+        return siteData.TRACKER_HOLDINGS.slice();
+    }
+
+    function getMarketCodes() {
+        return getHoldings().map(function (item) {
+            return siteData.toMarketCode(item.base);
+        }).join(',');
+    }
 
     function normalizeLang(value) {
         const raw = String(value || '').trim().toLowerCase();
@@ -224,6 +233,9 @@
     }
 
     async function fetchQuotes() {
+        const marketCodes = getMarketCodes();
+        if (!marketCodes) return {};
+
         const tradeResponse = await fetchWithTimeout(`${INFOWAY_TRADE_URL}?codes=${encodeURIComponent(marketCodes)}`, {
             headers: { accept: 'application/json' }
         });
@@ -253,7 +265,7 @@
     }
 
     function buildRows(quoteMap) {
-        const rows = HOLDINGS.map(function (holding) {
+        const rows = getHoldings().map(function (holding) {
             const quote = quoteMap[holding.base];
             const marketPrice = toNumber(quote && quote.price, 0);
             if (!(marketPrice > 0)) return null;
@@ -286,6 +298,12 @@
             row.allocation = total > 0 ? (row.positionValue / total) * 100 : 0;
         });
         return rows;
+    }
+
+    if (siteData.ACTIVE_ASSETS_CHANGED_EVENT) {
+        window.addEventListener(siteData.ACTIVE_ASSETS_CHANGED_EVENT, function () {
+            refreshData(true);
+        });
     }
 
     function filteredRows() {

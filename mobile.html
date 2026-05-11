@@ -32,7 +32,8 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-<script src="./js/infoway-site-data.js?v=20260508a"></script>
+<script src="./js/infoway-site-data.js?v=20260511b"></script>
+<script src="./js/mobile-market-data-guards.js?v=20260511b"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
@@ -43,7 +44,7 @@
     </script>
     <script>
         (function () {
-            const mobileBuildId = '20260506j';
+        const mobileBuildId = '20260511b';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -16535,12 +16536,13 @@ No transfer fees for account transfer / exchange</div>
         }
     </script>
 
-    <script src="./js/infoway-market-data.js?v=20260506j"></script>
+    <script src="./js/infoway-market-data.js?v=20260511b"></script>
     <!-- INFOWAY API INTEGRATION -->
     <script>
         const INFOWAY_API_KEY = "217ed0f158d74b57b4d374b2373269a4-infoway";
         const INFOWAY_HTTP_BASE = 'https://data.infoway.io';
         const infoway = window.ECInfowayMarketData;
+        const mobileMarketDataGuards = window.ECMobileMarketDataGuards || {};
         const INFOWAY_WS_URL = `wss://data.infoway.io/ws?business=crypto&apikey=${encodeURIComponent(INFOWAY_API_KEY)}`;
         const APP_FRONTEND_HOSTS = new Set(['easycoinst0re.com', 'www.easycoinst0re.com', 'm.easycoinst0re.com', 'esycrupto.com', 'www.esycrupto.com', 'm.esycrupto.com', 'easycryptoguide.com', 'www.easycryptoguide.com', 'm.easycryptoguide.com', '127.0.0.1', 'localhost']);
         const API_PROXY_ORIGIN = 'https://api.easycoinst0re.com';
@@ -16556,6 +16558,9 @@ No transfer fees for account transfer / exchange</div>
             window.EC_COINGECKO_PROXY_URL || localStorage.getItem('ec_coingecko_proxy_url') || `${API_PROXY_ORIGIN}/api/coingecko/simple-price`
         ).trim();
         const ENABLE_COINGECKO = true;
+        const ALLOW_MARKET_MOCK_FALLBACK = typeof mobileMarketDataGuards.shouldEnableMockMarketData === 'function'
+            ? mobileMarketDataGuards.shouldEnableMockMarketData(window.location.hostname)
+            : false;
         const COINGECKO_SYMBOL_TO_ID = {
             BTC: 'bitcoin',
             ETH: 'ethereum',
@@ -16766,21 +16771,23 @@ No transfer fees for account transfer / exchange</div>
 
         window.localData = window.localData || {};
         window.allCoinsData = window.localData;
-        // Initially load mock data to prevent zeros if API takes a while or fails
-        Object.keys(fallbackMockData).forEach(sym => {
-            if (!window.localData[sym]) {
-                const basePrice = fallbackMockData[sym].price;
-                window.localData[sym] = {
-                    price: basePrice,
-                    close: basePrice,
-                    open: basePrice,
-                    high: basePrice * 1.02,
-                    low: basePrice * 0.98,
-                    volume: 0,
-                    change: fallbackMockData[sym].change
-                };
-            }
-        });
+        if (ALLOW_MARKET_MOCK_FALLBACK) {
+            // Local-only mock seed for offline development.
+            Object.keys(fallbackMockData).forEach(sym => {
+                if (!window.localData[sym]) {
+                    const basePrice = fallbackMockData[sym].price;
+                    window.localData[sym] = {
+                        price: basePrice,
+                        close: basePrice,
+                        open: basePrice,
+                        high: basePrice * 1.02,
+                        low: basePrice * 0.98,
+                        volume: 0,
+                        change: fallbackMockData[sym].change
+                    };
+                }
+            });
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             initPhoneCountryCodeSelectors();
@@ -16829,7 +16836,7 @@ No transfer fees for account transfer / exchange</div>
 
             // Render initial memory immediately
             topCryptoCoins.forEach(sym => {
-                if (window.localData[sym]) {
+                if (window.localData[sym] && Number(window.localData[sym].price) > 0) {
                     updatePriceUI(sym, window.localData[sym].price);
                     updateChangeUI(sym, window.localData[sym].change);
                 }
@@ -17203,8 +17210,14 @@ No transfer fees for account transfer / exchange</div>
                         return;
                     }
                     failureCount++;
-                    if (failureCount >= 3) useMock = true;
-                    applyMockData();
+                    if (typeof mobileMarketDataGuards.shouldPromoteToMock === 'function') {
+                        useMock = mobileMarketDataGuards.shouldPromoteToMock(ALLOW_MARKET_MOCK_FALLBACK, failureCount, 3);
+                    } else {
+                        useMock = ALLOW_MARKET_MOCK_FALLBACK && failureCount >= 3;
+                    }
+                    if (useMock) {
+                        applyMockData();
+                    }
                 }
             }
 
@@ -17231,10 +17244,12 @@ No transfer fees for account transfer / exchange</div>
                 }, 30000, 90000);
             }
 
-            // Keep prices alive without hammering profile/settings/support pages.
-            scheduleMarketRefresh(() => {
-                applyMockData();
-            }, 3000, 12000);
+            if (ALLOW_MARKET_MOCK_FALLBACK) {
+                // Local-only visual fallback when developing without live APIs.
+                scheduleMarketRefresh(() => {
+                    applyMockData();
+                }, 3000, 12000);
+            }
 
             // Poll for quotes to update base prices from API.
             scheduleMarketRefresh(() => {
@@ -17257,9 +17272,13 @@ No transfer fees for account transfer / exchange</div>
                 socket.onmessage = (event) => {
                     const data = JSON.parse(event.data);
                     if (data.code >= 400 || data.msg === 'error' || data.status === 'error') {
-                        useMock = true;
+                        if (ALLOW_MARKET_MOCK_FALLBACK) {
+                            useMock = true;
+                            socket.close();
+                            applyMockData();
+                            return;
+                        }
                         socket.close();
-                        applyMockData();
                         return;
                     }
                     if (data.code === 10002 && data.data) {
@@ -19544,7 +19563,7 @@ No transfer fees for account transfer / exchange</div>
     </div>
     <script src="./js/mobile-deposit-utils.js?v=20260510a"></script>
     <script src="./js/mobile-deposit-fixes.js?v=20260510a"></script>
-    <script src="/js/site-language.js?v=20260506j"></script>
+    <script src="/js/site-language.js?v=20260511b"></script>
 </body>
 
 </html>

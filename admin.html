@@ -2525,6 +2525,7 @@
         </div>
     </div>
 
+<script src="/js/infoway-site-data.js?v=20260511b"></script>
     <script src="/js/perpetual-symbols.js"></script>
     <script type="module">
         import { auth, signOut, checkSession, db, collection, onSnapshot, doc, updateDoc, deleteDoc, getDoc, setDoc, query, orderBy, addDoc, serverTimestamp, increment } from '../firebase-config.js';
@@ -4220,8 +4221,24 @@
             DOGE: { primary: 'Dogecoin Mainnet', aliases: ['Dogecoin Mainnet', 'Dogecoin'] },
             BNB: { primary: 'BEP', aliases: ['BEP', 'BEP20', 'BEP2'] },
             XRP: { primary: 'XRP Ledger', aliases: ['XRP Ledger'] },
-            TRX: { primary: 'TRC20', aliases: ['TRC20'] }
+            TRX: { primary: 'TRC20', aliases: ['TRC20'] },
+            ADA: { primary: 'Cardano', aliases: ['Cardano'] },
+            LINK: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            DOT: { primary: 'Polkadot', aliases: ['Polkadot'] },
+            AVAX: { primary: 'Avalanche C-Chain', aliases: ['Avalanche C-Chain', 'AVAX C-Chain'] },
+            LTC: { primary: 'Litecoin', aliases: ['Litecoin'] },
+            BCH: { primary: 'Bitcoin Cash', aliases: ['Bitcoin Cash', 'BCH'] },
+            XLM: { primary: 'Stellar', aliases: ['Stellar', 'XLM'] },
+            SUI: { primary: 'Sui', aliases: ['Sui'] },
+            ICP: { primary: 'Internet Computer', aliases: ['Internet Computer', 'ICP'] },
+            MANA: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            ETC: { primary: 'Ethereum Classic', aliases: ['Ethereum Classic', 'ETC'] },
+            SAND: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            CHZ: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] },
+            AXS: { primary: 'ERC20', aliases: ['ERC20', 'ERC-20'] }
         };
+
+        const adminSiteData = window.ECInfowaySiteData || null;
 
         function getAdminDepositRule(symbol) {
             return ADMIN_SINGLE_CHAIN_RULES[String(symbol || '').trim().toUpperCase()] || null;
@@ -4244,6 +4261,34 @@
             if (!select || !primary) return;
             select.innerHTML = `<option value="${primary}">${primary}</option>`;
             select.value = primary;
+        }
+
+        function getAdminSupportedDepositSymbols() {
+            const fallback = Object.keys(ADMIN_SINGLE_CHAIN_RULES);
+            if (!adminSiteData || !Array.isArray(adminSiteData.SUPPORTED_ASSETS)) {
+                return fallback;
+            }
+            return adminSiteData.SUPPORTED_ASSETS
+                .map((asset) => String(asset && asset.base || '').toUpperCase())
+                .filter((symbol) => !!getAdminDepositRule(symbol));
+        }
+
+        function populateDepositCryptoOptions(selectedSymbol) {
+            const select = document.getElementById('depositCrypto');
+            if (!select) return;
+
+            const symbols = getAdminSupportedDepositSymbols();
+            const preferred = String(selectedSymbol || select.value || symbols[0] || 'USDT').toUpperCase();
+            select.innerHTML = symbols.map((symbol) => {
+                const asset = adminSiteData && typeof adminSiteData.findAsset === 'function'
+                    ? adminSiteData.findAsset(symbol)
+                    : null;
+                const name = asset && asset.name ? asset.name : symbol;
+                return `<option value="${symbol}">${symbol} (${name})</option>`;
+            }).join('');
+
+            select.value = symbols.includes(preferred) ? preferred : (symbols[0] || 'USDT');
+            populateDepositNetworkOptions(select.value);
         }
 
         function resolveAdminDepositNetworkEntry(symbol, networks) {
@@ -4269,8 +4314,7 @@
         }
 
         window.openAddDepositModal = function () {
-            document.getElementById('depositCrypto').value = 'USDT';
-            populateDepositNetworkOptions('USDT');
+            populateDepositCryptoOptions('USDT');
             document.getElementById('depositAddress').value = '';
             document.getElementById('depositStatus').checked = true;
             document.getElementById('qrPreviewImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=EnterAddress';
@@ -5423,6 +5467,7 @@
                 document.getElementById('qrPreviewImage').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(qrData)}`;
             }
         };
+        populateDepositCryptoOptions('USDT');
         document.getElementById('depositAddress')?.addEventListener('input', updatePreview);
         document.getElementById('depositCrypto')?.addEventListener('change', function (event) {
             populateDepositNetworkOptions(event.target.value);

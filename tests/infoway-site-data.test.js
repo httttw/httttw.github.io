@@ -6,6 +6,12 @@ const {
     RATE_ASSETS,
     TRACKER_HOLDINGS,
     QUICK_CONVERTER_CRYPTO_OPTIONS,
+    getActiveHomeMarketAssets,
+    getActiveRateAssets,
+    getActiveTrackerHoldings,
+    getActiveQuickConverterOptions,
+    setConfiguredActiveBases,
+    resetConfiguredActiveBases,
     isSupportedBase,
     computeWeeklyChange,
     deriveUsdQuoteMap
@@ -60,4 +66,31 @@ test('derives a USD quote map from Infoway trade and kline payloads', () => {
     assert.equal(quotes.BTC.volume, 822074214.9862617);
     assert.equal(quotes.ETH.price, 2415);
     assert.equal(quotes.ETH.weekChange.toFixed(2), '2.36');
+});
+
+test('filters active frontend assets by backend-configured bases while preserving supported order', () => {
+    resetConfiguredActiveBases();
+    setConfiguredActiveBases(['ETH', 'USDT', 'BTC', 'SOL', 'BNB', 'USDC', 'UNKNOWN']);
+
+    assert.deepEqual(getActiveHomeMarketAssets().map((item) => item.base), [
+        'BTC', 'ETH', 'BNB', 'SOL', 'USDC'
+    ]);
+    assert.deepEqual(getActiveRateAssets().map((item) => item.base), [
+        'BTC', 'ETH', 'BNB', 'SOL', 'USDC'
+    ]);
+    assert.deepEqual(getActiveTrackerHoldings().map((item) => item.base), [
+        'BTC', 'ETH', 'BNB', 'SOL', 'USDC'
+    ]);
+    assert.deepEqual(getActiveQuickConverterOptions().map((item) => item.code), [
+        'BTC', 'ETH', 'BNB', 'SOL', 'USDC'
+    ]);
+});
+
+test('falls back to default frontend assets when backend-configured bases are empty', () => {
+    setConfiguredActiveBases([]);
+    assert.deepEqual(
+        getActiveHomeMarketAssets().map((item) => item.base),
+        HOME_MARKET_ASSETS.map((item) => item.base)
+    );
+    resetConfiguredActiveBases();
 });

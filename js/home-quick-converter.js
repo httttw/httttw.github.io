@@ -15,29 +15,21 @@
         { code: 'USD', name: 'US dollar', icon: 'https://flagcdn.com/w80/us.png' }
     ];
 
-    const CRYPTO_OPTIONS = siteData.QUICK_CONVERTER_CRYPTO_OPTIONS.map(function (item) {
-        return {
-            code: item.code,
-            name: item.name,
-            icon: makeCryptoSvgFallback(item.code)
-        };
-    });
-
     const FIAT_SET = new Set(FIAT_OPTIONS.map((item) => item.code));
-    const CRYPTO_SET = new Set(CRYPTO_OPTIONS.map((item) => item.code));
     const quoteState = {
         fiatUsd: {
             USD: 1
         },
-        cryptoUsd: Object.fromEntries(CRYPTO_OPTIONS.map((item) => [item.code, 0])),
+        cryptoUsd: {},
         loaded: false
     };
 
     let refreshTimer = null;
     let activeMenu = null;
-    const tradeCodes = CRYPTO_OPTIONS.map(function (item) {
-        return siteData.toMarketCode(item.code);
-    }).join(',');
+    let CRYPTO_OPTIONS = buildCryptoOptions();
+    let CRYPTO_SET = new Set(CRYPTO_OPTIONS.map((item) => item.code));
+    let tradeCodes = buildTradeCodes(CRYPTO_OPTIONS);
+    let widgets = [];
 
     const dropdownEl = document.createElement('div');
     dropdownEl.className = 'quick-currency-dropdown';
@@ -59,6 +51,47 @@
             </svg>
         `.trim();
         return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    }
+
+    function buildCryptoOptions() {
+        const optionsSource = typeof siteData.getActiveQuickConverterOptions === 'function'
+            ? siteData.getActiveQuickConverterOptions()
+            : siteData.QUICK_CONVERTER_CRYPTO_OPTIONS;
+        return optionsSource.map(function (item) {
+            return {
+                code: item.code,
+                name: item.name,
+                icon: makeCryptoSvgFallback(item.code)
+            };
+        });
+    }
+
+    function buildTradeCodes(options) {
+        return (options || []).map(function (item) {
+            return siteData.toMarketCode(item.code);
+        }).join(',');
+    }
+
+    function syncCryptoOptions() {
+        CRYPTO_OPTIONS = buildCryptoOptions();
+        CRYPTO_SET = new Set(CRYPTO_OPTIONS.map((item) => item.code));
+        tradeCodes = buildTradeCodes(CRYPTO_OPTIONS);
+        quoteState.cryptoUsd = Object.fromEntries(CRYPTO_OPTIONS.map((item) => [
+            item.code,
+            Number(quoteState.cryptoUsd[item.code] || 0)
+        ]));
+
+        const nextDefault = CRYPTO_OPTIONS[0] ? CRYPTO_OPTIONS[0].code : 'BTC';
+        widgets.forEach(function (widget) {
+            if (!CRYPTO_SET.has(widget.state.fromCode) && widget.state.mode === 'sell') {
+                widget.state.fromCode = nextDefault;
+            }
+            if (!CRYPTO_SET.has(widget.state.toCode)) {
+                widget.state.toCode = nextDefault;
+            }
+            updateLabels(widget);
+            recalculate(widget, widget.state.lastEdited, false);
+        });
     }
 
     function getCryptoIconCandidates(code) {
@@ -500,7 +533,8 @@
         });
     }
 
-    const widgets = widgetEls.map(createWidget);
+    syncCryptoOptions();
+    widgets = widgetEls.map(createWidget);
 
     async function refreshRates() {
         if (document.visibilityState === 'hidden') return;
@@ -524,6 +558,13 @@
         if (refreshTimer) return;
         refreshRates();
         refreshTimer = window.setInterval(refreshRates, 20000);
+    }
+
+    if (siteData.ACTIVE_ASSETS_CHANGED_EVENT) {
+        window.addEventListener(siteData.ACTIVE_ASSETS_CHANGED_EVENT, function () {
+            syncCryptoOptions();
+            refreshRates();
+        });
     }
 
     if (document.readyState === 'complete') {

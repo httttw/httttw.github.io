@@ -4,7 +4,6 @@
     const siteApiConfig = window.ECSiteApiConfig || null;
     if (!siteData || !marketData) return;
 
-    const RATE_UNIVERSE = siteData.RATE_ASSETS.slice();
     const DEFAULT_LANG = 'en';
     const POLL_MS = 30000;
     const PRICE_SPREAD_RATE = 0.005;
@@ -13,10 +12,6 @@
         : 'https://api.easycoinst0re.com';
     const INFOWAY_TRADE_URL = `${API_ORIGIN}/api/infoway/batch-trade`;
     const INFOWAY_KLINE_URL = `${API_ORIGIN}/api/infoway/batch-kline`;
-    const marketCodes = RATE_UNIVERSE.map(function (item) {
-        return siteData.toMarketCode(item.base);
-    }).join(',');
-
     const COPY = {
         en: {
             loading: 'Loading live rates...',
@@ -59,6 +54,19 @@
         errorText: '',
         lastUpdatedAt: 0
     };
+
+    function getRateUniverse() {
+        if (typeof siteData.getActiveRateAssets === 'function') {
+            return siteData.getActiveRateAssets().slice();
+        }
+        return siteData.RATE_ASSETS.slice();
+    }
+
+    function getMarketCodes() {
+        return getRateUniverse().map(function (item) {
+            return siteData.toMarketCode(item.base);
+        }).join(',');
+    }
 
     function normalizeLang(value) {
         const raw = String(value || '').trim().toLowerCase();
@@ -150,6 +158,9 @@
     }
 
     async function fetchQuotes() {
+        const marketCodes = getMarketCodes();
+        if (!marketCodes) return {};
+
         const tradeResponse = await fetchWithTimeout(`${INFOWAY_TRADE_URL}?codes=${encodeURIComponent(marketCodes)}`, {
             headers: { accept: 'application/json' }
         });
@@ -172,7 +183,7 @@
     }
 
     function buildRows(quoteMap) {
-        return RATE_UNIVERSE.map(function (asset) {
+        return getRateUniverse().map(function (asset) {
             const quote = quoteMap[asset.base];
             if (!quote || !(quote.price > 0)) return null;
             return {
@@ -186,6 +197,12 @@
                 volume: toNumber(quote.volume, 0)
             };
         }).filter(Boolean);
+    }
+
+    if (siteData.ACTIVE_ASSETS_CHANGED_EVENT) {
+        window.addEventListener(siteData.ACTIVE_ASSETS_CHANGED_EVENT, function () {
+            refreshData(true);
+        });
     }
 
     function filteredRows() {

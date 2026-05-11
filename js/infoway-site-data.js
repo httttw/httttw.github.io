@@ -7,6 +7,7 @@
         root.ECInfowaySiteData = api;
     }
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+    const ACTIVE_ASSETS_CHANGED_EVENT = 'ec:active-assets-changed';
     const SUPPORTED_ASSETS = [
         { base: 'BTC', symbol: 'BTC/USDT', name: 'Bitcoin', accent: 'amber', icon: 'B' },
         { base: 'ETH', symbol: 'ETH/USDT', name: 'Ethereum', accent: 'blue', icon: 'E' },
@@ -76,6 +77,12 @@
         .filter(Boolean);
 
     const SUPPORTED_BASES = new Set(SUPPORTED_ASSETS.map(function (item) { return item.base; }));
+    const DEFAULT_HOME_BASES = HOME_MARKET_ASSETS.map(function (item) { return item.base; });
+    const FIREBASE_PROJECT_ID = 'easycrypto-3d6bb';
+    const FIREBASE_API_KEY = 'AIzaSyBQRl3toKm_L8Nzfi7_73Gl6lHcaJNv1bU';
+    const DEPOSIT_ADDRESSES_ENDPOINT = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents/deposit_addresses?key=${FIREBASE_API_KEY}`;
+    let configuredActiveBases = null;
+    let configuredActiveBasesBootstrap = null;
 
     function cleanBase(value) {
         return String(value || '').trim().toUpperCase().replace('/USDT', '');
@@ -88,6 +95,154 @@
 
     function isSupportedBase(base) {
         return SUPPORTED_BASES.has(cleanBase(base));
+    }
+
+    function normalizeConfiguredBases(bases) {
+        const requested = new Set();
+        (Array.isArray(bases) ? bases : []).forEach(function (base) {
+            const clean = cleanBase(base);
+            if (!clean || !isSupportedBase(clean)) return;
+            requested.add(clean);
+        });
+        return DEFAULT_HOME_BASES.filter(function (base) {
+            return requested.has(base);
+        });
+    }
+
+    function getEffectiveActiveBases() {
+        return configuredActiveBases && configuredActiveBases.length
+            ? configuredActiveBases.slice()
+            : DEFAULT_HOME_BASES.slice();
+    }
+
+    function filterAssetsByBases(assets, bases, key) {
+        const allowed = new Set(bases);
+        return (assets || []).filter(function (item) {
+            return item && allowed.has(cleanBase(item[key]));
+        });
+    }
+
+    function dispatchActiveAssetsChanged() {
+        if (typeof globalThis === 'undefined' || !globalThis.dispatchEvent || typeof globalThis.CustomEvent !== 'function') {
+            return;
+        }
+        globalThis.dispatchEvent(new globalThis.CustomEvent(ACTIVE_ASSETS_CHANGED_EVENT, {
+            detail: {
+                bases: getEffectiveActiveBases()
+            }
+        }));
+    }
+
+    function setConfiguredActiveBases(bases) {
+        const normalized = normalizeConfiguredBases(bases);
+        configuredActiveBases = normalized.length ? normalized : null;
+        dispatchActiveAssetsChanged();
+        return getEffectiveActiveBases();
+    }
+
+    function resetConfiguredActiveBases() {
+        configuredActiveBases = null;
+        dispatchActiveAssetsChanged();
+        return getEffectiveActiveBases();
+    }
+
+    function getConfiguredActiveBases() {
+        return getEffectiveActiveBases();
+    }
+
+    function getActiveHomeMarketAssets() {
+        return filterAssetsByBases(HOME_MARKET_ASSETS, getEffectiveActiveBases(), 'base');
+    }
+
+    function getActiveRateAssets() {
+        return filterAssetsByBases(RATE_ASSETS, getEffectiveActiveBases(), 'base');
+    }
+
+    function getActiveTrackerHoldings() {
+        const holdingByBase = new Map(
+            TRACKER_HOLDINGS.map(function (item) {
+                return [cleanBase(item && item.base), item];
+            })
+        );
+        return getEffectiveActiveBases().map(function (base) {
+            return holdingByBase.get(base) || null;
+        }).filter(Boolean);
+    }
+
+    function getActiveQuickConverterOptions() {
+        return filterAssetsByBases(QUICK_CONVERTER_CRYPTO_OPTIONS, getEffectiveActiveBases(), 'code');
+    }
+
+    function unwrapFirestoreValue(value) {
+        if (!value || typeof value !== 'object') return undefined;
+        if (Object.prototype.hasOwnProperty.call(value, 'stringValue')) return value.stringValue;
+        if (Object.prototype.hasOwnProperty.call(value, 'booleanValue')) return Boolean(value.booleanValue);
+        if (Object.prototype.hasOwnProperty.call(value, 'integerValue')) return Number(value.integerValue);
+        if (Object.prototype.hasOwnProperty.call(value, 'doubleValue')) return Number(value.doubleValue);
+        if (Object.prototype.hasOwnProperty.call(value, 'mapValue')) {
+            const fields = value.mapValue && value.mapValue.fields ? value.mapValue.fields : {};
+            const result = {};
+            Object.keys(fields).forEach(function (key) {
+                result[key] = unwrapFirestoreValue(fields[key]);
+            });
+            return result;
+        }
+        if (Object.prototype.hasOwnProperty.call(value, 'arrayValue')) {
+            const values = Array.isArray(value.arrayValue && value.arrayValue.values) ? value.arrayValue.values : [];
+            return values.map(unwrapFirestoreValue);
+        }
+        if (Object.prototype.hasOwnProperty.call(value, 'nullValue')) return null;
+        return undefined;
+    }
+
+    function hasActiveDepositNetwork(networks) {
+        if (!networks || typeof networks !== 'object') return false;
+        return Object.keys(networks).some(function (networkName) {
+            const entry = networks[networkName];
+            if (!entry || typeof entry !== 'object') return false;
+            const status = String(entry.status || '').trim().toLowerCase();
+            if (status === 'active') return true;
+            if (entry.active === true) return true;
+            return false;
+        });
+    }
+
+    function parseConfiguredBasesFromDocuments(documents) {
+        return normalizeConfiguredBases((documents || []).map(function (doc) {
+            const name = String(doc && doc.name || '');
+            const symbol = name.split('/').pop();
+            const fields = doc && doc.fields ? unwrapFirestoreValue({ mapValue: { fields: doc.fields } }) : {};
+            if (!hasActiveDepositNetwork(fields.networks || {})) return '';
+            return symbol;
+        }).filter(Boolean));
+    }
+
+    async function bootstrapConfiguredActiveBases(fetchImpl) {
+        if (configuredActiveBasesBootstrap) return configuredActiveBasesBootstrap;
+        const runtimeFetch = fetchImpl || (typeof globalThis !== 'undefined' ? globalThis.fetch : null);
+        if (typeof runtimeFetch !== 'function') {
+            return Promise.resolve(getEffectiveActiveBases());
+        }
+
+        configuredActiveBasesBootstrap = runtimeFetch(DEPOSIT_ADDRESSES_ENDPOINT, {
+            headers: { accept: 'application/json' }
+        }).then(function (response) {
+            if (!response.ok) {
+                throw new Error('Deposit address bootstrap HTTP ' + response.status);
+            }
+            return response.json();
+        }).then(function (payload) {
+            const bases = parseConfiguredBasesFromDocuments(payload && payload.documents);
+            if (bases.length) {
+                return setConfiguredActiveBases(bases);
+            }
+            return getEffectiveActiveBases();
+        }).catch(function (error) {
+            console.warn('[EasyCrypto] Active asset bootstrap failed:', error && error.message ? error.message : error);
+            return getEffectiveActiveBases();
+        });
+
+        return configuredActiveBasesBootstrap;
     }
 
     function toMarketCode(base) {
@@ -145,13 +300,31 @@
         return quotes;
     }
 
+    if (typeof globalThis !== 'undefined' && typeof globalThis.window !== 'undefined') {
+        Promise.resolve().then(function () {
+            return bootstrapConfiguredActiveBases();
+        }).catch(function () {
+            return null;
+        });
+    }
+
     return {
+        ACTIVE_ASSETS_CHANGED_EVENT,
         SUPPORTED_ASSETS,
         HOME_MARKET_ASSETS,
         RATE_ASSETS,
         TRACKER_HOLDINGS,
         QUICK_CONVERTER_CRYPTO_OPTIONS,
         SUPPORTED_BASES,
+        normalizeConfiguredBases,
+        setConfiguredActiveBases,
+        resetConfiguredActiveBases,
+        getConfiguredActiveBases,
+        getActiveHomeMarketAssets,
+        getActiveRateAssets,
+        getActiveTrackerHoldings,
+        getActiveQuickConverterOptions,
+        bootstrapConfiguredActiveBases,
         findAsset,
         isSupportedBase,
         toMarketCode,

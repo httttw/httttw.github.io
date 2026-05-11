@@ -13,11 +13,8 @@
         : 'https://api.easycoinst0re.com';
     const INFOWAY_TRADE_URL = `${API_ORIGIN}/api/infoway/batch-trade`;
     const INFOWAY_KLINE_URL = `${API_ORIGIN}/api/infoway/batch-kline`;
-    const HOME_MARKET_UNIVERSE = siteData.HOME_MARKET_ASSETS.slice();
     const store = {};
-    const codes = HOME_MARKET_UNIVERSE.map(function (item) {
-        return siteData.toMarketCode(item.base);
-    }).join(',');
+    let homeMarketUniverse = getHomeMarketUniverse();
 
     let activeTab = 'market';
     let refreshTimer = null;
@@ -28,6 +25,23 @@
         green: '#10b981',
         red: '#ef4444'
     };
+
+    function getHomeMarketUniverse() {
+        if (typeof siteData.getActiveHomeMarketAssets === 'function') {
+            return siteData.getActiveHomeMarketAssets().slice();
+        }
+        return siteData.HOME_MARKET_ASSETS.slice();
+    }
+
+    function getMarketCodes() {
+        return homeMarketUniverse.map(function (item) {
+            return siteData.toMarketCode(item.base);
+        }).join(',');
+    }
+
+    function syncHomeMarketUniverse() {
+        homeMarketUniverse = getHomeMarketUniverse();
+    }
 
     function fetchWithTimeout(url, options) {
         const controller = new AbortController();
@@ -73,6 +87,9 @@
     }
 
     async function fetchQuotes() {
+        const codes = getMarketCodes();
+        if (!codes) return {};
+
         const tradeResponse = await fetchWithTimeout(`${INFOWAY_TRADE_URL}?codes=${encodeURIComponent(codes)}`, {
             headers: { accept: 'application/json' }
         });
@@ -100,7 +117,7 @@
     }
 
     function buildRowsForTab(tab) {
-        const rows = HOME_MARKET_UNIVERSE.map(function (item) {
+        const rows = homeMarketUniverse.map(function (item) {
             const live = store[item.base] || {};
             return {
                 ...item,
@@ -156,6 +173,7 @@
         if (isRefreshing || document.visibilityState === 'hidden') return;
         isRefreshing = true;
         setStatus('Updating market data...', '#8a879d');
+        syncHomeMarketUniverse();
 
         try {
             const quotes = await fetchQuotes();
@@ -173,6 +191,14 @@
         } finally {
             isRefreshing = false;
         }
+    }
+
+    if (siteData.ACTIVE_ASSETS_CHANGED_EVENT) {
+        window.addEventListener(siteData.ACTIVE_ASSETS_CHANGED_EVENT, function () {
+            syncHomeMarketUniverse();
+            renderTable();
+            refreshMarketData();
+        });
     }
 
     tabEls.forEach(function (tabEl) {
