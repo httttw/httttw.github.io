@@ -32,9 +32,9 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-<script src="./js/infoway-site-data.js?v=20260511c"></script>
-<script src="./js/mobile-market-data-guards.js?v=20260511c"></script>
-<script src="./js/mobile-nav-state-utils.js?v=20260511c"></script>
+<script src="./js/infoway-site-data.js?v=20260511d"></script>
+<script src="./js/mobile-market-data-guards.js?v=20260511d"></script>
+<script src="./js/mobile-nav-state-utils.js?v=20260511d"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
@@ -45,7 +45,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260511c';
+        const mobileBuildId = '20260511d';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -449,7 +449,7 @@
                                 kycBadge.style.borderColor = 'rgba(46, 213, 115, 0.3)';
                                 kycBadge.removeAttribute('data-t-key');
                             } else if (normalizedStatus === 'pending') {
-                                kycBadge.innerHTML = '⏳ Pending';
+                                kycBadge.innerHTML = '�?Pending';
                                 kycBadge.style.background = 'rgba(255, 171, 0, 0.1)';
                                 kycBadge.style.color = '#FFAB00';
                                 kycBadge.style.borderColor = 'rgba(255, 171, 0, 0.3)';
@@ -461,7 +461,7 @@
                                 kycBadge.style.borderColor = 'rgba(255, 77, 79, 0.3)';
                                 kycBadge.removeAttribute('data-t-key');
                             } else {
-                                kycBadge.innerHTML = '✗ Unauthenticated';
+                                kycBadge.innerHTML = '�?Unauthenticated';
                                 kycBadge.style.background = 'rgba(255, 77, 79, 0.1)';
                                 kycBadge.style.color = '#FF4757';
                                 kycBadge.style.borderColor = 'rgba(255, 77, 79, 0.3)';
@@ -6158,7 +6158,7 @@
                             <div class="safe-card" onclick="showScreen('email')">
                                 <div class="safe-card-header">
                                     <div class="safe-card-icon-box">
-                                        ✉
+                                        �?
                                         <div class="safe-warning-dot">!</div>
                                     </div>
                                     <span class="safe-card-arrow">&gt;</span>
@@ -6401,14 +6401,14 @@
                         </div>
                         <div class="funds-actions">
                             <div class="funds-action-btn" onclick="showScreen('deposit')" data-t-key="funds_deposit">
-                                <span>↘</span> Deposit
+                                <span>�?/span> Deposit
                             </div>
                             <div class="funds-action-btn" onclick="showScreen('withdraw')" data-t-key="funds_withdraw">
-                                <span>↗</span> Withdraw
+                                <span>�?/span> Withdraw
                             </div>
                             <div class="funds-action-btn"
                                 onclick="tradeEntrySource='exchange-nav'; showScreen('trade');"
-                                data-t-key="funds_exchange"><span>⇄</span>
+                                data-t-key="funds_exchange"><span>�?/span>
                                 Exchange
                             </div>
                         </div>
@@ -6423,19 +6423,19 @@
                         </div>
                         <div id="funds-portfolio-list">
                             <div class="portfolio-row">
-                                <div class="p-meta"><span>•</span> <span data-t-key="tab_spot">Spot</span></div>
+                                <div class="p-meta"><span>�?/span> <span data-t-key="tab_spot">Spot</span></div>
                                 <div class="p-value"><span class="p-value-main" id="funds-spot-main">0 USDT</span><span
                                         class="p-value-sub" id="funds-spot-sub">$
                                         $ 0.00</span></div>
                             </div>
                             <div class="portfolio-row">
-                                <div class="p-meta"><span>•</span> <span data-t-key="tab_contract">Contract</span></div>
+                                <div class="p-meta"><span>�?/span> <span data-t-key="tab_contract">Contract</span></div>
                                 <div class="p-value"><span class="p-value-main" id="funds-contract-main">0 USDT</span><span
                                         class="p-value-sub" id="funds-contract-sub">$
                                         $ 0.00</span></div>
                             </div>
                             <div class="portfolio-row">
-                                <div class="p-meta"><span>•</span> <span data-t-key="funds_delivery_account">Delivery
+                                <div class="p-meta"><span>�?/span> <span data-t-key="funds_delivery_account">Delivery
                                         contract account</span></div>
                                 <div class="p-value"><span class="p-value-main" id="funds-delivery-main">0 USDT</span><span
                                         class="p-value-sub" id="funds-delivery-sub">$
@@ -6660,23 +6660,23 @@
 
                     <div class="support-btn">
                         <span>Send us a message</span>
-                        <div class="support-btn-icon" style="color:#8B5CF6;">✓</div>
+                        <div class="support-btn-icon" style="color:#8B5CF6;">�?/div>
                     </div>
 
                     <div class="support-btn">
                         <span>Historical evaluations</span>
-                        <div class="support-btn-icon">›</div>
+                        <div class="support-btn-icon">�?/div>
                     </div>
                 </div>
 
                 <div class="support-bottom-nav">
                     <div class="s-nav-item active">
-                        <div class="s-nav-icon">⌂</div>
+                        <div class="s-nav-icon">�?/div>
                         <span>Home</span>
                     </div>
                     <div class="s-nav-item" onclick="showScreen('supportChatScreen')">
                         <span id="support-nav-badge" class="nav-badge"></span>
-                        <div class="s-nav-icon">✉</div>
+                        <div class="s-nav-icon">�?/div>
                         <span>Messages</span>
                     </div>
                 </div>
@@ -6700,14 +6700,14 @@
                             aria-label="Edit profile">&#9998;</button>
                         <div
                             style="margin-left:auto; background:#eee; padding:5px; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; color:#6a35ff;">
-                            ✎</div>
+                            �?/div>
                     </div>
 
                     <div class="profile-assets-card" onclick="showScreen('funds'); switchFundsTab('overview');"
                         style="cursor:pointer;">
                         <div class="p-card-header">
                             <span data-t-key="prof_my_assets">My assets</span>
-                            <span>›</span>
+                            <span>�?/span>
                         </div>
                         <p style="font-size:12px; color:#999; margin-bottom:5px;" data-t-key="prof_total_assets_sub">
                             Total account assets converted[USDT]
@@ -6744,7 +6744,7 @@
                         <span class="p-menu-arrow">&gt;</span>
                     </div>
                     <div class="profile-menu-item" onclick="tradeEntrySource='exchange-nav'; showScreen('trade');">
-                        <span class="p-menu-icon">⇄</span>
+                        <span class="p-menu-icon">�?/span>
                         <span class="p-menu-label" data-t-key="prof_exchange">Exchange</span>
                         <span class="p-menu-arrow">&gt;</span>
                     </div>
@@ -7440,7 +7440,7 @@
                             center</h1>
                         <button
                             style="border: none; background: rgba(26, 11, 46, 0.5); color: #ffffff; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 24px;">
-                            <span>⭐</span> <span data-t-key="cert_view_features">View current features</span>
+                            <span>�?/span> <span data-t-key="cert_view_features">View current features</span>
                         </button>
                     </div>
 
@@ -7476,7 +7476,7 @@
                             and Limitations</div>
 
                         <div class="limit-item">
-                            <div class="limit-check active">✓</div>
+                            <div class="limit-check active">�?/div>
                             <div class="limit-content">
                                 <div class="limit-title" data-t-key="cert_fiat_limit" style="color: #ffffff;">Fiat
                                     Crypto limit</div>
@@ -7492,7 +7492,7 @@
                         </div>
 
                         <div class="limit-item">
-                            <div class="limit-check active">✓</div>
+                            <div class="limit-check active">�?/div>
                             <div class="limit-content">
                                 <div class="limit-title" data-t-key="cert_c2c_limit" style="color: #ffffff;">C2C
                                     transaction limit</div>
@@ -7505,7 +7505,7 @@
                         </div>
 
                         <div class="limit-item">
-                            <div class="limit-check active">✓</div>
+                            <div class="limit-check active">�?/div>
                             <div class="limit-content">
                                 <div class="limit-title" data-t-key="cert_crypto_limit" style="color: #ffffff;">
                                     Crypto limit</div>
@@ -7522,7 +7522,7 @@
                         </div>
 
                         <div class="review-info">
-                            <span style="font-size: 24px;">⏱</span>
+                            <span style="font-size: 24px;">�?/span>
                             <span data-t-key="cert_review_time">Review time: 3 days</span>
                         </div>
 
@@ -7631,7 +7631,7 @@
                     <div class="cert-card"
                         style="background: rgba(26, 11, 46, 0.8); border: 1px solid rgba(139, 92, 246, 0.3); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); text-align: left;">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
-                            <span style="font-size: 24px;">⏳</span>
+                            <span style="font-size: 24px;">�?/span>
                             <h2 style="margin: 0; font-size: 20px; font-weight: 700; color: #ffffff;"
                                 data-t-key="kyc_submitted_heading">Application Submitted</h2>
                         </div>
@@ -7695,7 +7695,7 @@
                             </svg>
                             <span>English</span>
                         </div>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">�?/span>
                     </div>
                     <div class="language-item" onclick="selectLanguage('中文', this)">
                         <div style="display: flex; align-items: center;">
@@ -7705,7 +7705,7 @@
                             </svg>
                             <span>中文</span>
                         </div>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">�?/span>
                     </div>
                     <div class="language-item" onclick="selectLanguage('Deutsch', this)">
                         <div style="display: flex; align-items: center;">
@@ -7716,7 +7716,7 @@
                             </svg>
                             <span>Deutsch</span>
                         </div>
-                        <span class="check-icon">✓</span>
+                        <span class="check-icon">�?/span>
                     </div>
                     <div class="language-item" onclick="selectLanguage('\u65e5\u672c\u8a9e', this)">
                         <div style="display: flex; align-items: center;">
@@ -7773,7 +7773,7 @@
                         <div style="display: flex; align-items: center;">
                             <div
                                 style="background: #f3ba2f; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; font-weight: 700; font-size: 15px;">
-                                €</div>
+                                �?/div>
                             <span style="font-size: 16px; font-weight: 500;">EUR</span>
                         </div>
                     </div>
@@ -7813,7 +7813,7 @@
                         <div style="display: flex; align-items: center;">
                             <div
                                 style="background: #f3ba2f; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; font-weight: 700; font-size: 15px;">
-                                ฿</div>
+                                �?/div>
                             <span style="font-size: 16px; font-weight: 500;">THB</span>
                         </div>
                     </div>
@@ -7829,7 +7829,7 @@
                         <div style="display: flex; align-items: center;">
                             <div
                                 style="background: #f3ba2f; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; margin-right: 12px; font-weight: 700; font-size: 15px;">
-                                ₩</div>
+                                �?/div>
                             <span style="font-size: 16px; font-weight: 500;">KRW</span>
                         </div>
                     </div>
@@ -7884,7 +7884,7 @@
 
                     <div class="support-btn" onclick="showScreen('supportChatScreen')">
                         <span class="support-btn-text">Send us a message</span>
-                        <span class="support-btn-icon">✓</span>
+                        <span class="support-btn-icon">�?/span>
                     </div>
 
                     <div class="support-btn" onclick="alert('Viewing evaluations...')">
@@ -7894,12 +7894,12 @@
                 </div>
                 <div class="support-footer">
                     <div class="support-footer-item active" onclick="showScreen('supportScreen')">
-                        <span class="support-footer-icon">⌂</span>
+                        <span class="support-footer-icon">�?/span>
                         <span>Home</span>
                     </div>
                     <div class="support-footer-item" onclick="showScreen('supportChatScreen')">
                         <span id="support-footer-badge" class="nav-badge"></span>
-                        <span class="support-footer-icon">✉</span>
+                        <span class="support-footer-icon">�?/span>
                         <span>Messages</span>
                     </div>
                 </div>
@@ -7937,12 +7937,12 @@
             </div>
             <div class="support-footer support-chat-footer">
                 <div class="support-footer-item" onclick="showScreen('supportScreen')">
-                    <span class="support-footer-icon">鈱?/span>
+                    <span class="support-footer-icon">�?/span>
                     <span>Home</span>
                 </div>
                 <div class="support-footer-item active" onclick="showScreen('supportChatScreen')">
                     <span id="support-chat-footer-badge" class="nav-badge"></span>
-                    <span class="support-footer-icon">鉁?/span>
+                    <span class="support-footer-icon">�?/span>
                     <span>Messages</span>
                 </div>
             </div>
@@ -8415,20 +8415,20 @@
                 <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;"><b>We may collect
                         personal information from you such as:</b></p>
 
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Contact details,
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Contact details,
                     such as name, email, phone number, address;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Application
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Application
                     details such as date of birth, photo ID, source of funds, banking details, tax details, account
                     preferences, reason and/or intent of purchase and your cryptocurrency wallet addresses;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Device details,
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Device details,
                     such as IP address, device information, operating system, web log information, cookie
                     information;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Engagement
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Engagement
                     details: details of any engagements you have with us, including enquiries, feedback (eg by
                     completing a form on our Sites) and other communications you have with us. This includes
                     recording any phone conversations for quality control (making sure our staff are giving the
                     right information) or dispute resolution (having a record of who said what);</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">• Marketing: details
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">�?Marketing: details
                     of your marketing preferences.</p>
 
                 <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;"><b>You don't have to
@@ -8462,17 +8462,17 @@
                 <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">We may use your
                     information for the following purposes:</p>
 
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• To provide you
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?To provide you
                     with services and manage your account with us. This includes using your information to process
                     transactions.</p>
 
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• To prevent or
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?To prevent or
                     investigate illegal or potentially illegal activities;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• To help improve
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?To help improve
                     our customer support, like training, and resolve disputes;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• To test, research,
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?To test, research,
                     analyse and develop our service to make it better, safer and easier to use; and</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">• To promote Easy
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">�?To promote Easy
                     Crypto and send you other things we think you'll like or think would be relevant for you. This
                     includes content about our service or the services of our business partners.</p>
 
@@ -8482,32 +8482,32 @@
                 <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">We may share your
                     information with the following:</p>
 
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Companies within
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Companies within
                     the Easy Crypto group;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Third parties that
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Third parties that
                     help us carry out the service (eg to verify your identity, complete payments like banks, credit
                     card processing providers, etc);</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Third parties to
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Third parties to
                     help prevent or investigate illegal or potentially illegal activities;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• SaaS providers
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?SaaS providers
                     that we use to provide our service and cloud storage partners;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Providers to help
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Providers to help
                     us market to you directly e.g. Google and Facebook. (We never ever EVER give your information to
                     third parties so that they can market directly to you but we may need to send it to other
                     providers like Google to help facilitate our own marketing, unless we get your express consent
                     to do so;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Data analytics or
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Data analytics or
                     research partners (but usually this information will be aggregated, with identifiable
                     characteristics removed so you remain anonymous);</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Third parties to
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Third parties to
                     help us enhance the safety and security of the service;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Where required, to
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Where required, to
                     regulators (eg for tax purposes) or enforcement/government agencies;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Third parties to
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Third parties to
                     whom we may choose to sell, transfer or merge parts of our business or our assets;</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">• Our consultants,
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 16px;">�?Our consultants,
                     lawyers, accountants, insurers and other professional advisers; and</p>
-                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">• Any other party
+                <p style="color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">�?Any other party
                     authorised by you or to whom we are required or authorised to disclose personal information in
                     accordance with applicable law.</p>
 
@@ -9943,7 +9943,7 @@
             <div id="admin-panel" class="hidden">
                 <div class="admin-section-title">
                     <span>Deposit Configuration</span>
-                    <span onclick="toggleAdminPanel(false)" style="cursor:pointer;">✓</span>
+                    <span onclick="toggleAdminPanel(false)" style="cursor:pointer;">�?/span>
                 </div>
 
                 <div class="admin-form-row">
@@ -11259,52 +11259,52 @@ const translations = {
                     "auth_label_password": "密码",
                     "auth_placeholder_password": "输入您的密码",
                     "auth_btn_login": "登录",
-                    "auth_placeholder_create_password": "请输入密码",
+                    "auth_placeholder_create_password": "请输入密�?,
                     "auth_label_confirm": "确认密码",
-                    "auth_placeholder_confirm_password": "请确认密码",
-                    "auth_label_verification": "验证码",
+                    "auth_placeholder_confirm_password": "请确认密�?,
+                    "auth_label_verification": "验证�?,
                     "auth_btn_signup": "创建帐户",
                     "prof_safe": "安全",
-                    "prof_safe_subtitle": "双因素身份验证",
-                    "prof_safe_desc": "为了保护您的财产，建议至少开启一项二因素身份验证 (2FA)。",
-                    "prof_safe_ga": "谷歌身份验证器",
+                    "prof_safe_subtitle": "双因素身份验�?,
+                    "prof_safe_desc": "为了保护您的财产，建议至少开启一项二因素身份验证 (2FA)�?,
+                    "prof_safe_ga": "谷歌身份验证�?,
                     "prof_safe_mobile": "手机",
                     "prof_safe_email": "电子邮件",
                     "prof_safe_modify_login": "修改登录密码",
                     "prof_safe_modify_fund": "修改资金密码",
                     "prof_safe_manual_reset": "手动复位",
-                    "pwd_old_label": "旧密码",
-                    "pwd_placeholder": "请输入密码",
-                    "pwd_new_label": "新密码",
-                    "pwd_hint": "请输入6-12个字符，包括数字或字母",
-                    "pwd_confirm_label": "确认新密码",
+                    "pwd_old_label": "旧密�?,
+                    "pwd_placeholder": "请输入密�?,
+                    "pwd_new_label": "新密�?,
+                    "pwd_hint": "请输�?-12个字符，包括数字或字�?,
+                    "pwd_confirm_label": "确认新密�?,
                     "pwd_confirm_btn": "确认",
                     "prof_payment": "付款方式",
                     "home_announcement": "EasyCrypto交易所公告",
-                    "tab_hot": "热币榜",
-                    "tab_gainers": "涨幅榜",
-                    "tab_losers": "跌幅榜",
+                    "tab_hot": "热币�?,
+                    "tab_gainers": "涨幅�?,
+                    "tab_losers": "跌幅�?,
                     "market_placeholder_search": "搜索币名",
-                    "tab_favorites": "收藏夹",
+                    "tab_favorites": "收藏�?,
                     "tab_spot": "现货",
                     "tab_contract": "合同",
                     "tab_overview": "概述",
-                    "funds_total": "总资产（USDT）",
-                    "funds_deposit": "充值",
+                    "funds_total": "总资产（USDT�?,
+                    "funds_deposit": "充�?,
                     "funds_withdraw": "提现",
                     "funds_exchange": "兑换",
                     "funds_portfolio": "投资组合",
                     "funds_delivery_account": "交货合约账户",
                     "funds_no_assets": "没有可用资产",
-                    "funds_perpetual": "永久的",
+                    "funds_perpetual": "永久�?,
                     "funds_delivery": "交货合同",
-                    "funds_margin_balance": "保证金余额（USDT）",
+                    "funds_margin_balance": "保证金余额（USDT�?,
                     "funds_wallet_balance": "钱包余额(USDT)",
-                    "funds_unrealized": "所有未实现损益（USDT）",
-                    "funds_no_positions": "您目前没有职位。",
+                    "funds_unrealized": "所有未实现损益（USDT�?,
+                    "funds_no_positions": "您目前没有职位�?,
                     "prof_my_assets": "我的资产",
                     "prof_total_assets_sub": "账户总资产兑换[USDT]",
-                    "prof_available": "可用：0",
+                    "prof_available": "可用�?",
                     "prof_deposit": "押金",
                     "prof_withdraw": "撤回",
                     "prof_exchange": "交流",
@@ -11313,21 +11313,21 @@ const translations = {
                     "prof_section_user": "用户",
                     "prof_consume": "消费记录",
                     "prof_auth": "认证",
-                    "prof_section_general": "一般",
+                    "prof_section_general": "一�?,
                     "prof_language": "语言",
                     "prof_price_method": "计价方式",
                     "prof_section_more": "更多",
                     "prof_help": "帮助中心",
                     "prof_about": "关于我们",
-                    "prof_logout": "退出",
-                    "pwd_hint_fund": "请输入6位数字",
-                    "pwd_verification_code": "验证码",
+                    "prof_logout": "退�?,
+                    "pwd_hint_fund": "请输�?位数�?,
+                    "pwd_verification_code": "验证�?,
                     "pwd_placeholder_code": "请输入验证码",
-                    "pwd_send_btn": "发送",
-                    "manual_reset_subtitle": "身份证照片/上传护照",
-                    "manual_reset_front": "身份证首页",
-                    "manual_reset_back": "身份证背面",
-                    "manual_reset_handheld": "手持身份证照片",
+                    "pwd_send_btn": "发�?,
+                    "manual_reset_subtitle": "身份证照�?上传护照",
+                    "manual_reset_front": "身份证首�?,
+                    "manual_reset_back": "身份证背�?,
+                    "manual_reset_handheld": "手持身份证照�?,
                     "manual_reset_type_fund": "重置资金密码",
                     "manual_reset_type_phone": "重置电话号码",
                     "manual_reset_type_mailbox": "重置邮箱",
@@ -11336,7 +11336,7 @@ const translations = {
                     "manual_reset_fund_confirm_label": "确认资金密码",
                     "manual_reset_msg_label": "留言",
                     "manual_reset_msg_placeholder": "请输入留言",
-                    "phone_placeholder": "请输入您的电话",
+                    "phone_placeholder": "请输入您的电�?,
                     "prof_bank_card": "所有银行卡",
                     "config_method": "支付方式配置",
                     "config_type": "付款方式类型",
@@ -11344,44 +11344,44 @@ const translations = {
                     "config_bank_name": "银行名称",
                     "config_supplement": "补充（可选）",
                     "config_remark": "备注",
-                    "config_reminder": "温馨提示：当您出售数字货币时，您选择的付款方式将会显示给买家，请确认信息准确。",
+                    "config_reminder": "温馨提示：当您出售数字货币时，您选择的付款方式将会显示给买家，请确认信息准确�?,
                     "config_save": "保存",
                     "prof_coin_collection": "钱币收藏",
                     "config_currency": "货币",
                     "config_network": "网络",
                     "config_address": "地址",
-                    "config_qr": "支付方式二维码",
+                    "config_qr": "支付方式二维�?,
                     "cert_personal_center": "个人中心",
                     "cert_view_features": "查看当前功能",
                     "cert_advanced_btn": "高级认证",
-                    "cert_require": "需要未经身份验证",
+                    "cert_require": "需要未经身份验�?,
                     "cert_unauthenticated": "未经身份验证",
                     "cert_p_info": "个人信息",
-                    "cert_gov_id": "政府颁发的身份证件",
-                    "cert_features": "特点和限制",
+                    "cert_gov_id": "政府颁发的身份证�?,
+                    "cert_features": "特点和限�?,
                     "cert_fiat_limit": "法定加密货币限制",
                     "cert_c2c_limit": "C2C交易限额",
                     "cert_unlimited": "无限",
                     "cert_crypto_limit": "加密货币限制",
-                    "cert_review_time": "审稿时间：3天",
-                    "cert_start_btn": "开始认证",
+                    "cert_review_time": "审稿时间�?�?,
+                    "cert_start_btn": "开始认�?,
                     "cert_nationality": "国籍",
                     "cert_legal_name": "法定全名",
-                    "cert_legal_name_placeholder": "请输入您的真实姓名",
+                    "cert_legal_name_placeholder": "请输入您的真实姓�?,
                     "cert_id_number": "文件/护照号码",
                     "cert_id_number_placeholder": "请输入您的身份证/护照号码",
                     "cert_shooting_example": "拍摄示例",
-                    "kyc_submitted_title": "KYC已提交",
-                    "kyc_submitted_heading": "申请已提交",
-                    "kyc_submitted_desc": "您的KYC资料已提交成功，合规团队正在审核。",
-                    "kyc_submitted_status_label": "当前状态",
+                    "kyc_submitted_title": "KYC已提�?,
+                    "kyc_submitted_heading": "申请已提�?,
+                    "kyc_submitted_desc": "您的KYC资料已提交成功，合规团队正在审核�?,
+                    "kyc_submitted_status_label": "当前状�?,
                     "kyc_submitted_status_pending": "等待审核",
-                    "kyc_submitted_eta": "预计审核时间：1-3个工作日。",
-                    "kyc_submitted_view_btn": "查看认证状态",
+                    "kyc_submitted_eta": "预计审核时间�?-3个工作日�?,
+                    "kyc_submitted_view_btn": "查看认证状�?,
                     "kyc_submitted_home_btn": "返回首页",
                     "lang_title": "语言",
                     "market_list_name": "名称",
-                    "market_list_price_change": "最后价格/24 小时变动",
+                    "market_list_price_change": "最后价�?24 小时变动",
                     "nav_home": "首页",
                     "nav_market": "市场",
                     "nav_contract": "合同",
@@ -11412,7 +11412,7 @@ const translations = {
                     "pwd_old_label": "Altes Passwort",
                     "pwd_placeholder": "Bitte geben Sie das Passwort ein",
                     "pwd_new_label": "Neues Passwort",
-                    "pwd_hint": "Bitte geben Sie 6–12 Zeichen ein, einschließlich Zahlen oder Buchstaben",
+                    "pwd_hint": "Bitte geben Sie 6�?2 Zeichen ein, einschließlich Zahlen oder Buchstaben",
                     "pwd_confirm_label": "Bestätigen Sie das neue Passwort",
                     "pwd_confirm_btn": "Bestätigen",
                     "prof_payment": "Zahlungsart",
@@ -11524,7 +11524,7 @@ const translations = {
                     "nav_trade": "Austausch",
                     "nav_funds": "Fonds"
           },
-          "日本語": {
+          "日本�?: {
                     "auth_tab_login": "Login",
                     "auth_label_email": "Email Address",
                     "auth_placeholder_email": "Enter your email",
@@ -11660,7 +11660,7 @@ const translations = {
                     "nav_trade": "Exchange",
                     "nav_funds": "Funds"
           },
-          "한국어": {
+          "한국�?: {
                     "auth_tab_login": "Login",
                     "auth_label_email": "Email Address",
                     "auth_placeholder_email": "Enter your email",
@@ -13024,10 +13024,10 @@ const translations = {
 
         function getKycIdFormatMessage() {
             const lang = typeof window.getSiteLanguageCode === 'function' ? window.getSiteLanguageCode() : 'en';
-            if (lang === 'zh') return '证件号码格式已锁定为 1 个字母 + 7 位数字，例如 A1234567。';
+            if (lang === 'zh') return '证件号码格式已锁定为 1 个字�?+ 7 位数字，例如 A1234567�?;
             if (lang === 'de') return 'Das Format der Ausweisnummer ist 1 Buchstabe + 7 Ziffern, zum Beispiel A1234567.';
-            if (lang === 'ja') return '証明書番号の形式は英字1文字 + 数字7桁です。例: A1234567';
-            if (lang === 'ko') return '신분증 번호 형식은 영문 1자 + 숫자 7자리입니다. 예: A1234567';
+            if (lang === 'ja') return '証明書番号の形式は英�?文字 + 数字7桁です。例: A1234567';
+            if (lang === 'ko') return '신분�?번호 형식은 영문 1�?+ 숫자 7자리입니�? �? A1234567';
             return 'The ID number format is 1 letter + 7 digits, for example A1234567.';
         }
 
@@ -13644,7 +13644,7 @@ const translations = {
             const fromPrice = getCoinUsdPriceForExchange(exFrom);
             const toPrice = getCoinUsdPriceForExchange(exTo);
             const rateText = (quote.valid && quote.rate > 0)
-                ? `1 ${exFrom} ≈ ${formatExchangeAmount(quote.rate, exTo)} ${exTo}`
+                ? `1 ${exFrom} �?${formatExchangeAmount(quote.rate, exTo)} ${exTo}`
                 : '--';
             const feeText = (quote.valid && quote.feeAmount >= 0)
                 ? `${formatExchangeAmount(quote.feeAmount, exTo)} ${exTo} (0.50%)`
@@ -13692,7 +13692,7 @@ const translations = {
                 setExchangeStatusNote(copy.quoteUnavailableHint, '#f59e0b');
             } else {
                 canSubmit = true;
-                buttonText = `${copy.btnReady} · ${exFrom} → ${exTo}`;
+                buttonText = `${copy.btnReady} · ${exFrom} �?${exTo}`;
                 setExchangeStatusNote(copy.readyHint, '#52c41a');
             }
 
@@ -13854,12 +13854,12 @@ const translations = {
                 const toAmount = formatExchangeAmount(item.to_amount, item.to_coin);
                 const feeAmount = formatExchangeAmount(item.fee_amount, item.to_coin);
                 const rateText = Number(item.rate) > 0
-                    ? `1 ${item.from_coin} ≈ ${formatExchangeAmount(item.rate, item.to_coin)} ${item.to_coin}`
+                    ? `1 ${item.from_coin} �?${formatExchangeAmount(item.rate, item.to_coin)} ${item.to_coin}`
                     : '--';
                 return `
                     <div style="padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: left;">
                         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;">
-                            <span style="color:#fff; font-weight:600;">${item.from_coin} → ${item.to_coin}</span>
+                            <span style="color:#fff; font-weight:600;">${item.from_coin} �?${item.to_coin}</span>
                             <span style="color:#52c41a; font-size:11px; font-weight:700; border:1px solid rgba(82,196,26,0.25); background:rgba(82,196,26,0.08); padding:3px 8px; border-radius:999px;">${copy.statusCompleted}</span>
                         </div>
                         <div style="display:flex; justify-content:space-between; color:#c9cce0; font-size:13px; margin-bottom:4px;">
@@ -16546,7 +16546,7 @@ No transfer fees for account transfer / exchange</div>
         }
     </script>
 
-<script src="./js/infoway-market-data.js?v=20260511c"></script>
+<script src="./js/infoway-market-data.js?v=20260511d"></script>
     <!-- INFOWAY API INTEGRATION -->
     <script>
         const INFOWAY_API_KEY = "217ed0f158d74b57b4d374b2373269a4-infoway";
@@ -19074,12 +19074,12 @@ No transfer fees for account transfer / exchange</div>
 
                 if (result.isWin) {
                     iconCircle.className = 'result-icon-circle result-icon-win';
-                    icon.innerText = '✓';
+                    icon.innerText = '�?;
                     title.innerText = 'Trade Win';
                     pnlValue.className = 'result-pnl-value green-text';
                 } else {
                     iconCircle.className = 'result-icon-circle result-icon-lose';
-                    icon.innerText = '✗';
+                    icon.innerText = '�?;
                     title.innerText = 'Trade Loss';
                     pnlValue.className = 'result-pnl-value red-text';
                 }
@@ -19573,7 +19573,7 @@ No transfer fees for account transfer / exchange</div>
     </div>
     <script src="./js/mobile-deposit-utils.js?v=20260510a"></script>
     <script src="./js/mobile-deposit-fixes.js?v=20260510a"></script>
-    <script src="/js/site-language.js?v=20260511c"></script>
+    <script src="/js/site-language.js?v=20260511d"></script>
 </body>
 
 </html>
