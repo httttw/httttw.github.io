@@ -73,7 +73,7 @@ test('mobile login page wires login handlers without runtime boot errors', async
     page.on('pageerror', (err) => pageErrors.push(err.stack || String(err)));
 
     try {
-      await page.goto(`${origin}/mobile.html?v=20260511f`, {
+      await page.goto(`${origin}/mobile.html?v=20260511g`, {
         waitUntil: 'domcontentloaded',
         timeout: 30000,
       });
@@ -104,6 +104,28 @@ test('mobile login page wires login handlers without runtime boot errors', async
       assert.equal(runtimeState.bottomNavParentClass, 'mobile-frame');
       assert.ok(runtimeState.bottomNavRect && runtimeState.bottomNavRect.width > 0, 'expected bottom nav width to be positive');
       assert.ok(runtimeState.bottomNavRect && runtimeState.bottomNavRect.height > 0, 'expected bottom nav height to be positive');
+
+      await page.locator('.bottom-nav .nav-item').filter({ hasText: 'Contract' }).first().click();
+      await page.waitForTimeout(800);
+
+      const tradeRuntimeState = await page.evaluate(() => {
+        const tradeScreen = document.getElementById('trade-screen');
+        const rect = tradeScreen ? tradeScreen.getBoundingClientRect() : null;
+        return {
+          tradeParentId: tradeScreen?.parentElement?.id || null,
+          tradeParentClass: tradeScreen?.parentElement?.className || null,
+          tradeRect: rect
+            ? {
+                width: rect.width,
+                height: rect.height,
+              }
+            : null,
+        };
+      });
+
+      assert.equal(tradeRuntimeState.tradeParentId, 'app-screen');
+      assert.ok(tradeRuntimeState.tradeRect && tradeRuntimeState.tradeRect.width > 0, 'expected trade screen width to be positive');
+      assert.ok(tradeRuntimeState.tradeRect && tradeRuntimeState.tradeRect.height > 0, 'expected trade screen height to be positive');
     } finally {
       await browser.close();
     }
