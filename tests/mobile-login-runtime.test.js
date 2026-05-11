@@ -73,7 +73,7 @@ test('mobile login page wires login handlers without runtime boot errors', async
     page.on('pageerror', (err) => pageErrors.push(err.stack || String(err)));
 
     try {
-      await page.goto(`${origin}/mobile.html?v=20260511d`, {
+      await page.goto(`${origin}/mobile.html?v=20260511f`, {
         waitUntil: 'domcontentloaded',
         timeout: 30000,
       });
@@ -82,6 +82,16 @@ test('mobile login page wires login handlers without runtime boot errors', async
       const runtimeState = await page.evaluate(() => ({
         hasHandleLogin: typeof window.handleLogin,
         hasSwitchLoginTab: typeof window.switchLoginTab,
+        bottomNavParentClass: document.querySelector('.bottom-nav')?.parentElement?.className || null,
+        bottomNavRect: (() => {
+          const nav = document.querySelector('.bottom-nav');
+          if (!nav) return null;
+          const rect = nav.getBoundingClientRect();
+          return {
+            width: rect.width,
+            height: rect.height,
+          };
+        })(),
       }));
 
       const blockers = pageErrors.filter((entry) =>
@@ -91,8 +101,12 @@ test('mobile login page wires login handlers without runtime boot errors', async
       assert.deepEqual(blockers, [], `expected no login-boot blockers, got:\n${blockers.join('\n\n')}`);
       assert.equal(runtimeState.hasHandleLogin, 'function');
       assert.equal(runtimeState.hasSwitchLoginTab, 'function');
+      assert.equal(runtimeState.bottomNavParentClass, 'mobile-frame');
+      assert.ok(runtimeState.bottomNavRect && runtimeState.bottomNavRect.width > 0, 'expected bottom nav width to be positive');
+      assert.ok(runtimeState.bottomNavRect && runtimeState.bottomNavRect.height > 0, 'expected bottom nav height to be positive');
     } finally {
       await browser.close();
     }
   });
 });
+

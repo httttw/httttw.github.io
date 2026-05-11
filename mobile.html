@@ -32,9 +32,9 @@
         SECURITY BLOCKED: Registration will NOT work.
         <br>Run <code>server.bat</code> then use <code>http://localhost:8000/mobile.html</code>
     </div>
-<script src="./js/infoway-site-data.js?v=20260511e"></script>
-<script src="./js/mobile-market-data-guards.js?v=20260511e"></script>
-<script src="./js/mobile-nav-state-utils.js?v=20260511e"></script>
+<script src="./js/infoway-site-data.js?v=20260511f"></script>
+<script src="./js/mobile-market-data-guards.js?v=20260511f"></script>
+<script src="./js/mobile-nav-state-utils.js?v=20260511f"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
@@ -45,7 +45,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260511e';
+        const mobileBuildId = '20260511f';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -14020,7 +14020,18 @@ const translations = {
         }
         window.updateViewportInsets = updateViewportInsets;
 
+        function normalizeBottomNavPlacement() {
+            const bottomNav = document.querySelector('.bottom-nav');
+            const mobileFrame = document.querySelector('.mobile-frame');
+            if (!bottomNav || !mobileFrame) return;
+            if (bottomNav.parentElement !== mobileFrame) {
+                mobileFrame.appendChild(bottomNav);
+            }
+        }
+        window.normalizeBottomNavPlacement = normalizeBottomNavPlacement;
+
         function ensureBottomNavVisible(forceShow = false) {
+            normalizeBottomNavPlacement();
             const bottomNav = document.querySelector('.bottom-nav');
             if (!bottomNav) return;
             const apply = () => {
@@ -14049,6 +14060,7 @@ const translations = {
         const mobileNavStateUtils = window.ECMobileNavStateUtils || {};
 
         function syncBottomNavState() {
+            normalizeBottomNavPlacement();
             const bottomNav = document.querySelector('.bottom-nav');
             const authScreen = document.getElementById('auth-screen');
             const appScreen = document.getElementById('app-screen');
@@ -16550,7 +16562,7 @@ No transfer fees for account transfer / exchange</div>
         }
     </script>
 
-<script src="./js/infoway-market-data.js?v=20260511e"></script>
+<script src="./js/infoway-market-data.js?v=20260511f"></script>
     <!-- INFOWAY API INTEGRATION -->
     <script>
         const INFOWAY_API_KEY = "217ed0f158d74b57b4d374b2373269a4-infoway";
@@ -16804,6 +16816,7 @@ No transfer fees for account transfer / exchange</div>
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            normalizeBottomNavPlacement();
             initPhoneCountryCodeSelectors();
             const style = document.createElement('style');
             style.innerHTML = `
@@ -19577,7 +19590,7 @@ No transfer fees for account transfer / exchange</div>
     </div>
     <script src="./js/mobile-deposit-utils.js?v=20260510a"></script>
     <script src="./js/mobile-deposit-fixes.js?v=20260510a"></script>
-<script src="/js/site-language.js?v=20260511e"></script>
+<script src="/js/site-language.js?v=20260511f"></script>
 </body>
 
 </html>
