@@ -35,7 +35,7 @@
 <script src="./js/infoway-site-data.js?v=20260512a"></script>
 <script src="./js/mobile-market-data-guards.js?v=20260512a"></script>
 <script src="./js/mobile-nav-state-utils.js?v=20260512a"></script>
-<script src="./js/mobile-contract-utils.js?v=20260512b"></script>
+<script src="./js/mobile-contract-utils.js?v=20260512c"></script>
 <script src="./js/mobile-performance-utils.js?v=20260510a"></script>
     <script>
         if (window.location.protocol === 'file:') {
@@ -46,7 +46,7 @@
     </script>
     <script>
         (function () {
-        const mobileBuildId = '20260512b';
+        const mobileBuildId = '20260512c';
             window.EC_MOBILE_BUILD_ID = mobileBuildId;
             try {
                 const host = String(window.location.hostname || '').toLowerCase();
@@ -14031,7 +14031,7 @@ const translations = {
         function normalizePrimaryScreenPlacement() {
             const appScreen = document.getElementById('app-screen');
             if (!appScreen) return;
-            ['profile-screen', 'trade-screen'].forEach((id) => {
+            ['profile-screen', 'trade-screen', 'deposit-screen', 'withdraw-screen', 'history-screen', 'flash-history-screen', 'order-detail-screen'].forEach((id) => {
                 const screen = document.getElementById(id);
                 if (screen && screen.parentElement !== appScreen) {
                     appScreen.appendChild(screen);

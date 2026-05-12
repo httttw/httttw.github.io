@@ -128,6 +128,33 @@ test('mobile login page wires login handlers without runtime boot errors', async
       assert.ok(postResizeNavState.rect && postResizeNavState.rect.width > 0, 'expected bottom nav width to stay positive after resize');
       assert.ok(postResizeNavState.rect && postResizeNavState.rect.height > 0, 'expected bottom nav height to stay positive after resize');
 
+      await page.evaluate(() => {
+        if (typeof window.showScreen === 'function') {
+          window.showScreen('deposit');
+        }
+      });
+      await page.waitForTimeout(300);
+
+      const depositState = await page.evaluate(() => {
+        const deposit = document.getElementById('deposit-screen');
+        const rect = deposit ? deposit.getBoundingClientRect() : null;
+        return {
+          parentId: deposit?.parentElement?.id || deposit?.parentElement?.className || null,
+          display: deposit ? getComputedStyle(deposit).display : null,
+          rect: rect
+            ? {
+                width: rect.width,
+                height: rect.height,
+              }
+            : null,
+        };
+      });
+
+      assert.equal(depositState.parentId, 'app-screen');
+      assert.equal(depositState.display, 'flex');
+      assert.ok(depositState.rect && depositState.rect.width > 0, 'expected deposit screen width to be positive');
+      assert.ok(depositState.rect && depositState.rect.height > 0, 'expected deposit screen height to be positive');
+
     } finally {
       await browser.close();
     }
