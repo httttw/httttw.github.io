@@ -12057,6 +12057,7 @@ const translations = {
         let currentUserBalance = 0;
         let currentActiveTab = 'hot';
         let currentScreen = 'homeScreen';
+        window.currentScreen = currentScreen;
         window.currentTradeFooterTab = 'positions';
         window.currentContractHistoryView = 'history';
         let navigationStack = [];
@@ -14268,6 +14269,7 @@ const translations = {
             }
 
             currentScreen = target;
+            window.currentScreen = currentScreen;
 
             const toggleScreen = (id, shouldShow) => {
                 const el = document.getElementById(id);
@@ -16790,7 +16792,7 @@ No transfer fees for account transfer / exchange</div>
         async function fetchCoinGeckoQuotesMobile() {
             if (!ENABLE_COINGECKO) return 0;
             if (document.visibilityState === 'hidden') return 0;
-            if (!shouldAllowPublicMarketPreview(window.currentScreen || '')) return 0;
+            if (!shouldAllowPublicMarketPreview(currentScreen || '')) return 0;
             const tracked = Array.from(new Set(
                 topCryptoCoins
                     .map((sym) => String(sym || '').toUpperCase())
@@ -17201,7 +17203,7 @@ No transfer fees for account transfer / exchange</div>
             }
 
             function shouldRefreshMarketData() {
-                return document.visibilityState !== 'hidden' && shouldAllowPublicMarketPreview(window.currentScreen || '');
+                return document.visibilityState !== 'hidden' && shouldAllowPublicMarketPreview(currentScreen || '');
             }
 
             function scheduleMarketRefresh(callback, activeDelay, quietDelay) {

@@ -157,6 +157,21 @@ test('mobile login page wires login handlers without runtime boot errors', async
 
       await page.evaluate(() => {
         if (typeof window.showScreen === 'function') {
+          window.showScreen('market');
+        }
+      });
+      await page.waitForTimeout(300);
+
+      const marketState = await page.evaluate(() => ({
+        currentScreen: window.currentScreen,
+        marketHidden: document.getElementById('market-screen')?.classList.contains('hidden') ?? null,
+      }));
+
+      assert.equal(marketState.currentScreen, 'market');
+      assert.equal(marketState.marketHidden, false);
+
+      await page.evaluate(() => {
+        if (typeof window.showScreen === 'function') {
           window.showScreen('supportScreen');
         }
       });
